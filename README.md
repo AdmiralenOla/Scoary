@@ -9,6 +9,13 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Dependencies] (#dependencies)
 - [Installation] (#installation)
 - [Usage] (#usage)
+- [Input] (#input)
+- [Outout] (#output)
+- [Options] (#options)
+- [License] (#license)
+- [Etymology] (#etymology)
+- [Citation] (#citation)
+- [Contact] (#contact)
 
 ## What's new?
 
@@ -153,6 +160,9 @@ This will restrict the current analysis to isolates 1,2,4 and 9, and will omit a
 
 #### The -s parameter
 The **-s** parameter is used to indicate to Scoary which column in the gene_presence_absence.csv file is the _first_ column representing an isolate. By default it is set to 15 (1-based indexing).
+
+## License
+Scoary is freely available under a GPLv3 license.
 
 ## Etymology
 Scoary is an anagram of "scoring" and "Roary", the pan-genome pipeline. It was named as an homage to Roary.
