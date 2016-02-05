@@ -144,7 +144,11 @@ The **-r** parameter is particularly useful, as you can use it to restrict your 
 This can be useful for example if you have multiple clades in your dataset but would like to restrict analysis to just one clade. Maybe the trait determinant is not the same in the two clades? Or maybe you have data with multiple clones of the same isolate? This will invalidate the statistical analysis, which assumes phylogenetic independency.
 
 The provided file can look something like this:
->Strain1,Strain2,Strain4,Strain9
+
+```
+Strain1,Strain2,Strain4,Strain9
+```
+
 This will restrict the current analysis to isolates 1,2,4 and 9, and will omit all others.
 
 #### The -s parameter
