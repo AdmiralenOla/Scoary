@@ -1,7 +1,7 @@
 # Scoary
 Pan-genome wide association studies
 
-Scoary is designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome (all genes that are present in *i* genomes where 1 <= *i* < N) and the traits. Scoary reports a list of genes sorted by strength of association per trait.
+Scoary is designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome (all genes that are present in *i* genomes where 1 < *i* < N) and the traits. Scoary reports a list of genes sorted by strength of association per trait.
 
 
 ## Contents
