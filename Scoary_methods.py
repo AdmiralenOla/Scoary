@@ -190,8 +190,17 @@ def Setup_results(genedic, traitsdic):
 		print "\nAdding p-values adjusted for testing multiple hypotheses"
 		# Now calculate Holm-Sidak and Benjamini-Hochberg p-values
 		sorted_p_values = sorted(p_value_list, key=lambda x: x[1]) # Sorted list of tuples: (gene, p-value)
-		hs_corrected_p_values = {gene : (1.0-(1.0-p)**(number_of_tests - float(ind))) for (ind, (gene, p)) in enumerate(sorted_p_values)} # Zero-based indices. Dicts like {gene, corrected-p}
-		bh_corrected_p_values = {gene : p*number_of_tests/(ind+1.0) for (ind, (gene, p)) in enumerate(sorted_p_values)}
+		# Find out which p-values are ties
+		tie = [ sorted_p_values[i-1] == sorted_p_values[i] for i in xrange(1,len(sorted_p_values)) ]
+		hs_corrected_p_values = {}
+		bh_corrected_p_values = {}
+		last_hs = (1.0 - (1.0-sorted_p_values[0][1])**number_of_tests)
+		last_bh = (sorted_p_values[0][1]*number_of_tests/1.0)
+		for (ind, (gene,p)) in enumerate(sorted_p_values):
+			hs_corrected_p_values[gene] = (1.0-(1.0-p)**(number_of_tests - float(ind))) if not tie else last_hs 
+			bh_corrected_p_values[gene] = p*number_of_tests/(ind+1.0) if not tie else last_bh 
+			last_hs = hs_corrected_p_values[gene]
+			last_bh = bh_corrected_p_values[gene]
 		
 		# Now add values to dictionaries:
 		
