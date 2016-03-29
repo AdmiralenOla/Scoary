@@ -238,7 +238,7 @@ def StoreResults(Results, max_hits, p_cutoff, correctionmethod):
 		
 
 def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod): # This method is passed a single trait
-	with open(Traitname + time.strftime("_%d_%m_%Y") + ".csv", "w") as outfile:
+	with open(Traitname + time.strftime("_%d_%m_%Y_%H%M") + ".csv", "w") as outfile:
 		# Sort genes by p-value.
 		sort_instructions = SortResultsAndSetKey(Trait)
 		
