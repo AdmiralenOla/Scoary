@@ -19,7 +19,10 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
-Current release - v1.0 (5th Feb 2016)
+Current release - v1.1 (29th Mar 2016)
+
+- Scoary now imports all methods from Scoary_methods in order to circumvent errors when trying to run Scoary under Python 3.x.
+- Genes that have the same naïve p-value now have adjusted p-values penalized with the same factor rather than an increasing one.
 
 
 ## Dependencies
