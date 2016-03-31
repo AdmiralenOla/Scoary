@@ -26,20 +26,36 @@
 import argparse, os, sys, csv, time
 from scipy import stats as ss
 
+SCOARY_VERSION = 'v1.1'
+
 def main():
 	# Parse arguments.
-	parser = argparse.ArgumentParser(description='Screen pan-genome for trait-associated genes', epilog='by Ola Brynildsrud (olbb@fhi.no)')
-	parser.add_argument('-t', '--traits', help='Input trait table (comma-separated-values). Trait presence is indicated by 1, trait absence by 0. Assumes strain names in the first column and trait names in the first row', required=True)
-	parser.add_argument('-g', '--genes', help='Input gene presence/absence table (comma-separated-values) from ROARY. Strain names must be equal to those in the trait table', required=True)
+	parser = argparse.ArgumentParser(description='Scoary version %s - Screen pan-genome for trait-associated genes' %(SCOARY_VERSION), epilog='by Ola Brynildsrud (olbb@fhi.no)')
+	parser.add_argument('-t', '--traits', help='Input trait table (comma-separated-values). Trait presence is indicated by 1, trait absence by 0. Assumes strain names in the first column and trait names in the first row' )
+	parser.add_argument('-g', '--genes', help='Input gene presence/absence table (comma-separated-values) from ROARY. Strain names must be equal to those in the trait table')
 	parser.add_argument('-p', '--p_value_cutoff', help='P-value cut-off. SCOARY will not report genes with higher p-values than this. Set to 1.0 to report all genes. Default = 0.05', default=0.05, type=float)
 	parser.add_argument('-c', '--correction', help='Instead of cutting off at the individual test p-value (option -p), use the indicated corrected p-value for cut-off. Default = use individual test p-value.', choices=['Individual', 'Bonferroni', 'Holm-Sidak', 'Benjamini-Hochberg'], default='Individual')
 	parser.add_argument('-m', '--max_hits', help='Maximum number of hits to report. SCOARY will only report the top max_hits results per trait', type=int)
 	parser.add_argument('-r', '--restrict_to', help='Use if you only want to analyze a subset of your strains. SCOARY will read the provided comma-separated table of strains and restrict analyzes to these.')
 	parser.add_argument('-s', '--start_col', help='On which column in the gene presence/absence file do individual strain info start. Default=15. (1-based indexing)', default=15, type=int)
 	parser.add_argument('--delimiter', help='The delimiter between cells in the gene presence/absence and trait files. NOTE: Even though commas are the default they might mess with the annotation column, and it is therefore recommended to save your files using semicolon or tab ("\t") instead. SCOARY will output files delimited by semicolon', default=',', type=str)
+	parser.add_argument('--version', help='Display Scoary version, and exit.', default=False,action='store_true')
 
 	args = parser.parse_args()
-	
+
+	# add version for tracing facilities
+	if args.version:
+		print sys.stdout, "Scoary version: %s" %(SCOARY_VERSION)
+		sys.exit(0)
+	# check required arguments.
+	if args.traits is None or args.genes is None :
+		parser.print_usage()
+		if args.traits is None :
+			print "error: argument -t/--traits is required"
+		if args.genes is None:
+			print "error: argument -g/--genes is required"
+		sys.exit(1)
+
 	with open(args.genes, "rU") as genes, open(args.traits, "rU") as traits:
 		
 		if args.restrict_to is not None:
