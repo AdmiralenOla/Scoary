@@ -57,25 +57,25 @@ def main():
 		sys.exit(1)
 
 	with open(args.genes, "rU") as genes, open(args.traits, "rU") as traits:
-		
+
 		if args.restrict_to is not None:
 			with open(args.restrict_to, "rU") as restrict_to_isolates:
 				allowed_isolates = [isolate for isolate in restrict_to_isolates.next().rstrip().split(",")]
 		else:
 			allowed_isolates = None # Despite the confusing name, this actually means all isolates are allowed and included in the analysis
-					
+
 		genedic = Csv_to_dic_Roary(genes, args.delimiter, startcol=args.start_col - 1, allowed_isolates=allowed_isolates) # 0-based indexing
-				
+
 		traitsdic = Csv_to_dic(traits, args.delimiter, allowed_isolates)
-				
+
 		print "Finished loading files into memory."
 		print "Tallying genes and performing statistical analyses"
-		
+
 		RES = Setup_results(genedic, traitsdic)
-		
-		
+
+
 		StoreResults(RES, args.max_hits, args.p_value_cutoff, args.correction)
-		
+
 
 	sys.exit("Finished")
 
@@ -85,17 +85,17 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=0, allowed_isolates=None):
 	r = {}
 	csvfile = csv.reader(genefile, skipinitialspace=True)
 	header = csvfile.next()
-	
+
 	# If roaryfile = True, then commence reading from column 15 (where the strains start)
 	# Code to find out where strains begin. Use if Roary starts including more columns:
 	#for x in header:
 	#	if x not in ['Gene', 'Non-unique Gene name', 'Annotation', 'No. isolates', 'No. sequences', 'Avg sequences per isolate', 'Genome Fragment', 'Order within Fragment', 'Accessory Fragment', 'Accessory Order with Fragment', 'QC', 'Min group size nuc', 'Max group size nuc', 'Avg group size nuc']:
 	#		print x
 	#		break
-	
+
 	# This might be expanded if Roary changes its output format. For now:
 	roaryfile = True
-	
+
 	strains = header[startcol:]
 
 	try:
@@ -115,7 +115,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=0, allowed_isolates=None):
 		for strain in xrange(len(strains)):
 			if (allowed_isolates is not None) and strains[strain] not in allowed_isolates:
 				continue
-			if q[startcol + strain] in ["", "0", "-"]: 
+			if q[startcol + strain] in ["", "0", "-"]:
 				# If the gene is not present, AND The isolate is allowed
 				r[q[genecol]][strains[strain]] = 0
 				# Add a 0 to indicate non-presence
@@ -125,7 +125,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=0, allowed_isolates=None):
 				# Add a 1 to indicate presence of the current gene in this strain
 
 	return r
-	
+
 def Csv_to_dic(csvfile, delimiter, allowed_isolates):
 	tab = zip(*csv.reader(csvfile, delimiter=delimiter))
 	r = {}
@@ -141,54 +141,54 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates):
 			del p["Name"]
 		else:
 			sys.exit("Make sure the top-left cell in the traits file is either empty or 'Name'. Do not include empty rows")
-			
+
 		# Filter so that only allowed isolates are included
 		if allowed_isolates is not None:
-			p = {strain: indicator for (strain,indicator) in p.iteritems() if strain in allowed_isolates} # if allowed_isolates is not None 
+			p = {strain: indicator for (strain,indicator) in p.iteritems() if strain in allowed_isolates} # if allowed_isolates is not None
 		r[name_trait] = p
-	
+
 	return r
-	
+
 def Setup_results(genedic, traitsdic):
-	
+
 	# Need to create one results dictionary for each trait
-	
+
 	all_traits = {}
 	for trait in traitsdic:
 		all_traits[trait] = {}
 		# Also need a list of all p-values to perform stepwise FDR methods
 		p_value_list = []
 		print "Gene-wise counting and Fisher's exact tests for trait: " + trait
-		
+
 		# We also need a number of tests variable for each genedic. (The number of tests may not be the same, depending on how many genes are in 0 or all strains.)
 		number_of_tests = len(genedic)
 		initial_number_of_tests = number_of_tests # This number needed for status bar
-		
+
 		i = 0 # Progress
 		for gene in genedic:
 			# Status:
 			sys.stdout.write("\r{:.2%}".format(float(i)/initial_number_of_tests))
 			sys.stdout.flush()
 			i += 1 # Progress
-			
+
 			stat_table = Perform_statistics(traitsdic[trait], genedic[gene])
 			num_pos = stat_table["tpgp"] + stat_table["tpgn"]
 			num_neg = stat_table["tngp"] + stat_table["tngn"]
-			
+
 			if (stat_table["tpgp"] + stat_table["tngp"]) == 0:
 				number_of_tests -= 1 # Remove 1 from the number of tests
 				continue # proceed to the next gene
-			
+
 			if (stat_table["tpgn"] + stat_table["tngn"]) == 0:
 				number_of_tests -= 1
 				continue
-			
+
 			obs_table = [[stat_table["tpgp"], stat_table["tpgn"]],[stat_table["tngp"],stat_table["tngn"]]]
 			fisher = ss.fisher_exact(obs_table)
 			p_value = fisher[1]
 			bonferroni_p = p_value * number_of_tests if (p_value * number_of_tests) < 1.0 else 1.0
 			p_value_list.append((gene, p_value))
-			
+
 			all_traits[trait][gene] = { \
 			"NUGN": genedic[gene]["Non-unique Gene name"], \
 			"Annotation": genedic[gene]["Annotation"], \
@@ -202,7 +202,7 @@ def Setup_results(genedic, traitsdic):
 			"p_v": p_value, \
 			"B_p": bonferroni_p, \
 			}
-			
+
 		print "\nAdding p-values adjusted for testing multiple hypotheses"
 		# Now calculate Holm-Sidak and Benjamini-Hochberg p-values
 		sorted_p_values = sorted(p_value_list, key=lambda x: x[1]) # Sorted list of tuples: (gene, p-value)
@@ -213,18 +213,18 @@ def Setup_results(genedic, traitsdic):
 		last_hs = (1.0 - (1.0-sorted_p_values[0][1])**number_of_tests)
 		last_bh = (sorted_p_values[0][1]*number_of_tests/1.0)
 		for (ind, (gene,p)) in enumerate(sorted_p_values):
-			hs_corrected_p_values[gene] = (1.0-(1.0-p)**(number_of_tests - float(ind))) if not tie else last_hs 
-			bh_corrected_p_values[gene] = p*number_of_tests/(ind+1.0) if not tie else last_bh 
+			hs_corrected_p_values[gene] = (1.0-(1.0-p)**(number_of_tests - float(ind))) if not tie else last_hs
+			bh_corrected_p_values[gene] = p*number_of_tests/(ind+1.0) if not tie else last_bh
 			last_hs = hs_corrected_p_values[gene]
 			last_bh = bh_corrected_p_values[gene]
-		
+
 		# Now add values to dictionaries:
-		
+
 		for gene in genedic:
 			if gene in all_traits[trait]:
 				all_traits[trait][gene]["HS_p"] = hs_corrected_p_values[gene] if hs_corrected_p_values[gene] < 1.0 else 1.0
 				all_traits[trait][gene]["BH_p"] = bh_corrected_p_values[gene] if bh_corrected_p_values[gene] < 1.0 else 1.0
-		
+
 	return all_traits
 
 
@@ -251,19 +251,19 @@ def StoreResults(Results, max_hits, p_cutoff, correctionmethod):
 	for Trait in Results:
 		print "Storing results: " + Trait
 		StoreTraitResult(Results[Trait], Trait, max_hits, p_cutoff, correctionmethod)
-		
+
 
 def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod): # This method is passed a single trait
 	with open(Traitname + time.strftime("_%d_%m_%Y_%H%M") + ".csv", "w") as outfile:
 		# Sort genes by p-value.
 		sort_instructions = SortResultsAndSetKey(Trait)
-		
+
 		num_results = max_hits if max_hits is not None else len(Trait)
-		
+
 		cut_possibilities = {"Individual": "p_v", "Bonferroni": "B_p", "Holm_Sidak": "HS_p", "Benjamini-Hochberg": "BH_p"}
-		
-		outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Holm-Sidak_p;Benjamini_H_p\n") 
-		
+
+		outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Holm-Sidak_p;Benjamini_H_p\n")
+
 		for x in xrange(num_results):
 			# Start with lowest p-value, the one which has key 0 in sort_instructions
 			currentgene = sort_instructions[x]
@@ -272,5 +272,5 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod): # 
 			outfile.write(currentgene + ";" + str(Trait[currentgene]["NUGN"]) + ";" + str(Trait[currentgene]["Annotation"]) + ";" + str(Trait[currentgene]["tpgp"]) + ";" + str(Trait[currentgene]["tngp"]) + ";" + str(Trait[currentgene]["tpgn"]) + ";" + str(Trait[currentgene]["tngn"]) + ";" + str(Trait[currentgene]["sens"]) + ";" + str(Trait[currentgene]["spes"]) + ";" + str(Trait[currentgene]["OR"]) + ";" + str(Trait[currentgene]["p_v"]) + ";" + str(Trait[currentgene]["B_p"]) + ";" + str(Trait[currentgene]["HS_p"]) + ";" + str(Trait[currentgene]["BH_p"]) + "\n")
 
 def SortResultsAndSetKey(genedic): # This returns a dictionary where genes are sorted by p_value.
-	return {i:gene for (i,gene) in enumerate(sorted(genedic, key=lambda x: genedic[x]["p_v"])) }	
+	return {i:gene for (i,gene) in enumerate(sorted(genedic, key=lambda x: genedic[x]["p_v"])) }
 
