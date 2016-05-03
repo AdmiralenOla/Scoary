@@ -19,7 +19,13 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
-Current release - v1.1 (29th Mar 2016)
+Current release - v1.1.1 (3rd May 2016)
+- Fixed a bug where adjusted p-values were not being calculated and output correctly. (Thanks to cimendes).
+- Benjamini-Hochberg p-values are now calculated from least to most significant (step-up) instead of step-down.
+- Holm-Sidak p-values has been removed.
+- The Scoary version is now displayed in the help message and if calling Scoary with the --version flag. (Thanks to EricDeveaud)
+
+v1.1 (29th Mar 2016)
 
 - Scoary now imports all methods from Scoary_methods in order to circumvent errors when trying to run Scoary under Python 3.x.
 - Genes that have the same naïve p-value now have adjusted p-values penalized with the same factor rather than an increasing one.
