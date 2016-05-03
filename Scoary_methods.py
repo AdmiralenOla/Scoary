@@ -26,7 +26,7 @@
 import argparse, os, sys, csv, time
 from scipy import stats as ss
 
-SCOARY_VERSION = 'v1.1'
+SCOARY_VERSION = 'v1.1.1'
 
 def main():
 	# Parse arguments.
