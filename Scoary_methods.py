@@ -26,7 +26,7 @@
 import argparse, os, sys, csv, time
 from scipy import stats as ss
 
-SCOARY_VERSION = 'v1.1'
+SCOARY_VERSION = 'v1.1.1'
 
 def main():
 	# Parse arguments.
@@ -34,7 +34,7 @@ def main():
 	parser.add_argument('-t', '--traits', help='Input trait table (comma-separated-values). Trait presence is indicated by 1, trait absence by 0. Assumes strain names in the first column and trait names in the first row' )
 	parser.add_argument('-g', '--genes', help='Input gene presence/absence table (comma-separated-values) from ROARY. Strain names must be equal to those in the trait table')
 	parser.add_argument('-p', '--p_value_cutoff', help='P-value cut-off. SCOARY will not report genes with higher p-values than this. Set to 1.0 to report all genes. Default = 0.05', default=0.05, type=float)
-	parser.add_argument('-c', '--correction', help='Instead of cutting off at the individual test p-value (option -p), use the indicated corrected p-value for cut-off. Default = use individual test p-value.', choices=['Individual', 'Bonferroni', 'Holm-Sidak', 'Benjamini-Hochberg'], default='Individual')
+	parser.add_argument('-c', '--correction', help='Instead of cutting off at the individual test p-value (option -p), use the indicated corrected p-value for cut-off. Default = use individual test p-value.', choices=['Individual', 'Bonferroni', 'Benjamini-Hochberg'], default='Individual')
 	parser.add_argument('-m', '--max_hits', help='Maximum number of hits to report. SCOARY will only report the top max_hits results per trait', type=int)
 	parser.add_argument('-r', '--restrict_to', help='Use if you only want to analyze a subset of your strains. SCOARY will read the provided comma-separated table of strains and restrict analyzes to these.')
 	parser.add_argument('-s', '--start_col', help='On which column in the gene presence/absence file do individual strain info start. Default=15. (1-based indexing)', default=15, type=int)
@@ -204,25 +204,20 @@ def Setup_results(genedic, traitsdic):
 			}
 
 		print "\nAdding p-values adjusted for testing multiple hypotheses"
-		# Now calculate Holm-Sidak and Benjamini-Hochberg p-values
+		# Now calculate Benjamini-Hochberg p-values
 		sorted_p_values = sorted(p_value_list, key=lambda x: x[1]) # Sorted list of tuples: (gene, p-value)
 		# Find out which p-values are ties
-		tie = [ sorted_p_values[i-1] == sorted_p_values[i] for i in xrange(1,len(sorted_p_values)) ]
-		hs_corrected_p_values = {}
+		# Note: Changed from step-down to step-up (from least significant to most significant)
+		tie = [ sorted_p_values[i-1][1] == sorted_p_values[i][1] for i in xrange(1,len(sorted_p_values)) ][::-1]
 		bh_corrected_p_values = {}
-		last_hs = (1.0 - (1.0-sorted_p_values[0][1])**number_of_tests)
-		last_bh = (sorted_p_values[0][1]*number_of_tests/1.0)
-		for (ind, (gene,p)) in enumerate(sorted_p_values):
-			hs_corrected_p_values[gene] = (1.0-(1.0-p)**(number_of_tests - float(ind))) if not tie else last_hs
-			bh_corrected_p_values[gene] = p*number_of_tests/(ind+1.0) if not tie else last_bh
-			last_hs = hs_corrected_p_values[gene]
+		bh_corrected_p_values[sorted_p_values[len(sorted_p_values)-1][0]] = last_bh = sorted_p_values[len(sorted_p_values)-1][1]
+		for (ind, (gene,p)) in enumerate(sorted_p_values[::-1][1:]):
+			bh_corrected_p_values[gene] = min([last_bh, p*number_of_tests/(ind+1.0)]) if not tie[ind] else last_bh
 			last_bh = bh_corrected_p_values[gene]
 
 		# Now add values to dictionaries:
-
 		for gene in genedic:
 			if gene in all_traits[trait]:
-				all_traits[trait][gene]["HS_p"] = hs_corrected_p_values[gene] if hs_corrected_p_values[gene] < 1.0 else 1.0
 				all_traits[trait][gene]["BH_p"] = bh_corrected_p_values[gene] if bh_corrected_p_values[gene] < 1.0 else 1.0
 
 	return all_traits
@@ -260,16 +255,16 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod): # 
 
 		num_results = max_hits if max_hits is not None else len(Trait)
 
-		cut_possibilities = {"Individual": "p_v", "Bonferroni": "B_p", "Holm_Sidak": "HS_p", "Benjamini-Hochberg": "BH_p"}
+		cut_possibilities = {"Individual": "p_v", "Bonferroni": "B_p", "Benjamini-Hochberg": "BH_p"}
 
-		outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Holm-Sidak_p;Benjamini_H_p\n")
+		outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Benjamini_H_p\n")
 
 		for x in xrange(num_results):
 			# Start with lowest p-value, the one which has key 0 in sort_instructions
 			currentgene = sort_instructions[x]
 			if (Trait[currentgene][cut_possibilities[correctionmethod]] > p_cutoff):
 				break
-			outfile.write(currentgene + ";" + str(Trait[currentgene]["NUGN"]) + ";" + str(Trait[currentgene]["Annotation"]) + ";" + str(Trait[currentgene]["tpgp"]) + ";" + str(Trait[currentgene]["tngp"]) + ";" + str(Trait[currentgene]["tpgn"]) + ";" + str(Trait[currentgene]["tngn"]) + ";" + str(Trait[currentgene]["sens"]) + ";" + str(Trait[currentgene]["spes"]) + ";" + str(Trait[currentgene]["OR"]) + ";" + str(Trait[currentgene]["p_v"]) + ";" + str(Trait[currentgene]["B_p"]) + ";" + str(Trait[currentgene]["HS_p"]) + ";" + str(Trait[currentgene]["BH_p"]) + "\n")
+			outfile.write(currentgene + ";" + str(Trait[currentgene]["NUGN"]) + ";" + str(Trait[currentgene]["Annotation"]) + ";" + str(Trait[currentgene]["tpgp"]) + ";" + str(Trait[currentgene]["tngp"]) + ";" + str(Trait[currentgene]["tpgn"]) + ";" + str(Trait[currentgene]["tngn"]) + ";" + str(Trait[currentgene]["sens"]) + ";" + str(Trait[currentgene]["spes"]) + ";" + str(Trait[currentgene]["OR"]) + ";" + str(Trait[currentgene]["p_v"]) + ";" + str(Trait[currentgene]["B_p"]) + ";" + str(Trait[currentgene]["BH_p"]) + "\n")
 
 def SortResultsAndSetKey(genedic): # This returns a dictionary where genes are sorted by p_value.
 	return {i:gene for (i,gene) in enumerate(sorted(genedic, key=lambda x: genedic[x]["p_v"])) }
