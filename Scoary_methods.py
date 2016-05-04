@@ -26,7 +26,7 @@
 import argparse, os, sys, csv, time
 from scipy import stats as ss
 
-SCOARY_VERSION = 'v1.1.1'
+SCOARY_VERSION = 'v1.1.2'
 
 def main():
 	# Parse arguments.
@@ -208,10 +208,11 @@ def Setup_results(genedic, traitsdic):
 		sorted_p_values = sorted(p_value_list, key=lambda x: x[1]) # Sorted list of tuples: (gene, p-value)
 		# Find out which p-values are ties
 		# Note: Changed from step-down to step-up (from least significant to most significant)
-		tie = [ sorted_p_values[i-1][1] == sorted_p_values[i][1] for i in xrange(1,len(sorted_p_values)) ][::-1]
+		tie = [ sorted_p_values[i-1][1] == sorted_p_values[i][1] for i in xrange(1,len(sorted_p_values)) ]
 		bh_corrected_p_values = {}
+		# The least significant gene is added to the dic without correction
 		bh_corrected_p_values[sorted_p_values[len(sorted_p_values)-1][0]] = last_bh = sorted_p_values[len(sorted_p_values)-1][1]
-		for (ind, (gene,p)) in enumerate(sorted_p_values[::-1][1:]):
+		for (ind, (gene,p)) in reversed(list(enumerate(sorted_p_values[:-1]))):
 			bh_corrected_p_values[gene] = min([last_bh, p*number_of_tests/(ind+1.0)]) if not tie[ind] else last_bh
 			last_bh = bh_corrected_p_values[gene]
 
