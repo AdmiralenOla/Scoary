@@ -26,7 +26,7 @@
 import argparse, os, sys, csv, time
 from scipy import stats as ss
 
-SCOARY_VERSION = 'v1.1.1'
+SCOARY_VERSION = 'v1.1.2'
 
 def main():
 	# Parse arguments.
@@ -85,15 +85,6 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=0, allowed_isolates=None):
 	r = {}
 	csvfile = csv.reader(genefile, skipinitialspace=True)
 	header = csvfile.next()
-
-	# If roaryfile = True, then commence reading from column 15 (where the strains start)
-	# Code to find out where strains begin. Use if Roary starts including more columns:
-	#for x in header:
-	#	if x not in ['Gene', 'Non-unique Gene name', 'Annotation', 'No. isolates', 'No. sequences', 'Avg sequences per isolate', 'Genome Fragment', 'Order within Fragment', 'Accessory Fragment', 'Accessory Order with Fragment', 'QC', 'Min group size nuc', 'Max group size nuc', 'Avg group size nuc']:
-	#		print x
-	#		break
-
-	# This might be expanded if Roary changes its output format. For now:
 	roaryfile = True
 
 	strains = header[startcol:]
@@ -208,10 +199,11 @@ def Setup_results(genedic, traitsdic):
 		sorted_p_values = sorted(p_value_list, key=lambda x: x[1]) # Sorted list of tuples: (gene, p-value)
 		# Find out which p-values are ties
 		# Note: Changed from step-down to step-up (from least significant to most significant)
-		tie = [ sorted_p_values[i-1][1] == sorted_p_values[i][1] for i in xrange(1,len(sorted_p_values)) ][::-1]
+		tie = [ sorted_p_values[i-1][1] == sorted_p_values[i][1] for i in xrange(1,len(sorted_p_values)) ]
 		bh_corrected_p_values = {}
+		# The least significant gene is added to the dic without correction
 		bh_corrected_p_values[sorted_p_values[len(sorted_p_values)-1][0]] = last_bh = sorted_p_values[len(sorted_p_values)-1][1]
-		for (ind, (gene,p)) in enumerate(sorted_p_values[::-1][1:]):
+		for (ind, (gene,p)) in reversed(list(enumerate(sorted_p_values[:-1]))):
 			bh_corrected_p_values[gene] = min([last_bh, p*number_of_tests/(ind+1.0)]) if not tie[ind] else last_bh
 			last_bh = bh_corrected_p_values[gene]
 
@@ -221,7 +213,6 @@ def Setup_results(genedic, traitsdic):
 				all_traits[trait][gene]["BH_p"] = bh_corrected_p_values[gene] if bh_corrected_p_values[gene] < 1.0 else 1.0
 
 	return all_traits
-
 
 def Perform_statistics(traits, genes):
 	r = {"tpgp" : 0, "tpgn": 0, "tngp" : 0, "tngn" : 0} # tpgn = trait positive, gene negative
@@ -236,7 +227,9 @@ def Perform_statistics(traits, genes):
 			elif int(traits[t]) == 0 and genes[t] == 0:
 				r["tngn"] += 1
 			else:
-				sys.exit("There was a problem with comparing your traits and gene presence/absence files. Make sure you have formatted the traits file to specification and only use 1s and 0s, and make sure the Roary file contains empty cells for non-present genes and non-empty text cells for present genes")
+				sys.exit("There was a problem with comparing your traits and gene presence/absence files." + \
+				"Make sure you have formatted the traits file to specification and only use 1s and 0s, and make sure " + \
+				"the Roary file contains empty cells for non-present genes and non-empty text cells for present genes")
 		except KeyError:
 			print "\nError occured when trying to find " + str(t) + " in the genes file."
 			sys.exit("Make sure strains are named the same in your traits file as in your gene presence/absence file")
@@ -247,25 +240,26 @@ def StoreResults(Results, max_hits, p_cutoff, correctionmethod):
 		print "Storing results: " + Trait
 		StoreTraitResult(Results[Trait], Trait, max_hits, p_cutoff, correctionmethod)
 
-
 def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod): # This method is passed a single trait
 	with open(Traitname + time.strftime("_%d_%m_%Y_%H%M") + ".csv", "w") as outfile:
 		# Sort genes by p-value.
 		sort_instructions = SortResultsAndSetKey(Trait)
-
 		num_results = max_hits if max_hits is not None else len(Trait)
-
 		cut_possibilities = {"Individual": "p_v", "Bonferroni": "B_p", "Benjamini-Hochberg": "BH_p"}
-
-		outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Benjamini_H_p\n")
-
+		outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;" + \
+		"Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Benjamini_H_p\n") 
+		
 		for x in xrange(num_results):
 			# Start with lowest p-value, the one which has key 0 in sort_instructions
 			currentgene = sort_instructions[x]
 			if (Trait[currentgene][cut_possibilities[correctionmethod]] > p_cutoff):
 				break
-			outfile.write(currentgene + ";" + str(Trait[currentgene]["NUGN"]) + ";" + str(Trait[currentgene]["Annotation"]) + ";" + str(Trait[currentgene]["tpgp"]) + ";" + str(Trait[currentgene]["tngp"]) + ";" + str(Trait[currentgene]["tpgn"]) + ";" + str(Trait[currentgene]["tngn"]) + ";" + str(Trait[currentgene]["sens"]) + ";" + str(Trait[currentgene]["spes"]) + ";" + str(Trait[currentgene]["OR"]) + ";" + str(Trait[currentgene]["p_v"]) + ";" + str(Trait[currentgene]["B_p"]) + ";" + str(Trait[currentgene]["BH_p"]) + "\n")
-
+			outfile.write('"' + currentgene + '";"' + str(Trait[currentgene]["NUGN"]) + '";"' + str(Trait[currentgene]["Annotation"]) + \
+			'";"' + str(Trait[currentgene]["tpgp"]) + '";"' + str(Trait[currentgene]["tngp"]) + '";"' + str(Trait[currentgene]["tpgn"]) + \
+			'";"' + str(Trait[currentgene]["tngn"]) + '";"' + str(Trait[currentgene]["sens"]) + '";"' + str(Trait[currentgene]["spes"]) + \
+			'";"' + str(Trait[currentgene]["OR"]) + '";"' + str(Trait[currentgene]["p_v"]) + '";"' + str(Trait[currentgene]["B_p"]) + \
+			'";"' + str(Trait[currentgene]["BH_p"]) + '"\n')
+			
 def SortResultsAndSetKey(genedic): # This returns a dictionary where genes are sorted by p_value.
 	return {i:gene for (i,gene) in enumerate(sorted(genedic, key=lambda x: genedic[x]["p_v"])) }
 
