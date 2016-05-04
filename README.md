@@ -14,6 +14,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Options] (#options)
 - [License] (#license)
 - [Etymology] (#etymology)
+- [Coming soon] (#coming-soon)
 - [Citation] (#citation)
 - [Contact] (#contact)
 
@@ -180,6 +181,9 @@ Scoary is freely available under a GPLv3 license.
 
 ## Etymology
 Scoary is an anagram of "scoring" and "Roary", the pan-genome pipeline. It was named as an homage to Roary.
+
+## Coming soon
+I am currently implementing a method that determines the relatedness of the input population (the population structure) and adjusts significance estimates accordingly.
 
 ## Citation
 Manuscript not yet published
