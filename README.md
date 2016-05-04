@@ -20,7 +20,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 ## What's new?
 
 Current release - v1.1.2 (4th May 2016)
-- Fixed another bug related to Benjamini-Hochberg p-value adjustments. The numbers should now correspond to R's "p.adjust" method IF the number of tests are the same. (Scoary runs the correction on ALL genes, not just those with p<.05)
+- Fixed another bug related to Benjamini-Hochberg p-value adjustments. (Thanks again to cimendes). The numbers should now correspond to R's "p.adjust" method IF the number of tests are the same. (Scoary runs the correction on ALL genes, not just those with p<.05)
 - Results are now printed with "" quotation marks around each cell to avoid weird cell breaks if annotations contain semicolons when opening in spreadsheets.
 
 v1.1.1 (3rd May 2016)
