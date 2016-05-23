@@ -14,12 +14,24 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Options] (#options)
 - [License] (#license)
 - [Etymology] (#etymology)
+- [Coming soon] (#coming-soon)
 - [Citation] (#citation)
 - [Contact] (#contact)
 
 ## What's new?
 
-Current release - v1.1 (29th Mar 2016)
+Current release - v1.1.2 (4th May 2016)
+- Fixed another bug related to Benjamini-Hochberg p-value adjustments. (Thanks again to cimendes). The numbers should now correspond to R's "p.adjust" method IF the number of tests are the same. (Scoary runs the correction on ALL genes, not just those with p<.05)
+- Results are now printed with "" quotation marks around each cell to avoid weird cell breaks if annotations contain semicolons when opening in spreadsheets.
+
+v1.1.1 (3rd May 2016)
+
+- Fixed a bug where adjusted p-values were not being calculated and output correctly. (Thanks to cimendes).
+- Benjamini-Hochberg p-values are now calculated from least to most significant (step-up) instead of step-down.
+- Holm-Sidak p-values has been removed.
+- The Scoary version is now displayed in the help message and if calling Scoary with the --version flag. (Thanks to EricDeveaud)
+
+v1.1 (29th Mar 2016)
 
 - Scoary now imports all methods from Scoary_methods in order to circumvent errors when trying to run Scoary under Python 3.x.
 - Genes that have the same naïve p-value now have adjusted p-values penalized with the same factor rather than an increasing one.
@@ -169,6 +181,9 @@ Scoary is freely available under a GPLv3 license.
 
 ## Etymology
 Scoary is an anagram of "scoring" and "Roary", the pan-genome pipeline. It was named as an homage to Roary.
+
+## Coming soon
+I am currently implementing a method that determines the relatedness of the input population (the population structure) and adjusts significance estimates accordingly.
 
 ## Citation
 Manuscript not yet published
