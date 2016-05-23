@@ -20,7 +20,14 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
-Current release - v1.1.2 (4th May 2016)
+Current release - v1.2.0 (23rd May 2016)
+
+- Major changes. Scoary now implements the pairwise comparisons algorithm to account for population structure.
+- Scoary now imports 4 classes: Matrix, QuadTree, PhyloTree and Tip. They two former are used for storing pairwise distances between isolates, and the two latter are used for the pairwise comparisons algorithm. Scoary_methods contain some new functions and most of the old ones have been altered to allow the pairwise comparisons implementation. However, there are no changes to how Scoary calculates the previously implemented statistics.
+- There should now be a significant speed increase, as Scoary now stores Fisher's exact test p-values rather than re-calculating for every gene. Previously, a new calculation was made for every gene, even when the 2x2 table was identical.
+
+v1.1.2 (4th May 2016)
+
 - Fixed another bug related to Benjamini-Hochberg p-value adjustments. (Thanks again to cimendes). The numbers should now correspond to R's "p.adjust" method IF the number of tests are the same. (Scoary runs the correction on ALL genes, not just those with p<.05)
 - Results are now printed with "" quotation marks around each cell to avoid weird cell breaks if annotations contain semicolons when opening in spreadsheets.
 
@@ -106,8 +113,9 @@ The results file contains the following columns:
 | Odds_ratio | [Odds ratio] (https://en.wikipedia.org/wiki/Odds_ratio) |
 | p_value | The naïve p-value for the null hypothesis that the presence/absence of this gene is unrelated to the trait status |
 | Bonferroni_p | A p-value adjusted with Bonferroni's method for multiple comparisons correction (An [FWER] (https://en.wikipedia.org/wiki/Familywise_error_rate) type correction) |
-| Holm-Sidak_p | A p-value adjusted with Holm-Sidak's method for multiple comparisons correction (An [FWER] (https://en.wikipedia.org/wiki/Familywise_error_rate) type correction) |
 | Benjamini_H_p | A p-value adjusted with Benjamini-Hochberg's method for multiple comparisons correction (An [FDR] (https://en.wikipedia.org/wiki/False_discovery_rate) type correction) |
+| Max_pairwise_comparisons | The maximum number of pairs that contrast in both gene and trait characters that can be drawn on the phylogenetic tree without intersecting lines (Read & Nee, 1995; Maddison, 2000) |
+| Pairwise_comparisons_p | The p-value corresponding to the maximum number of pairs. Treats the trait as a randomly assigned character with p_trait_presence=p_trait_absence=0.5. (Note: This p-value really represents the LOWEST you could get if you only selected pairs based on contrast in the gene character. Use with caution.) |
 
 
 
@@ -115,9 +123,9 @@ The results file contains the following columns:
 Scoary can take a number of optional arguments to tweak the output and make sure it performs as intended:
 ```
 usage: SCOARY.py [-h] -t TRAITS -g GENES [-p P_VALUE_CUTOFF]
-                 [-c {Individual,Bonferroni,Holm-Sidak,Benjamini-Hochberg}]
+                 [-c {Individual,Bonferroni,Benjamini-Hochberg}]
                  [-m MAX_HITS] [-r RESTRICT_TO] [-s START_COL]
-                 [--delimiter DELIMITER]
+                 [--delimiter DELIMITER] [--version]
 
 Screen pan-genome for trait-associated genes
 
@@ -136,7 +144,7 @@ optional arguments:
                         P-value cut-off. SCOARY will not report genes with
                         higher p-values than this. Set to 1.0 to report all
                         genes. Default = 0.05
-  -c {Individual,Bonferroni,Holm-Sidak,Benjamini-Hochberg}, --correction {Individual,Bonferroni,Holm-Sidak,Benjamini-Hochberg}
+  -c {Individual,Bonferroni,Benjamini-Hochberg}, --correction {Individual,Bonferroni,Benjamini-Hochberg}
                         Instead of cutting off at the individual test p-value
                         (option -p), use the indicated corrected p-value for
                         cut-off. Default = use individual test p-value.
@@ -158,7 +166,8 @@ optional arguments:
                         annotation column, and it is therefore recommended to
                         save your files using semicolon or tab (" ") instead.
                         SCOARY will output files delimited by semicolon
-
+  --version    
+                        Display Scoary version, then exit
 ```
 #### The -r parameter
 The **-r** parameter is particularly useful, as you can use it to restrict your analysis to a subset of your isolates without altering the gene_presence_absence or trait files. Simply provide a single-line csv file (delimited by ",") with the names of the isolates you would like to include in the current analysis.
@@ -183,10 +192,15 @@ Scoary is freely available under a GPLv3 license.
 Scoary is an anagram of "scoring" and "Roary", the pan-genome pipeline. It was named as an homage to Roary.
 
 ## Coming soon
-I am currently implementing a method that determines the relatedness of the input population (the population structure) and adjusts significance estimates accordingly.
+Please feel free to suggest improvements, point out bugs or methods that could be better optimized.
+
+## Acknowledgements
+- The QuadTree and UPGMA implementation was heavily based on code by Christian Storm Pedersen
+- Inês Mendes pointed out bugs in the calculation of adjusted p-values
+- Eric Deveaud added versioning.
 
 ## Citation
-Manuscript not yet published
+Manuscript not yet published.
 
 ## Contact
 Ola Brynildsrud (ola.brynildsrud@fhi.no)
