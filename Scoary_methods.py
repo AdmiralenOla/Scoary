@@ -14,7 +14,7 @@ from Scoary_classes import QuadTree
 from Scoary_classes import PhyloTree
 from Scoary_classes import Tip
 
-SCOARY_VERSION = 'v1.2'
+SCOARY_VERSION = 'v1.2.0'
 
 def main():
 	"""
