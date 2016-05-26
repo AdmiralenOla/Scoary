@@ -21,7 +21,10 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
-Current release - v1.2.0 (23rd May 2016)
+Current release - v1.2.1 (26th May 2016)
+- Bug fix. The --restrict_to option had become broken in 1.2.0 because one function was passing the full set of isolate names rather than the restricted set downstream in the analyses. This has been fixed.
+
+v1.2.0 (23rd May 2016)
 
 - Major changes. Scoary now implements the pairwise comparisons algorithm to account for population structure.
 - Scoary now imports 4 classes: Matrix, QuadTree, PhyloTree and Tip. They two former are used for storing pairwise distances between isolates, and the two latter are used for the pairwise comparisons algorithm. Scoary_methods contain some new functions and most of the old ones have been altered to allow the pairwise comparisons implementation. However, there are no changes to how Scoary calculates the previously implemented statistics.
@@ -197,7 +200,7 @@ Please feel free to suggest improvements, point out bugs or methods that could b
 
 ## Acknowledgements
 - The QuadTree and UPGMA implementation was heavily based on code by Christian Storm Pedersen
-- Inês Mendes pointed out bugs in the calculation of adjusted p-values
+- Inês Mendes pointed out a number of bugs related adjusted p-values and isolate restriction.
 - Eric Deveaud added versioning.
 
 ## Citation
