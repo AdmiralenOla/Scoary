@@ -14,7 +14,7 @@ from Scoary_classes import QuadTree
 from Scoary_classes import PhyloTree
 from Scoary_classes import Tip
 
-SCOARY_VERSION = 'v1.2.0'
+SCOARY_VERSION = 'v1.2.1'
 
 def main():
 	"""
@@ -124,6 +124,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=0, allowed_isolates=None):
 	roaryfile = True
 	
 	strains = header[startcol:]
+	strain_names_allowed = [val for val in strains if val in allowed_isolates]
 	zero_ones_matrix = []
 
 	try:
@@ -162,7 +163,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=0, allowed_isolates=None):
 		
 	# Transpose list for distance calculation purposes
 	zero_ones_matrix = map(list,zip(*zero_ones_matrix))
-	return {"Roarydic":r, "Zero_ones_matrix":zero_ones_matrix, "Strains":strains}
+	return {"Roarydic":r, "Zero_ones_matrix":zero_ones_matrix, "Strains":strain_names_allowed}
 	
 def Csv_to_dic(csvfile, delimiter, allowed_isolates):
 	"""
