@@ -12,7 +12,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Input] (#input)
 - [Output] (#output)
 - [Options] (#options)
-- [Population structure] (#populationstructure)
+- [Population structure] (#population-structure)
 - [License] (#license)
 - [Etymology] (#etymology)
 - [Coming soon] (#coming-soon)
