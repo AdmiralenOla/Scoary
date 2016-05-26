@@ -12,6 +12,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Input] (#input)
 - [Output] (#output)
 - [Options] (#options)
+- [Population structure] (#populationstructure)
 - [License] (#license)
 - [Etymology] (#etymology)
 - [Coming soon] (#coming-soon)
@@ -188,6 +189,15 @@ This will restrict the current analysis to isolates 1,2,4 and 9, and will omit a
 
 #### The -s parameter
 The **-s** parameter is used to indicate to Scoary which column in the gene_presence_absence.csv file is the _first_ column representing an isolate. By default it is set to 15 (1-based indexing).
+
+## Population structure
+Scoary implements the pairwise comparisons algorithm (Read & Nee, 1995; Maddison, 2000) to identify the maximum number of non-intersecting pairs of isolates that contrast in the state of both gene and trait. It does this by creating an UPGMA tree from the information contained in the gene_presence_absence matrix, annotating tips with gene and trait status, and recursively traversing the tree for each gene that were significant in the initial analysis. (i.e. those with p<0.05 if settings are left at default.)
+
+This tells you something about the **number of times** the gene and trait co-emerged in the evolutionary history of your sample. Consider the two following trees. In both scenarios, the gene perfectly predict the trait status, with 10 positive and 11 negative isolates, corresponding to a naïve p-value of 2.8E-6. However, in the first tree, there is a maximum of two non-intersecting contrasting pairs, which must be considered relatively weak evidence for a causal link between this gene and the trait. There can be many other evolutionary events at the stars that explain the observed distribution equally well as this gene. In the second tree, however, there is a maximum of seven possible non-intersecting contrasting pairs, which implies that this gene and the trait co-emerged seven times. This would be considered far stronger evidence for a causal link between the gene and the trait.
+
+![A not-so-significant link between gene and trait](https://cloud.githubusercontent.com/assets/14874487/15569716/8c66322a-2332-11e6-8500-5d27828417c7.png)
+
+![A very significant link between gene and trait](https://cloud.githubusercontent.com/assets/14874487/15569715/8c61f962-2332-11e6-90e7-5c37976071c8.png)
 
 ## License
 Scoary is freely available under a GPLv3 license.
