@@ -22,7 +22,11 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
-Current release - v1.2.1 (26th May 2016)
+v1.2.2 (28th May 2016)
+- Another bug fix related to the restrict_to option where Scoary would crash if it was NOT set. 
+
+v1.2.1 (26th May 2016)
+
 - Bug fix. The --restrict_to option had become broken in 1.2.0 because one function was passing the full set of isolate names rather than the restricted set downstream in the analyses. This has been fixed.
 
 v1.2.0 (23rd May 2016)
