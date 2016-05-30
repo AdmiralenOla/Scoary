@@ -14,7 +14,7 @@ from Scoary_classes import QuadTree
 from Scoary_classes import PhyloTree
 from Scoary_classes import Tip
 
-SCOARY_VERSION = 'v1.2.2'
+SCOARY_VERSION = 'v1.2.3'
 
 def main():
 	"""
@@ -239,11 +239,13 @@ def Setup_results(genedic, traitsdic):
 			obs_table = [[stat_table["tpgp"], stat_table["tpgn"]],[stat_table["tngp"],stat_table["tngn"]]]
 			obs_tuple = (stat_table["tpgp"], stat_table["tpgn"], stat_table["tngp"], stat_table["tngn"])
 			if obs_tuple in fisher_calculated_values:
-				p_value = fisher_calculated_values[obs_tuple]
+				odds_ratio = fisher_calculated_values[obs_tuple][0]
+				p_value = fisher_calculated_values[obs_tuple][1]
 			else:
 				fisher = ss.fisher_exact(obs_table)
 				p_value = fisher[1]
-				fisher_calculated_values[obs_tuple] = p_value
+				odds_ratio = fisher[0]
+				fisher_calculated_values[obs_tuple] = fisher
 			bonferroni_p = p_value * number_of_tests if (p_value * number_of_tests) < 1.0 else 1.0
 			p_value_list.append((gene, p_value))
 			
@@ -256,7 +258,7 @@ def Setup_results(genedic, traitsdic):
 			"tngn": stat_table["tngn"], \
 			"sens": (float(stat_table["tpgp"]) / num_pos * 100) if num_pos > 0 else 0.0, \
 			"spes": (float(stat_table["tngn"]) / num_neg * 100) if num_neg > 0 else 0.0, \
-			"OR": fisher[0], \
+			"OR": odds_ratio, \
 			"p_v": p_value, \
 			"B_p": bonferroni_p, \
 			}

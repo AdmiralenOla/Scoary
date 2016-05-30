@@ -22,6 +22,9 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
+v1.2.3 (30th May 2016)
+- Odds ratios should now be correct again. These were behaving strangely since 1.2.0. Apologies.
+
 v1.2.2 (28th May 2016)
 - Another bug fix related to the restrict_to option where Scoary would crash if it was NOT set. 
 
