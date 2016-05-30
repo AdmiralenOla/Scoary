@@ -14,7 +14,7 @@ from Scoary_classes import QuadTree
 from Scoary_classes import PhyloTree
 from Scoary_classes import Tip
 
-SCOARY_VERSION = 'v1.2.1'
+SCOARY_VERSION = 'v1.2.2'
 
 def main():
 	"""
@@ -124,7 +124,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=0, allowed_isolates=None):
 	roaryfile = True
 	
 	strains = header[startcol:]
-	strain_names_allowed = [val for val in strains if val in allowed_isolates]
+	strain_names_allowed = [val for val in strains if val in allowed_isolates] if allowed_isolates is not None else strains
 	zero_ones_matrix = []
 
 	try:
