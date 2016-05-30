@@ -245,7 +245,7 @@ def Setup_results(genedic, traitsdic):
 				fisher = ss.fisher_exact(obs_table)
 				p_value = fisher[1]
 				odds_ratio = fisher[0]
-				fisher_calculated_values[obs_tuple] = p_value
+				fisher_calculated_values[obs_tuple] = fisher
 			bonferroni_p = p_value * number_of_tests if (p_value * number_of_tests) < 1.0 else 1.0
 			p_value_list.append((gene, p_value))
 			
