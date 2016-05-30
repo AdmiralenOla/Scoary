@@ -181,7 +181,7 @@ optional arguments:
 #### The -r parameter
 The **-r** parameter is particularly useful, as you can use it to restrict your analysis to a subset of your isolates without altering the gene_presence_absence or trait files. Simply provide a single-line csv file (delimited by ",") with the names of the isolates you would like to include in the current analysis.
 
-This can be useful for example if you have multiple clades in your dataset but would like to restrict analysis to just one clade. Maybe the trait determinant is not the same in the two clades? Or maybe you have data with multiple clones of the same isolate? This will invalidate the statistical analysis, which assumes phylogenetic independency.
+This can be useful for example if you have multiple clades in your dataset but would like to restrict analysis to just one clade. Maybe the trait determinant is not the same in the two clades? Or perhaps you have missing data for some isolates?
 
 The provided file can look something like this:
 
