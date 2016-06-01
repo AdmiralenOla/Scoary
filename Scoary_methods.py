@@ -30,6 +30,7 @@ def main():
 	parser.add_argument('-m', '--max_hits', help='Maximum number of hits to report. SCOARY will only report the top max_hits results per trait', type=int)
 	parser.add_argument('-r', '--restrict_to', help='Use if you only want to analyze a subset of your strains. SCOARY will read the provided comma-separated table of strains and restrict analyzes to these.')
 	parser.add_argument('-s', '--start_col', help='On which column in the gene presence/absence file do individual strain info start. Default=15. (1-based indexing)', default=15, type=int)
+	parser.add_argument('-u', '--upgma_tree', help='This flag will cause Scoary to write the calculated UPGMA tree to a newick file', default=False, action='store_true')
 	parser.add_argument('--delimiter', help='The delimiter between cells in the gene presence/absence and trait files. NOTE: Even though commas are the default they might mess with the annotation column, and it is therefore recommended to save your files using semicolon or tab ("\t") instead. SCOARY will output files delimited by semicolon', default=',', type=str)
 	parser.add_argument('--version', help='Display Scoary version, and exit.', default=False,action='store_true')
 	
@@ -73,6 +74,9 @@ def main():
 		RES_and_GTC = Setup_results(genedic, traitsdic)
 		RES = RES_and_GTC["Results"]
 		GTC = RES_and_GTC["Gene_trait_combinations"]
+		
+		if args.upgma_tree:
+			StoreUPGMAtreeToFile(upgmatree)
 		
 		StoreResults(RES, args.max_hits, args.p_value_cutoff, args.correction, upgmatree, GTC)
 
@@ -422,3 +426,13 @@ def ConvertUPGMAtoPhyloTree(tree, GTC):
 	print "Max antipairs : " + str(MyPhyloTree.max_contrasting_antipairs)
 	
 	return {"Total" : MyPhyloTree.max_contrasting_pairs, "Pro" : MyPhyloTree.max_contrasting_propairs, "Anti" : MyPhyloTree.max_contrasting_antipairs}
+
+def StoreUPGMAtreeToFile(upgmatree):
+	"""
+	A method for printing the UPGMA tree that is built internally from the hamming distances in the gene presence/absence matrix
+	"""
+	with open("Tree" + time.strftime("_%d_%m_%Y_%H%M") + ".nwk", "w") as treefile:
+		Tree = str(upgmatree)
+		Tree = Tree.replace("[","(")
+		Tree = Tree.replace("]",")")
+		treefile.write(Tree)
