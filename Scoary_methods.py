@@ -421,9 +421,6 @@ def ConvertUPGMAtoPhyloTree(tree, GTC):
 	num_ab = float(GTC.values().count("ab"))
 	OR = ((num_AB + 1)/(num_Ab + 1)) / ((num_aB + 1)/(num_ab + 1)) # Use pseudocounts to avoid 0 or inf OR.
 	MyPhyloTree = PhyloTree(leftnode=tree[0], rightnode=tree[1], GTC=GTC, OR=OR)
-	print "Max contrasting pairs : " + str(MyPhyloTree.max_contrasting_pairs)
-	print "Max propairs : " + str(MyPhyloTree.max_contrasting_propairs)
-	print "Max antipairs : " + str(MyPhyloTree.max_contrasting_antipairs)
 	
 	return {"Total" : MyPhyloTree.max_contrasting_pairs, "Pro" : MyPhyloTree.max_contrasting_propairs, "Anti" : MyPhyloTree.max_contrasting_antipairs}
 
