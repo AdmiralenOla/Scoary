@@ -1,3 +1,131 @@
+import sys
+
+# Note: The Matrix and QuadTree implementations are heavily based on original implementations by Christian Storm Pedersen.
+
+class Matrix:
+	"""
+	A matrix stored as a list of lists
+	"""
+	def __init__(self,dim,elm=sys.maxint):
+		"""
+		Builds empty nxn matrix
+		"""
+		self.undef = sys.maxint
+		self.dim = dim
+		self.data = []
+		for i in xrange(self.dim):
+			self.data.append(self.dim * [elm])
+			
+	def __getitem__(self, i):
+		"""
+		Get row i from Matrix
+		"""
+		return self.data[i]
+				
+	def __str__(self):
+		s = ""
+		for i in xrange(self.dim):
+			for j in xrange(self.dim):
+				s += str(self.data[i][j]) + " "
+			s += "\n"
+		return s.strip("\n")
+
+class QuadTree:
+	"""
+	A basic QuadTree with names
+	"""
+	def __init__(self, dim, names=None):
+		"""
+		Constructs a quad tree of dimension dim and fills it with 0's
+		"""
+		self.undef = sys.maxint
+		self.dim = dim
+		n = self.dim + self.dim % 2
+		if names is None:
+			names = [str(x) for x in xrange(dim)]
+		self.names = names
+		self.level = []
+		while n > 1:
+			n += (n % 2)
+			self.level.append(Matrix(n))
+			n = (n+1) / 2
+			
+	def get_elm(self,i,j):
+		"""
+		Returns the element at position (i,j) in the quad tree
+		"""
+		return self.level[0][i][j]
+		
+	def insert_row(self, i, row):
+		"""
+		Inserts row (of dim elements) as row number i
+		"""
+		curr_row = row
+		for l in self.level:
+			if len(curr_row) % 2 == 1:
+				curr_row.append(self.undef)
+			next_row = []
+			for j in xrange(len(curr_row)):
+				l[i][j] = curr_row[j]
+				if j % 2 == 1:
+					next_row.append(self.quad_min(i,j,l))
+			i /= 2
+			curr_row = next_row
+			
+	def insert_col(self,j,col):
+		"""
+		Inserts col (of dim elements) as col number j
+		"""
+		curr_col = col
+		for l in self.level:
+			if len(curr_col) % 2 == 1:
+				curr_col.append(self.undef)
+			next_col = []
+			for i in xrange(len(curr_col)):
+				l[i][j] = curr_col[i]
+				if i % 2 == 1:
+					next_col.append(self.quad_min(i,j,l))
+			j /= 2
+			curr_col = next_col
+		
+	def min(self):
+		"""
+		Returns minimum element stored in tree
+		"""
+		return self.quad_min(0,0,self.level[-1])
+		
+	def argmin(self):
+		"""
+		Returns coordinates of minimum element in tree
+		"""
+		i = j = 0
+		for l in reversed(self.level[1:]):
+			i, j = self.quad_argmin(i,j,l)
+			i *= 2
+			j *= 2
+		return self.quad_argmin(i,j,self.level[0])
+		
+	def quad_min_all(self, i, j, l):
+		"""
+		Returns the minimum element stored in the quad (i,j) and its coordinates
+		"""
+		# Need even numbers
+		i = (i/2) * 2
+		j = (j/2) * 2
+		return min((l[i][j],i,j), (l[i+1][j],i+1,j), (l[i][j+1],i,j+1), (l[i+1][j+1],i+1,j+1))
+		
+	def quad_min(self,i,j,l):
+		"""
+		Returns the minimum element stored in the quad containing (i,j)
+		"""
+		return self.quad_min_all(i,j,l)[0]
+		
+	def quad_argmin(self,i,j,l):
+		"""
+		Returns the coordinates of the minimum element in the quad containing (i,j)
+		"""
+		return self.quad_min_all(i,j,l)[1:]
+
 class PhyloTree:
 	"""
 	A class that represents a binary tree. Phylotrees can be nested. They can also contain tips at left, right or both nodes.
