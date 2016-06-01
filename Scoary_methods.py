@@ -49,6 +49,8 @@ def main():
 			print "error: argument -g/--genes is required"
 		sys.exit(1)
 	
+	starttime = time.time()
+	
 	with open(args.genes, "rU") as genes, open(args.traits, "rU") as traits:
 		
 		if args.restrict_to is not None:
@@ -79,8 +81,9 @@ def main():
 			StoreUPGMAtreeToFile(upgmatree)
 		
 		StoreResults(RES, args.max_hits, args.p_value_cutoff, args.correction, upgmatree, GTC)
-
-	sys.exit("Finished")
+		print "Finished. Checked a total of", len(genedic), "genes for associations to", len(traitsdic), "trait(s). Total time used:",int(time.time()-starttime),"seconds."
+	
+	sys.exit(0)
 
 def CreateTriangularDistanceMatrix(zeroonesmatrix,strainnames):
 	"""
