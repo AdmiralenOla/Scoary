@@ -25,6 +25,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 v1.3.0 (1st Jun 2016)
 - Major changes to the pairwise comparisons algorithm. Scoary now calculates the maximum number of contrasting pairs, and given that maximum number tests the maximum number of pairs that SUPPORT A -> B (AB-ab pairs) and the maximum number of pairs that OPPOSE A -> B (Ab-aB pairs). The opposite is true for genes where the odds ratio is < 1 (i.e. that indicate A -> b).
 - The p-values reported from the pairwise comparisons is now a range. It reports the best (lowest) p-value, which comes from the maximum number of supporting pairs and the minimum number of opposing (given a set total), as well as the worst (highest) p-value, which comes from the minimum number of supporting pairs and the maximum number of non-supporting, given a set total number of pairings. It does this at each node in the tree.
+- Scoary can now print the UPGMA tree that is calculated internally from the Hamming distances of the gene_presence_absence matrix. Do this by using the -u flag.
 
 v1.2.3 (30th May 2016)
 - Odds ratios should now be correct again. These were behaving strangely since 1.2.0. Apologies.
@@ -141,12 +142,12 @@ The results file contains the following columns:
 ## Options
 Scoary can take a number of optional arguments to tweak the output and make sure it performs as intended:
 ```
-usage: SCOARY.py [-h] -t TRAITS -g GENES [-p P_VALUE_CUTOFF]
-                 [-c {Individual,Bonferroni,Benjamini-Hochberg}]
-                 [-m MAX_HITS] [-r RESTRICT_TO] [-s START_COL]
-                 [--delimiter DELIMITER] [--version]
+usage: Scoary.py [-h] [-t TRAITS] [-g GENES] [-p P_VALUE_CUTOFF]
+                 [-c {Individual,Bonferroni,Benjamini-Hochberg}] [-m MAX_HITS]
+                 [-r RESTRICT_TO] [-u] [-s START_COL] [--delimiter DELIMITER]
+                 [--version]
 
-Screen pan-genome for trait-associated genes
+Scoary version v1.3.0 - Screen pan-genome for trait-associated genes
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -174,6 +175,8 @@ optional arguments:
                         Use if you only want to analyze a subset of your
                         strains. SCOARY will read the provided comma-separated
                         table of strains and restrict analyzes to these.
+  -u, --upgma_tree      This flag will cause Scoary to write the calculated
+                        UPGMA tree to a newick file
   -s START_COL, --start_col START_COL
                         On which column in the gene presence/absence file do
                         individual strain info start. Default=15. (1-based
@@ -185,8 +188,8 @@ optional arguments:
                         annotation column, and it is therefore recommended to
                         save your files using semicolon or tab (" ") instead.
                         SCOARY will output files delimited by semicolon
-  --version    
-                        Display Scoary version, then exit
+  --version             Display Scoary version, and exit.
+
 ```
 #### The -r parameter
 The **-r** parameter is particularly useful, as you can use it to restrict your analysis to a subset of your isolates without altering the gene_presence_absence or trait files. Simply provide a single-line csv file (delimited by ",") with the names of the isolates you would like to include in the current analysis.
@@ -203,6 +206,9 @@ This will restrict the current analysis to isolates 1,2,4 and 9, and will omit a
 
 #### The -s parameter
 The **-s** parameter is used to indicate to Scoary which column in the gene_presence_absence.csv file is the _first_ column representing an isolate. By default it is set to 15 (1-based indexing).
+
+#### The -u flag
+Calling Scoary with the **-u** flag will cause it to write a newick file of the UPGMA tree that is calculated internally. The tree is based on pairwise Hamming distances in the gene_presence_absence matrix.
 
 ## Population structure
 Scoary implements the pairwise comparisons algorithm (Read & Nee, 1995; Maddison, 2000) to identify the maximum number of non-intersecting pairs of isolates that contrast in the state of both gene and trait. It does this by creating an UPGMA tree from the information contained in the gene_presence_absence matrix, annotating tips with gene and trait status, and recursively traversing the tree for each gene that were significant in the initial analysis. (i.e. those with p<0.05 if settings are left at default.)
