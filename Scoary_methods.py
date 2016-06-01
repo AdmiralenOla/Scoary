@@ -9,12 +9,13 @@
 import argparse, os, sys, csv, time
 from scipy import stats as ss
 from scipy import spatial
+from scipy import special
 from Scoary_classes import Matrix
 from Scoary_classes import QuadTree
 from Scoary_classes import PhyloTree
 from Scoary_classes import Tip
 
-SCOARY_VERSION = 'v1.2.3'
+SCOARY_VERSION = 'v1.3.0'
 
 def main():
 	"""
@@ -336,7 +337,8 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
 		cut_possibilities = {"Individual": "p_v", "Bonferroni": "B_p", "Benjamini-Hochberg": "BH_p"}
 		
 		outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;" + \
-		"Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Benjamini_H_p;Max_Pairwise_comparisons;Pairwise_comparisons_p\n")
+		"Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Benjamini_H_p;Max_Pairwise_comparisons;" + \
+		"Max_supporting_pairs;Max_opposing_pairs;Best_pairwise_comp_p;Worst_pairwise_comp_p\n")
 
 		for x in xrange(num_results):
 			# Start with lowest p-value, the one which has key 0 in sort_instructions
@@ -345,14 +347,19 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
 				break
 		
 			Max_pairwise_comparisons = ConvertUPGMAtoPhyloTree(upgmatree, GTC[Traitname][currentgene])
-			Pairwise_comparisons_P = 0.5 ** Max_pairwise_comparisons
-
+			max_total_pairs = Max_pairwise_comparisons["Total"]
+			max_propairs = Max_pairwise_comparisons["Pro"]
+			max_antipairs = Max_pairwise_comparisons["Anti"]
+			best_pairwise_comparison_p = special.binom(max_total_pairs,max_propairs) * (0.5 ** max_propairs) * (0.5 ** (max_total_pairs - max_propairs))
+			worst_pairwise_comparison_p = special.binom(max_total_pairs,(max_total_pairs - max_antipairs)) * (0.5 ** (max_total_pairs - max_antipairs)) * (0.5 ** max_antipairs)
+			
 			outfile.write('"' + currentgene + '";"' + str(Trait[currentgene]["NUGN"]) + '";"' + str(Trait[currentgene]["Annotation"]) + \
 			'";"' + str(Trait[currentgene]["tpgp"]) + '";"' + str(Trait[currentgene]["tngp"]) + '";"' + str(Trait[currentgene]["tpgn"]) + \
 			'";"' + str(Trait[currentgene]["tngn"]) + '";"' + str(Trait[currentgene]["sens"]) + '";"' + str(Trait[currentgene]["spes"]) + \
 			'";"' + str(Trait[currentgene]["OR"]) + '";"' + str(Trait[currentgene]["p_v"]) + '";"' + str(Trait[currentgene]["B_p"]) + \
-			'";"' + str(Trait[currentgene]["BH_p"]) + '";"' + str(Max_pairwise_comparisons) + '";"' + str(Pairwise_comparisons_P) + '"\n')
-
+			'";"' + str(Trait[currentgene]["BH_p"]) + '";"' + str(max_total_pairs) + '";"' + str(max_propairs) + '";"' + str(max_antipairs) + \
+			'";"' + str(best_pairwise_comparison_p) + '";"' + str(worst_pairwise_comparison_p) + '"\n')
+			
 def SortResultsAndSetKey(genedic):
 	"""
 	A method for returning a dictionary where genes are sorted by p-value
@@ -404,5 +411,14 @@ def ConvertUPGMAtoPhyloTree(tree, GTC):
 	"""
 	
 	# TRAVERSING TREE: For each binary division - go to left until hit tip. Then go back
-	MyPhyloTree = PhyloTree(leftnode=tree[0], rightnode=tree[1], GTC=GTC)
-	return MyPhyloTree.max_contrasting_pairs
+	num_AB = float(GTC.values().count("AB"))
+	num_Ab = float(GTC.values().count("Ab"))
+	num_aB = float(GTC.values().count("aB"))
+	num_ab = float(GTC.values().count("ab"))
+	OR = ((num_AB + 1)/(num_Ab + 1)) / ((num_aB + 1)/(num_ab + 1)) # Use pseudocounts to avoid 0 or inf OR.
+	MyPhyloTree = PhyloTree(leftnode=tree[0], rightnode=tree[1], GTC=GTC, OR=OR)
+	print "Max contrasting pairs : " + str(MyPhyloTree.max_contrasting_pairs)
+	print "Max propairs : " + str(MyPhyloTree.max_contrasting_propairs)
+	print "Max antipairs : " + str(MyPhyloTree.max_contrasting_antipairs)
+	
+	return {"Total" : MyPhyloTree.max_contrasting_pairs, "Pro" : MyPhyloTree.max_contrasting_propairs, "Anti" : MyPhyloTree.max_contrasting_antipairs}
