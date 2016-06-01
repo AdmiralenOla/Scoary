@@ -343,6 +343,8 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
 		outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;" + \
 		"Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Benjamini_H_p;Max_Pairwise_comparisons;" + \
 		"Max_supporting_pairs;Max_opposing_pairs;Best_pairwise_comp_p;Worst_pairwise_comp_p\n")
+		
+		print "Calculating max number of contrasting pairs for each significant gene"
 
 		for x in xrange(num_results):
 			# Start with lowest p-value, the one which has key 0 in sort_instructions
