@@ -350,9 +350,9 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
 			max_total_pairs = Max_pairwise_comparisons["Total"]
 			max_propairs = Max_pairwise_comparisons["Pro"]
 			max_antipairs = Max_pairwise_comparisons["Anti"]
-			best_pairwise_comparison_p = special.binom(max_total_pairs,max_propairs) * (0.5 ** max_propairs) * (0.5 ** (max_total_pairs - max_propairs))
-			worst_pairwise_comparison_p = special.binom(max_total_pairs,(max_total_pairs - max_antipairs)) * (0.5 ** (max_total_pairs - max_antipairs)) * (0.5 ** max_antipairs)
-			
+			best_pairwise_comparison_p = ss.binom_test(max_propairs, max_total_pairs, 0.5, alternative="greater")
+			worst_pairwise_comparison_p = ss.binom_test(max_total_pairs-max_antipairs, max_total_pairs, 0.5, alternative="greater")
+
 			outfile.write('"' + currentgene + '";"' + str(Trait[currentgene]["NUGN"]) + '";"' + str(Trait[currentgene]["Annotation"]) + \
 			'";"' + str(Trait[currentgene]["tpgp"]) + '";"' + str(Trait[currentgene]["tngp"]) + '";"' + str(Trait[currentgene]["tpgn"]) + \
 			'";"' + str(Trait[currentgene]["tngn"]) + '";"' + str(Trait[currentgene]["sens"]) + '";"' + str(Trait[currentgene]["spes"]) + \
