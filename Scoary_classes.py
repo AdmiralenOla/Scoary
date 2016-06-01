@@ -1,4 +1,3 @@
-
 import sys
 
 # Note: The Matrix and QuadTree implementations are heavily based on original implementations by Christian Storm Pedersen.
@@ -126,7 +125,7 @@ class QuadTree:
 		Returns the coordinates of the minimum element in the quad containing (i,j)
 		"""
 		return self.quad_min_all(i,j,l)[1:]
-			
+
 class PhyloTree:
 	"""
 	A class that represents a binary tree. Phylotrees can be nested. They can also contain tips at left, right or both nodes.
@@ -137,7 +136,7 @@ class PhyloTree:
 	4. Free path to ab. 
 	5. No free path.
 	"""
-	def __init__(self, leftnode, rightnode, GTC):
+	def __init__(self, leftnode, rightnode, GTC, OR):
 		"""
 		Constructs a phylotree and links it to its left and right nodes
 		"""
@@ -148,18 +147,23 @@ class PhyloTree:
 		elif isinstance(leftnode, PhyloTree):
 			self.leftnode = leftnode
 		else:
-			self.leftnode = PhyloTree(leftnode=leftnode[0], rightnode=leftnode[1], GTC=GTC)
+			self.leftnode = PhyloTree(leftnode=leftnode[0], rightnode=leftnode[1], GTC=GTC, OR=OR)
 		if len(rightnode) == 1:
 			self.rightnode = Tip(GTC[rightnode[0]])
 		elif isinstance(rightnode, PhyloTree):
 			self.rightnode = rightnode
 		else:
-			self.rightnode = PhyloTree(leftnode=rightnode[0], rightnode=rightnode[1], GTC=GTC)
+			self.rightnode = PhyloTree(leftnode=rightnode[0], rightnode=rightnode[1], GTC=GTC, OR=OR)
 		
 		# Initialize the max number of paths. Set to -1 meaning they cannot be reached
+		self.OR = OR
 		self.maxvalues = {"AB": -1, "Ab": -1, "aB": -1, "ab": -1, "0": -1}
+		self.max_propairs = {"AB": -1, "Ab": -1, "aB": -1, "ab": -1, "0": -1}
+		self.max_antipairs = {"AB": -1, "Ab": -1, "aB": -1, "ab": -1, "0": -1}
 		self.calculate_max()
 		self.max_contrasting_pairs = max(self.maxvalues.values())
+		self.max_contrasting_propairs = max(self.max_propairs.values())
+		self.max_contrasting_antipairs = max(self.max_antipairs.values())
 		
 	def calculate_max(self):
 		"""
@@ -167,10 +171,15 @@ class PhyloTree:
 		"""
 		for condition in ["AB","Ab","aB","ab","nofree"]:
 			if condition in ["AB", "Ab", "aB", "ab"]:
-				self.maxvalues[condition] = self.calculate_max_condition(condition)
+				pairings = self.calculate_max_condition(condition)
+				self.maxvalues[condition] = pairings["Total"]
+				self.max_propairs[condition] = pairings["Pro"]
+				self.max_antipairs[condition] = pairings["Anti"]
 			else: # Condition == nofree
-				self.maxvalues["0"] = self.calculate_max_nofree()
-				
+				pairings = self.calculate_max_nofree()
+				self.maxvalues["0"] = pairings["Total"]
+				self.max_propairs["0"] = pairings["Pro"]
+				self.max_antipairs["0"] = pairings["Anti"]
 		
 	def calculate_max_condition(self,condition):
 		"""
@@ -179,46 +188,221 @@ class PhyloTree:
 		Possible_conditions = set(["AB", "Ab", "aB", "ab"])
 		Possible_conditions.remove(condition)
 		Otherconditions = list(Possible_conditions) # Now we have a list of the elements that are NOT condition
-		max_pairs = -1
+		max_pairs_1 = -1
+		max_pairs_2 = -1
+		max_pairs_3 = -1
+		max_pairs_4 = -1
+		max_pairs_5 = -1
+		max_pairs_6 = -1
+		max_pairs_7 = -1
+		max_pairs_8 = -1
+		max_pairs_9 = -1
+		
+		max_propairs_1 = -1
+		max_propairs_2 = -1
+		max_propairs_3 = -1
+		max_propairs_4 = -1
+		max_propairs_5 = -1
+		max_propairs_6 = -1
+		max_propairs_7 = -1
+		max_propairs_8 = -1
+		max_propairs_9 = -1
+		
+		max_antipairs_1 = -1
+		max_antipairs_2 = -1
+		max_antipairs_3 = -1
+		max_antipairs_4 = -1
+		max_antipairs_5 = -1
+		max_antipairs_6 = -1
+		max_antipairs_7 = -1
+		max_antipairs_8 = -1
+		max_antipairs_9 = -1		
+		
 		if self.leftnode.maxvalues[condition] > -1 and self.rightnode.maxvalues["0"] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues[condition] + self.rightnode.maxvalues["0"] )
-		if self.leftnode.maxvalues[condition] > -1 and self.rightnode.maxvalues[Otherconditions[0]] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues[condition] + self.rightnode.maxvalues[Otherconditions[0]] )
-		if self.leftnode.maxvalues[condition] > -1 and self.rightnode.maxvalues[Otherconditions[1]] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues[condition] + self.rightnode.maxvalues[Otherconditions[1]] )
-		if self.leftnode.maxvalues[condition] > -1 and self.rightnode.maxvalues[Otherconditions[2]] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues[condition] + self.rightnode.maxvalues[Otherconditions[2]] )
-		if self.leftnode.maxvalues[condition] > -1 and self.rightnode.maxvalues[condition] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues[condition] + self.rightnode.maxvalues[condition] )
-		if self.leftnode.maxvalues["0"] > -1 and self.rightnode.maxvalues[condition] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues["0"] + self.rightnode.maxvalues[condition] )
-		if self.leftnode.maxvalues[Otherconditions[0]] > -1 and self.rightnode.maxvalues[condition] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues[Otherconditions[0]] + self.rightnode.maxvalues[condition] )
-		if self.leftnode.maxvalues[Otherconditions[1]] > -1 and self.rightnode.maxvalues[condition] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues[Otherconditions[1]] + self.rightnode.maxvalues[condition] )
-		if self.leftnode.maxvalues[Otherconditions[2]] > -1 and self.rightnode.maxvalues[condition] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues[Otherconditions[2]] + self.rightnode.maxvalues[condition] )
+			max_pairs_1 = self.leftnode.maxvalues[condition] + self.rightnode.maxvalues["0"]
+			max_propairs_1 = self.leftnode.max_propairs[condition] + self.rightnode.max_propairs["0"]
+			max_antipairs_1 = self.leftnode.max_antipairs[condition] + self.rightnode.max_antipairs["0"]
 			
-		return max_pairs
+		if self.leftnode.maxvalues[condition] > -1 and self.rightnode.maxvalues[Otherconditions[0]] > -1:
+			max_pairs_2 = self.leftnode.maxvalues[condition] + self.rightnode.maxvalues[Otherconditions[0]]
+			max_propairs_2 = self.leftnode.max_propairs[condition] + self.rightnode.max_propairs[Otherconditions[0]]
+			max_antipairs_2 = self.leftnode.max_antipairs[condition] + self.rightnode.max_antipairs[Otherconditions[0]]
+			
+		if self.leftnode.maxvalues[condition] > -1 and self.rightnode.maxvalues[Otherconditions[1]] > -1:
+			max_pairs_3 = self.leftnode.maxvalues[condition] + self.rightnode.maxvalues[Otherconditions[1]]
+			max_propairs_3 = self.leftnode.max_propairs[condition] + self.rightnode.max_propairs[Otherconditions[1]]
+			max_antipairs_3 = self.leftnode.max_antipairs[condition] + self.rightnode.max_antipairs[Otherconditions[1]] 
+			
+		if self.leftnode.maxvalues[condition] > -1 and self.rightnode.maxvalues[Otherconditions[2]] > -1:
+			max_pairs_4 = self.leftnode.maxvalues[condition] + self.rightnode.maxvalues[Otherconditions[2]]
+			max_propairs_4 = self.leftnode.max_propairs[condition] + self.rightnode.max_propairs[Otherconditions[2]]
+			max_antipairs_4 = self.leftnode.max_antipairs[condition] + self.rightnode.max_antipairs[Otherconditions[2]]
+			
+		if self.leftnode.maxvalues[condition] > -1 and self.rightnode.maxvalues[condition] > -1:
+			max_pairs_5 = self.leftnode.maxvalues[condition] + self.rightnode.maxvalues[condition]
+			max_propairs_5 = self.leftnode.max_propairs[condition] + self.rightnode.max_propairs[condition]
+			max_antipairs_5 = self.leftnode.max_antipairs[condition] + self.rightnode.max_antipairs[condition]
+			
+		if self.leftnode.maxvalues["0"] > -1 and self.rightnode.maxvalues[condition] > -1:
+			max_pairs_6 = self.leftnode.maxvalues["0"] + self.rightnode.maxvalues[condition]
+			max_propairs_6 = self.leftnode.max_propairs["0"] + self.rightnode.max_propairs[condition]
+			max_antipairs_6 = self.leftnode.max_antipairs["0"] + self.rightnode.max_antipairs[condition]
+			
+		if self.leftnode.maxvalues[Otherconditions[0]] > -1 and self.rightnode.maxvalues[condition] > -1:
+			max_pairs_7 = self.leftnode.maxvalues[Otherconditions[0]] + self.rightnode.maxvalues[condition]
+			max_propairs_7 = self.leftnode.max_propairs[Otherconditions[0]] + self.rightnode.max_propairs[condition]
+			max_antipairs_7 = self.leftnode.max_antipairs[Otherconditions[0]] + self.rightnode.max_antipairs[condition]
+			
+		if self.leftnode.maxvalues[Otherconditions[1]] > -1 and self.rightnode.maxvalues[condition] > -1:
+			max_pairs_8 = self.leftnode.maxvalues[Otherconditions[1]] + self.rightnode.maxvalues[condition]
+			max_propairs_8 = self.leftnode.max_propairs[Otherconditions[1]] + self.rightnode.max_propairs[condition]
+			max_antipairs_8 = self.leftnode.max_antipairs[Otherconditions[1]] + self.rightnode.max_antipairs[condition]
+			
+		if self.leftnode.maxvalues[Otherconditions[2]] > -1 and self.rightnode.maxvalues[condition] > -1:
+			max_pairs_9 = self.leftnode.maxvalues[Otherconditions[2]] + self.rightnode.maxvalues[condition]
+			max_propairs_9 = self.leftnode.max_propairs[Otherconditions[2]] + self.rightnode.max_propairs[condition]
+			max_antipairs_9 = self.leftnode.max_antipairs[Otherconditions[2]] + self.rightnode.max_antipairs[condition]
+			
+		max_pairs = max(max_pairs_1, max_pairs_2, max_pairs_3, max_pairs_4, max_pairs_5, max_pairs_6, max_pairs_7, max_pairs_8, max_pairs_9)
+		
+		# Calculate maximum number of propairs, given a maxmimum number of pairs
+		max_propairs = -1	
+		if max_pairs == max_pairs_1:	
+			max_propairs = max(max_propairs, max_propairs_1)
+		if max_pairs == max_pairs_2:	
+			max_propairs = max(max_propairs, max_propairs_2)
+		if max_pairs == max_pairs_3:	
+			max_propairs = max(max_propairs, max_propairs_3)
+		if max_pairs == max_pairs_4:	
+			max_propairs = max(max_propairs, max_propairs_4)
+		if max_pairs == max_pairs_5:	
+			max_propairs = max(max_propairs, max_propairs_5)
+		if max_pairs == max_pairs_6:	
+			max_propairs = max(max_propairs, max_propairs_6)
+		if max_pairs == max_pairs_7:	
+			max_propairs = max(max_propairs, max_propairs_7)
+		if max_pairs == max_pairs_8:	
+			max_propairs = max(max_propairs, max_propairs_8)
+		if max_pairs == max_pairs_9:	
+			max_propairs = max(max_propairs, max_propairs_9)
+		
+		# Calculate maximum number of antipairs, given a maxmimum number of pairs
+		max_antipairs = -1	
+		if max_pairs == max_pairs_1:	
+			max_antipairs = max(max_antipairs, max_antipairs_1)
+		if max_pairs == max_pairs_2:	
+			max_antipairs = max(max_antipairs, max_antipairs_2)
+		if max_pairs == max_pairs_3:	
+			max_antipairs = max(max_antipairs, max_antipairs_3)
+		if max_pairs == max_pairs_4:	
+			max_antipairs = max(max_antipairs, max_antipairs_4)
+		if max_pairs == max_pairs_5:	
+			max_antipairs = max(max_antipairs, max_antipairs_5)
+		if max_pairs == max_pairs_6:	
+			max_antipairs = max(max_antipairs, max_antipairs_6)
+		if max_pairs == max_pairs_7:	
+			max_antipairs = max(max_antipairs, max_antipairs_7)
+		if max_pairs == max_pairs_8:	
+			max_antipairs = max(max_antipairs, max_antipairs_8)
+		if max_pairs == max_pairs_9:	
+			max_antipairs = max(max_antipairs, max_antipairs_9)
+			
+		return {"Total" : max_pairs, "Pro": max_propairs, "Anti" : max_antipairs}
 		
 	def calculate_max_nofree(self):
 		"""
 		Under the condition of no free paths, only 5 distinct possibilities exits
 		"""
-		max_pairs = -1
 		# No free pairs in either:
+		max_pairs_nofree = -1
+		max_pairs_1100 = -1
+		max_pairs_0011 = -1
+		max_pairs_1001 = -1
+		max_pairs_0110 = -1
+		
+		max_propairs_nofree = -1
+		max_propairs_1100 = -1
+		max_propairs_0011 = -1
+		max_propairs_1001 = -1
+		max_propairs_0110 = -1
+		
+		max_antipairs_nofree = -1
+		max_antipairs_1100 = -1
+		max_antipairs_0011 = -1
+		max_antipairs_1001 = -1
+		max_antipairs_0110 = -1
+		
+		
 		if self.leftnode.maxvalues["0"] > -1 and self.rightnode.maxvalues["0"] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues["0"] + self.rightnode.maxvalues["0"] )
+			max_pairs_nofree = self.leftnode.maxvalues["0"] + self.rightnode.maxvalues["0"]
+			max_propairs_nofree = self.leftnode.max_propairs["0"] + self.rightnode.max_propairs["0"]
+			max_antipairs_nofree = self.leftnode.max_antipairs["0"] + self.rightnode.max_antipairs["0"]
+		
 		if self.leftnode.maxvalues["AB"] > -1 and self.rightnode.maxvalues["ab"] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues["AB"] + self.rightnode.maxvalues["ab"] + 1 )
+			max_pairs_1100 = self.leftnode.maxvalues["AB"] + self.rightnode.maxvalues["ab"] + 1
+			max_propairs_1100 = self.leftnode.max_propairs["AB"] + self.rightnode.max_propairs["ab"]
+			max_antipairs_1100 = self.leftnode.max_antipairs["AB"] + self.rightnode.max_antipairs["ab"]
+			if self.OR < 1:
+				max_antipairs_1100 += 1
+			else:
+				max_propairs_1100 += 1
+			
 		if self.leftnode.maxvalues["ab"] > -1 and self.rightnode.maxvalues["AB"] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues["ab"] + self.rightnode.maxvalues["AB"] + 1 )
+			max_pairs_0011 = self.leftnode.maxvalues["ab"] + self.rightnode.maxvalues["AB"] + 1
+			max_propairs_0011 = self.leftnode.max_propairs["ab"] + self.rightnode.max_propairs["AB"]
+			max_antipairs_0011 = self.leftnode.max_antipairs["ab"] + self.rightnode.max_antipairs["AB"]
+			if self.OR < 1:
+				max_antipairs_0011 += 1
+			else:
+				max_propairs_0011 += 1
+			
 		if self.leftnode.maxvalues["Ab"] > -1 and self.rightnode.maxvalues["aB"] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues["Ab"] + self.rightnode.maxvalues["aB"] + 1 )
+			max_pairs_1001 = self.leftnode.maxvalues["Ab"] + self.rightnode.maxvalues["aB"] + 1
+			max_propairs_1001 = self.leftnode.max_propairs["Ab"] + self.rightnode.max_propairs["aB"]
+			max_antipairs_1001 = self.leftnode.max_antipairs["Ab"] + self.rightnode.max_antipairs["aB"]# + 1
+			if self.OR < 1:
+				max_propairs_1001 += 1
+			else:
+				max_antipairs_1001 += 1
+			
 		if self.leftnode.maxvalues["aB"] > -1 and self.rightnode.maxvalues["Ab"] > -1:
-			max_pairs = max( max_pairs, self.leftnode.maxvalues["aB"] + self.rightnode.maxvalues["Ab"] + 1 )
-
-		return max_pairs
+			max_pairs_0110 = self.leftnode.maxvalues["aB"] + self.rightnode.maxvalues["Ab"] + 1
+			max_propairs_0110 = self.leftnode.max_propairs["aB"] + self.rightnode.max_propairs["Ab"]
+			max_antipairs_0110 = self.leftnode.max_antipairs["aB"] + self.rightnode.max_antipairs["Ab"]
+			if self.OR < 1:
+				max_propairs_0110 += 1
+			else:
+				max_antipairs_0110 += 1
+			
+		max_pairs = max(max_pairs_nofree, max_pairs_1100, max_pairs_0011, max_pairs_1001, max_pairs_0110)
+		
+		# Calculate max number of propairs
+		max_propairs = -1 # Max_propairs can never go below -1
+		if max_pairs == max_pairs_nofree:
+			max_propairs = max(max_propairs, max_propairs_nofree)
+		if max_pairs == max_pairs_1100:
+			max_propairs = max(max_propairs, max_propairs_1100)
+		if max_pairs == max_pairs_0011:
+			max_propairs = max(max_propairs, max_propairs_0011)
+		if max_pairs == max_pairs_1001:
+			max_propairs = max(max_propairs, max_propairs_1001)
+		if max_pairs == max_pairs_0110:
+			max_propairs = max(max_propairs, max_propairs_0110)
+		
+		# Calculate max number of antipairs
+		max_antipairs = -1 # Max_antipairs can never go below -1
+		if max_pairs == max_pairs_nofree:
+			max_antipairs = max(max_antipairs, max_antipairs_nofree)
+		if max_pairs == max_pairs_1100:
+			max_antipairs = max(max_antipairs, max_antipairs_1100)
+		if max_pairs == max_pairs_0011:
+			max_antipairs = max(max_antipairs, max_antipairs_0011)
+		if max_pairs == max_pairs_1001:
+			max_antipairs = max(max_antipairs, max_antipairs_1001)
+		if max_pairs == max_pairs_0110:
+			max_antipairs = max(max_antipairs, max_antipairs_0110)
+			
+		return {"Total": max_pairs, "Pro": max_propairs, "Anti": max_antipairs}
 	
 class Tip:
 	"""
@@ -235,3 +419,5 @@ class Tip:
 				self.maxvalues[condition] = 0
 			else:
 				self.maxvalues[condition] = -1
+		self.max_propairs = {k:v for k,v in self.maxvalues.items()}
+		self.max_antipairs = {k:v for k,v in self.maxvalues.items()}

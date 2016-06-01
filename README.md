@@ -22,6 +22,12 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
+v1.3.0 (1st Jun 2016)
+- Major changes to the pairwise comparisons algorithm. Scoary now calculates the maximum number of contrasting pairs, and given that maximum number tests the maximum number of pairs that SUPPORT A -> B (AB-ab pairs) and the maximum number of pairs that OPPOSE A -> B (Ab-aB pairs). The opposite is true for genes where the odds ratio is < 1 (i.e. that indicate A -> b).
+- The p-values reported from the pairwise comparisons is now a range. It reports the best (lowest) p-value, which comes from the maximum number of supporting pairs and the minimum number of opposing (given a set total), as well as the worst (highest) p-value, which comes from the minimum number of supporting pairs and the maximum number of non-supporting, given a set total number of pairings. It does this at each node in the tree.
+- Scoary can now print the UPGMA tree that is calculated internally from the Hamming distances of the gene_presence_absence matrix. Do this by using the -u flag.
+- The elapsed time will now print when finished.
+
 v1.2.3 (30th May 2016)
 - Odds ratios should now be correct again. These were behaving strangely since 1.2.0. Apologies.
 
@@ -127,19 +133,22 @@ The results file contains the following columns:
 | Bonferroni_p | A p-value adjusted with Bonferroni's method for multiple comparisons correction (An [FWER] (https://en.wikipedia.org/wiki/Familywise_error_rate) type correction) |
 | Benjamini_H_p | A p-value adjusted with Benjamini-Hochberg's method for multiple comparisons correction (An [FDR] (https://en.wikipedia.org/wiki/False_discovery_rate) type correction) |
 | Max_pairwise_comparisons | The maximum number of pairs that contrast in both gene and trait characters that can be drawn on the phylogenetic tree without intersecting lines (Read & Nee, 1995; Maddison, 2000) |
-| Pairwise_comparisons_p | The p-value corresponding to the maximum number of pairs. Treats the trait as a randomly assigned character with p_trait_presence=p_trait_absence=0.5. (Note: This p-value really represents the LOWEST you could get if you only selected pairs based on contrast in the gene character. Use with caution.) |
+| Max_supporting_pairs | The maximum number of these pairs (Max_pairwise_comparisons) that support A->B or A->b, depending on the odds ratio. |
+| Max_opposing_pairs | The maximum number of these pairs (Max_pairwise_comparisons) that oppose A->B or A->b, depending on the odds ratio. |
+| Best_pairwise_comp_p | The p-value corresponding to the highest possible number of supporting pairs and the lowest possible number of opposing pairs, e.g. the lowest p-value you could end up with when picking a set of maximum number of pairs. |
+| Worst_pairwise_comp_p | The p-value corresponding to the lowest possible number of supporting pairs and the highest possible number of opposing pairs, e.g. the highest p-value you could end up with when picking a set of maximum number of pairs. |
 
 
 
 ## Options
 Scoary can take a number of optional arguments to tweak the output and make sure it performs as intended:
 ```
-usage: SCOARY.py [-h] -t TRAITS -g GENES [-p P_VALUE_CUTOFF]
-                 [-c {Individual,Bonferroni,Benjamini-Hochberg}]
-                 [-m MAX_HITS] [-r RESTRICT_TO] [-s START_COL]
-                 [--delimiter DELIMITER] [--version]
+usage: Scoary.py [-h] [-t TRAITS] [-g GENES] [-p P_VALUE_CUTOFF]
+                 [-c {Individual,Bonferroni,Benjamini-Hochberg}] [-m MAX_HITS]
+                 [-r RESTRICT_TO] [-u] [-s START_COL] [--delimiter DELIMITER]
+                 [--version]
 
-Screen pan-genome for trait-associated genes
+Scoary version v1.3.0 - Screen pan-genome for trait-associated genes
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -167,6 +176,8 @@ optional arguments:
                         Use if you only want to analyze a subset of your
                         strains. SCOARY will read the provided comma-separated
                         table of strains and restrict analyzes to these.
+  -u, --upgma_tree      This flag will cause Scoary to write the calculated
+                        UPGMA tree to a newick file
   -s START_COL, --start_col START_COL
                         On which column in the gene presence/absence file do
                         individual strain info start. Default=15. (1-based
@@ -178,8 +189,8 @@ optional arguments:
                         annotation column, and it is therefore recommended to
                         save your files using semicolon or tab (" ") instead.
                         SCOARY will output files delimited by semicolon
-  --version    
-                        Display Scoary version, then exit
+  --version             Display Scoary version, and exit.
+
 ```
 #### The -r parameter
 The **-r** parameter is particularly useful, as you can use it to restrict your analysis to a subset of your isolates without altering the gene_presence_absence or trait files. Simply provide a single-line csv file (delimited by ",") with the names of the isolates you would like to include in the current analysis.
@@ -197,6 +208,9 @@ This will restrict the current analysis to isolates 1,2,4 and 9, and will omit a
 #### The -s parameter
 The **-s** parameter is used to indicate to Scoary which column in the gene_presence_absence.csv file is the _first_ column representing an isolate. By default it is set to 15 (1-based indexing).
 
+#### The -u flag
+Calling Scoary with the **-u** flag will cause it to write a newick file of the UPGMA tree that is calculated internally. The tree is based on pairwise Hamming distances in the gene_presence_absence matrix.
+
 ## Population structure
 Scoary implements the pairwise comparisons algorithm (Read & Nee, 1995; Maddison, 2000) to identify the maximum number of non-intersecting pairs of isolates that contrast in the state of both gene and trait. It does this by creating an UPGMA tree from the information contained in the gene_presence_absence matrix, annotating tips with gene and trait status, and recursively traversing the tree for each gene that were significant in the initial analysis. (i.e. those with p<0.05 if settings are left at default.)
 
@@ -205,6 +219,18 @@ This tells you something about the **number of times** the gene and trait co-eme
 ![A not-so-significant link between gene and trait](https://cloud.githubusercontent.com/assets/14874487/15569716/8c66322a-2332-11e6-8500-5d27828417c7.png)
 
 ![A very significant link between gene and trait](https://cloud.githubusercontent.com/assets/14874487/15569715/8c61f962-2332-11e6-90e7-5c37976071c8.png)
+
+One must also consider that there might be multiple ways of picking the maximum number of contrasting pairs, and of all these possible sets of pairings, some might provide more support for A->B than others. Consider the following tree:
+
+![A best possible pairing](https://cloud.githubusercontent.com/assets/14874487/15708517/271bd3b2-27ff-11e6-9190-8c655622bbfd.png)
+
+The above tree has a maximum of 6 contrasting pairs, and in this tree the pairs have been chosen so that all pairs support A->B. (The presence of the gene caused the presence of the phenotype). However, in this particular tree we could also have picked 6 contrasting pairs where not all pairs supports this. See for example this pairing:
+
+![A worst possible pairing](https://cloud.githubusercontent.com/assets/14874487/15708516/271bf496-27ff-11e6-81d4-7309f2c274cc.png)
+
+The above tree has the same topology and terminal states, and the same number of contrasting pairs, but now we have chosen pairs so that 5 pairs support A->B while 1 pair oppose it (It suggests that A->b / a->B). This is a worst possible pairing which maintains the maximum number of contrasting pairs.
+
+Scoary reports the best (lowest) and worst (highest) p-values, corresponding to the first and the second scenario, respectively. The p-value corresponds to a binomial test using the number of supporting pairs as successes and p=0.5 for each state. A p<0.05 would thus typically be considered as a rejection of the null hypothesis that the expressed phenotype is not associated with the gene.
 
 ## License
 Scoary is freely available under a GPLv3 license.

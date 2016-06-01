@@ -9,12 +9,13 @@
 import argparse, os, sys, csv, time
 from scipy import stats as ss
 from scipy import spatial
+from scipy import special
 from Scoary_classes import Matrix
 from Scoary_classes import QuadTree
 from Scoary_classes import PhyloTree
 from Scoary_classes import Tip
 
-SCOARY_VERSION = 'v1.2.3'
+SCOARY_VERSION = 'v1.3.0'
 
 def main():
 	"""
@@ -29,6 +30,7 @@ def main():
 	parser.add_argument('-m', '--max_hits', help='Maximum number of hits to report. SCOARY will only report the top max_hits results per trait', type=int)
 	parser.add_argument('-r', '--restrict_to', help='Use if you only want to analyze a subset of your strains. SCOARY will read the provided comma-separated table of strains and restrict analyzes to these.')
 	parser.add_argument('-s', '--start_col', help='On which column in the gene presence/absence file do individual strain info start. Default=15. (1-based indexing)', default=15, type=int)
+	parser.add_argument('-u', '--upgma_tree', help='This flag will cause Scoary to write the calculated UPGMA tree to a newick file', default=False, action='store_true')
 	parser.add_argument('--delimiter', help='The delimiter between cells in the gene presence/absence and trait files. NOTE: Even though commas are the default they might mess with the annotation column, and it is therefore recommended to save your files using semicolon or tab ("\t") instead. SCOARY will output files delimited by semicolon', default=',', type=str)
 	parser.add_argument('--version', help='Display Scoary version, and exit.', default=False,action='store_true')
 	
@@ -46,6 +48,8 @@ def main():
 		if args.genes is None:
 			print "error: argument -g/--genes is required"
 		sys.exit(1)
+	
+	starttime = time.time()
 	
 	with open(args.genes, "rU") as genes, open(args.traits, "rU") as traits:
 		
@@ -73,9 +77,13 @@ def main():
 		RES = RES_and_GTC["Results"]
 		GTC = RES_and_GTC["Gene_trait_combinations"]
 		
+		if args.upgma_tree:
+			StoreUPGMAtreeToFile(upgmatree)
+		
 		StoreResults(RES, args.max_hits, args.p_value_cutoff, args.correction, upgmatree, GTC)
-
-	sys.exit("Finished")
+		print "Finished. Checked a total of", len(genedic), "genes for associations to", len(traitsdic), "trait(s). Total time used:",int(time.time()-starttime),"seconds."
+	
+	sys.exit(0)
 
 def CreateTriangularDistanceMatrix(zeroonesmatrix,strainnames):
 	"""
@@ -336,7 +344,10 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
 		cut_possibilities = {"Individual": "p_v", "Bonferroni": "B_p", "Benjamini-Hochberg": "BH_p"}
 		
 		outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;" + \
-		"Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Benjamini_H_p;Max_Pairwise_comparisons;Pairwise_comparisons_p\n")
+		"Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Benjamini_H_p;Max_Pairwise_comparisons;" + \
+		"Max_supporting_pairs;Max_opposing_pairs;Best_pairwise_comp_p;Worst_pairwise_comp_p\n")
+		
+		print "Calculating max number of contrasting pairs for each significant gene"
 
 		for x in xrange(num_results):
 			# Start with lowest p-value, the one which has key 0 in sort_instructions
@@ -345,14 +356,19 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
 				break
 		
 			Max_pairwise_comparisons = ConvertUPGMAtoPhyloTree(upgmatree, GTC[Traitname][currentgene])
-			Pairwise_comparisons_P = 0.5 ** Max_pairwise_comparisons
+			max_total_pairs = Max_pairwise_comparisons["Total"]
+			max_propairs = Max_pairwise_comparisons["Pro"]
+			max_antipairs = Max_pairwise_comparisons["Anti"]
+			best_pairwise_comparison_p = ss.binom_test(max_propairs, max_total_pairs, 0.5, alternative="greater")
+			worst_pairwise_comparison_p = ss.binom_test(max_total_pairs-max_antipairs, max_total_pairs, 0.5, alternative="greater")
 
 			outfile.write('"' + currentgene + '";"' + str(Trait[currentgene]["NUGN"]) + '";"' + str(Trait[currentgene]["Annotation"]) + \
 			'";"' + str(Trait[currentgene]["tpgp"]) + '";"' + str(Trait[currentgene]["tngp"]) + '";"' + str(Trait[currentgene]["tpgn"]) + \
 			'";"' + str(Trait[currentgene]["tngn"]) + '";"' + str(Trait[currentgene]["sens"]) + '";"' + str(Trait[currentgene]["spes"]) + \
 			'";"' + str(Trait[currentgene]["OR"]) + '";"' + str(Trait[currentgene]["p_v"]) + '";"' + str(Trait[currentgene]["B_p"]) + \
-			'";"' + str(Trait[currentgene]["BH_p"]) + '";"' + str(Max_pairwise_comparisons) + '";"' + str(Pairwise_comparisons_P) + '"\n')
-
+			'";"' + str(Trait[currentgene]["BH_p"]) + '";"' + str(max_total_pairs) + '";"' + str(max_propairs) + '";"' + str(max_antipairs) + \
+			'";"' + str(best_pairwise_comparison_p) + '";"' + str(worst_pairwise_comparison_p) + '"\n')
+			
 def SortResultsAndSetKey(genedic):
 	"""
 	A method for returning a dictionary where genes are sorted by p-value
@@ -404,5 +420,23 @@ def ConvertUPGMAtoPhyloTree(tree, GTC):
 	"""
 	
 	# TRAVERSING TREE: For each binary division - go to left until hit tip. Then go back
-	MyPhyloTree = PhyloTree(leftnode=tree[0], rightnode=tree[1], GTC=GTC)
-	return MyPhyloTree.max_contrasting_pairs
+	num_AB = float(GTC.values().count("AB"))
+	num_Ab = float(GTC.values().count("Ab"))
+	num_aB = float(GTC.values().count("aB"))
+	num_ab = float(GTC.values().count("ab"))
+	OR = ((num_AB + 1)/(num_Ab + 1)) / ((num_aB + 1)/(num_ab + 1)) # Use pseudocounts to avoid 0 or inf OR.
+	MyPhyloTree = PhyloTree(leftnode=tree[0], rightnode=tree[1], GTC=GTC, OR=OR)
+	
+	return {"Total" : MyPhyloTree.max_contrasting_pairs, "Pro" : MyPhyloTree.max_contrasting_propairs, "Anti" : MyPhyloTree.max_contrasting_antipairs}
+
+def StoreUPGMAtreeToFile(upgmatree):
+	"""
+	A method for printing the UPGMA tree that is built internally from the hamming distances in the gene presence/absence matrix
+	"""
+	treefilename = str("Tree" + time.strftime("_%d_%m_%Y_%H%M") + ".nwk")
+	with open(treefilename, "w") as treefile:
+		Tree = str(upgmatree)
+		Tree = Tree.replace("[","(")
+		Tree = Tree.replace("]",")")
+		treefile.write(Tree)
+		print "Wrote the UPGMA tree to file:", treefilename
