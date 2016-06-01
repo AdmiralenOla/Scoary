@@ -433,8 +433,10 @@ def StoreUPGMAtreeToFile(upgmatree):
 	"""
 	A method for printing the UPGMA tree that is built internally from the hamming distances in the gene presence/absence matrix
 	"""
-	with open("Tree" + time.strftime("_%d_%m_%Y_%H%M") + ".nwk", "w") as treefile:
+	treefilename = str("Tree" + time.strftime("_%d_%m_%Y_%H%M") + ".nwk")
+	with open(treefilename, "w") as treefile:
 		Tree = str(upgmatree)
 		Tree = Tree.replace("[","(")
 		Tree = Tree.replace("]",")")
 		treefile.write(Tree)
+		print "Wrote the UPGMA tree to file:", treefilename
