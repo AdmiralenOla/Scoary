@@ -1,6 +1,6 @@
 ![Scoary - Microbial Pan-GWAS](https://cloud.githubusercontent.com/assets/14874487/15738049/ad3ffdf6-28a9-11e6-854a-fbceaf2c2328.png)
 
-Scoary is designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome (all genes that are present in *i* genomes where 1 < *i* < N) and the traits. Scoary reports a list of genes sorted by strength of association per trait.
+Scoary is designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome and the traits. It reports a list of genes sorted by strength of association per trait.
 
 
 ## Contents
