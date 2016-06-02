@@ -16,6 +16,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Etymology] (#etymology)
 - [Coming soon] (#coming-soon)
 - [Acknowledgements] (#acknowledgements)
+- [Feedback] (#feedback)
 - [Citation] (#citation)
 - [Contact] (#contact)
 
@@ -244,6 +245,9 @@ Please feel free to suggest improvements, point out bugs or methods that could b
 - The QuadTree and UPGMA implementation was heavily based on code by Christian Storm Pedersen
 - Inês Mendes pointed out a number of bugs related adjusted p-values and isolate restriction.
 - Eric Deveaud added versioning.
+
+## Feedback
+I greatly appreciate any feedback, even negative. If you like (or dislike) Scoary, please feel free to tell your friends and colleagues about it. If you don't have friends or colleagues, please feel free to rant about it on your blog or social media profile.
 
 ## Citation
 Manuscript not yet published.
