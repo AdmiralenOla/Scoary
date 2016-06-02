@@ -1,7 +1,6 @@
-# Scoary
-Pan-genome wide association studies
+![Scoary - Microbial Pan-GWAS](https://cloud.githubusercontent.com/assets/14874487/15738049/ad3ffdf6-28a9-11e6-854a-fbceaf2c2328.png)
 
-Scoary is designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome (all genes that are present in *i* genomes where 1 < *i* < N) and the traits. Scoary reports a list of genes sorted by strength of association per trait.
+Scoary is designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome and the traits. It reports a list of genes sorted by strength of association per trait.
 
 
 ## Contents
@@ -87,19 +86,19 @@ If you want to add it to your $PATH variable:
 ## Input
 Scoary requires two input files: The gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) and a list of traits to test associations to. 
 
-The gene_presence_absence.csv file will look something like this:
+The **gene_presence_absence.csv** file will look something like this:
 ![gene_presence_absence.csv output] (http://sanger-pathogens.github.io/Roary/images/gene_presence_and_absence.png)
 
 _Source: http://sanger-pathogens.github.io/Roary/_
 
 Make sure you know the delimiter in the file. (By default this is ','). Scoary needs to know.
 
-The traits file needs to be formatted in a specific way. 
+The **traits.csv** file needs to be formatted in a specific way. 
 - It must use the same delimiter as the gene_presence_absence.csv file
 - The names of your isolates need to be identical in the two files
 - The rows should correspond to your isolates, the columns to the different traits
 - Traits needs to be dichotomized. Use "0" to indicate absence and "1" to indicate presence of the trait
-- All isolates and traits should be uniquely named and not contain any weird characters
+- All isolates and traits should be uniquely named and not contain any weird characters (e.g. %;,/&[]@? etc)
 - The top left cell should be left blank
 
 It should look something like this:
