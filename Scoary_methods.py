@@ -356,6 +356,8 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
 			# Start with lowest p-value, the one which has key 0 in sort_instructions
 			currentgene = sort_instructions[x]
 			if (Trait[currentgene][cut_possibilities[correctionmethod]] > p_cutoff):
+				sys.stdout.write("\r100.00%\n")
+				sys.stdout.flush()
 				break
 		
 			Max_pairwise_comparisons = ConvertUPGMAtoPhyloTree(upgmatree, GTC[Traitname][currentgene])
