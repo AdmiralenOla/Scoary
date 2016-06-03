@@ -350,6 +350,9 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
 		print "Calculating max number of contrasting pairs for each significant gene"
 
 		for x in xrange(num_results):
+			sys.stdout.write("\r{:.2%}".format(float(x)/num_results))
+			sys.stdout.flush()
+			
 			# Start with lowest p-value, the one which has key 0 in sort_instructions
 			currentgene = sort_instructions[x]
 			if (Trait[currentgene][cut_possibilities[correctionmethod]] > p_cutoff):
