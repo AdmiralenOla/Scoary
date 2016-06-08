@@ -22,6 +22,10 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
+v1.3.1 (8th Jun 2016)
+- Scoary is now packaged as a proper python package according to the PEP8 style guide (Thanks to Marco Galardini)
+- A percentage counter is now shown when calculating pairs
+
 v1.3.0 (1st Jun 2016)
 - Major changes to the pairwise comparisons algorithm. Scoary now calculates the maximum number of contrasting pairs, and given that maximum number tests the maximum number of pairs that SUPPORT A -> B (AB-ab pairs) and the maximum number of pairs that OPPOSE A -> B (Ab-aB pairs). The opposite is true for genes where the odds ratio is < 1 (i.e. that indicate A -> b).
 - The p-values reported from the pairwise comparisons is now a range. It reports the best (lowest) p-value, which comes from the maximum number of supporting pairs and the minimum number of opposing (given a set total), as well as the worst (highest) p-value, which comes from the minimum number of supporting pairs and the maximum number of non-supporting, given a set total number of pairings. It does this at each node in the tree.
