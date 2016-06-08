@@ -248,7 +248,7 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates):
     """
     Converts an input traits file (csv format) to dictionaries readable by Roary
     """
-    tab = zip(*csv.reader(csvfile, delimiter=delimiter))
+    tab = list(zip(*csv.reader(csvfile, delimiter=delimiter)))
     r = {}
     if len(tab) < 2:
         sys.exit("Please check that your traits file is formatted properly and contain at least one trait")
@@ -265,7 +265,7 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates):
 
         # Filter so that only allowed isolates are included
         if allowed_isolates is not None:
-            p = {strain: indicator for (strain, indicator) in p.iteritems()
+            p = {strain: indicator for (strain, indicator) in list(p.items())
                  if strain in allowed_isolates}
         r[name_trait] = p
 
@@ -498,14 +498,14 @@ def upgma(d):
             if cluster[k] is None:
                 new_dist.append(1)
             else:
-                new_dist.append((d.get_elm(i,k)*size[i] + d.get_elm(j,k)*size[j]) / new_size)
+                new_dist.append((d.get_elm(i,k)*size[i] + d.get_elm(j,k)*size[j]) // new_size)
 
         # Insert new row/col in d
-        new_dist[i] = sys.maxint
+        new_dist[i] = sys.maxsize
         d.insert_row(i, new_dist)
         d.insert_col(i, new_dist)
-        d.insert_row(j, d.dim * [sys.maxint])
-        d.insert_col(j, d.dim * [sys.maxint])
+        d.insert_row(j, d.dim * [sys.maxsize])
+        d.insert_col(j, d.dim * [sys.maxsize])
 
         cluster[i] = new_cluster
         cluster[j] = None
@@ -525,10 +525,10 @@ def ConvertUPGMAtoPhyloTree(tree, GTC):
     """
 
     # TRAVERSING TREE: For each binary division - go to left until hit tip. Then go back
-    num_AB = float(GTC.values().count("AB"))
-    num_Ab = float(GTC.values().count("Ab"))
-    num_aB = float(GTC.values().count("aB"))
-    num_ab = float(GTC.values().count("ab"))
+    num_AB = float(list(GTC.values()).count("AB"))
+    num_Ab = float(list(GTC.values()).count("Ab"))
+    num_aB = float(list(GTC.values()).count("aB"))
+    num_ab = float(list(GTC.values()).count("ab"))
     OR = ((num_AB + 1)/(num_Ab + 1)) / ((num_aB + 1)/(num_ab + 1))  # Use pseudocounts to avoid 0 or inf OR.
     MyPhyloTree = PhyloTree(leftnode=tree[0],
                             rightnode=tree[1],
