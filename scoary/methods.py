@@ -265,7 +265,7 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates):
 
         # Filter so that only allowed isolates are included
         if allowed_isolates is not None:
-            p = {strain: indicator for (strain, indicator) in p.iteritems()
+            p = {strain: indicator for (strain, indicator) in list(p.items())
                  if strain in allowed_isolates}
         r[name_trait] = p
 
