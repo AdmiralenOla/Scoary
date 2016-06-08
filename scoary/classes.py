@@ -57,7 +57,7 @@ class QuadTree:
         while n > 1:
             n += (n % 2)
             self.level.append(Matrix(n))
-            n = (n+1) / 2
+            n = (n+1) // 2
 
     def get_elm(self, i, j):
         """
@@ -78,7 +78,7 @@ class QuadTree:
                 l[i][j] = curr_row[j]
                 if j % 2 == 1:
                     next_row.append(self.quad_min(i, j, l))
-            i /= 2
+            i //= 2
             curr_row = next_row
 
     def insert_col(self, j, col):
@@ -94,7 +94,7 @@ class QuadTree:
                 l[i][j] = curr_col[i]
                 if i % 2 == 1:
                     next_col.append(self.quad_min(i, j, l))
-            j /= 2
+            j //= 2
             curr_col = next_col
 
     def min(self):
@@ -119,8 +119,8 @@ class QuadTree:
         Returns the minimum element stored in the quad (i,j) and its coordinates
         """
         # Need even numbers
-        i = (i/2) * 2
-        j = (j/2) * 2
+        i = (i//2) * 2
+        j = (j//2) * 2
         return min((l[i][j], i, j),
                    (l[i+1][j], i+1, j),
                    (l[i][j+1], i, j+1),
