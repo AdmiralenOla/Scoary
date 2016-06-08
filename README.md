@@ -1,4 +1,4 @@
-![Scoary - Microbial Pan-GWAS](https://cloud.githubusercontent.com/assets/14874487/15738049/ad3ffdf6-28a9-11e6-854a-fbceaf2c2328.png)
+![Scoary - Microbial Pan-GWAS](https://cloud.githubusercontent.com/assets/14874487/15772489/b026105a-2971-11e6-9d1e-da4035502869.png)
 
 Scoary is designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome and the traits. It reports a list of genes sorted by strength of association per trait.
 
@@ -16,6 +16,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Etymology] (#etymology)
 - [Coming soon] (#coming-soon)
 - [Acknowledgements] (#acknowledgements)
+- [Feedback] (#feedback)
 - [Citation] (#citation)
 - [Contact] (#contact)
 
@@ -244,6 +245,9 @@ Please feel free to suggest improvements, point out bugs or methods that could b
 - The QuadTree and UPGMA implementation was heavily based on code by Christian Storm Pedersen
 - Inês Mendes pointed out a number of bugs related adjusted p-values and isolate restriction.
 - Eric Deveaud added versioning.
+
+## Feedback
+I greatly appreciate any feedback, even negative. If you like (or dislike) Scoary, please feel free to tell your friends and colleagues about it. If you don't have friends or colleagues, please feel free to rant about it on your blog or social media profile.
 
 ## Citation
 Manuscript not yet published.
