@@ -23,6 +23,9 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
+v1.3.2 (8th Jun 2016)
+- Scoary SHOULD now be compatible with Python 3.x. Please report back if you disagree.
+
 v1.3.1 (8th Jun 2016)
 - Scoary is now packaged as a proper python package according to the PEP8 style guide (Thanks to Marco Galardini)
 - A percentage counter is now shown when calculating pairs
@@ -245,7 +248,8 @@ Scoary is an anagram of "scoring" and "Roary", the pan-genome pipeline. It was n
 
 ## Bugs
 Known bugs:
-- Scoary is only tested for python 2.7.x. It currently **does not** work with python3. If you run the program with python3 you will find that it drains a lot of memory.
+- I'm currently (8th Jun 2016) not aware of any bugs.
+- Please report bugs here (Issues) or to me directly at olbb@fhi.no
 
 ## Coming soon
 Please feel free to suggest improvements, point out bugs or methods that could be better optimized.
