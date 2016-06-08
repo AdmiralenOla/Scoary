@@ -14,6 +14,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Population structure] (#population-structure)
 - [License] (#license)
 - [Etymology] (#etymology)
+- [Bugs] (#bugs)
 - [Coming soon] (#coming-soon)
 - [Acknowledgements] (#acknowledgements)
 - [Feedback] (#feedback)
@@ -21,6 +22,10 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
+
+v1.3.1 (8th Jun 2016)
+- Scoary is now packaged as a proper python package according to the PEP8 style guide (Thanks to Marco Galardini)
+- A percentage counter is now shown when calculating pairs
 
 v1.3.0 (1st Jun 2016)
 - Major changes to the pairwise comparisons algorithm. Scoary now calculates the maximum number of contrasting pairs, and given that maximum number tests the maximum number of pairs that SUPPORT A -> B (AB-ab pairs) and the maximum number of pairs that OPPOSE A -> B (Ab-aB pairs). The opposite is true for genes where the odds ratio is < 1 (i.e. that indicate A -> b).
@@ -238,11 +243,16 @@ Scoary is freely available under a GPLv3 license.
 ## Etymology
 Scoary is an anagram of "scoring" and "Roary", the pan-genome pipeline. It was named as an homage to Roary.
 
+## Bugs
+Known bugs:
+- Scoary is only tested for python 2.7.x. It currently **does not** work with python3. If you run the program with python3 you will find that it drains a lot of memory.
+
 ## Coming soon
 Please feel free to suggest improvements, point out bugs or methods that could be better optimized.
 
 ## Acknowledgements
-- The QuadTree and UPGMA implementation was heavily based on code by Christian Storm Pedersen
+- Marco Galardini cleaned stylistic inconsistencies in the code and formatted it according to PEP8.
+- The QuadTree and UPGMA implementation was heavily based on code by Christian Storm Pedersen.
 - Inês Mendes pointed out a number of bugs related adjusted p-values and isolate restriction.
 - Eric Deveaud added versioning.
 
