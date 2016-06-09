@@ -86,8 +86,8 @@ def main():
                         'presence/absence and trait files. NOTE: Even though '
                         'commas are the default they might mess with the '
                         'annotation column, and it is therefore recommended to '
-                        'save your files using semicolon or tab ("\t") instead'
-                        '. SCOARY will output files delimited by semicolon',
+                        'save your files using semicolon instead. '
+                        'SCOARY will output files delimited by semicolon',
                         default=',',
                         type=str)
     parser.add_argument('--version', help='Display Scoary version, and exit.',
@@ -431,7 +431,7 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
         cut_possibilities = {"Individual": "p_v", "Bonferroni": "B_p", "Benjamini-Hochberg": "BH_p"}
 
         outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;"
-        "Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;p_value;Bonferroni_p;Benjamini_H_p;Max_Pairwise_comparisons;"
+        "Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;Naive_p;Bonferroni_p;Benjamini_H_p;Max_Pairwise_comparisons;"
         "Max_supporting_pairs;Max_opposing_pairs;Best_pairwise_comp_p;Worst_pairwise_comp_p\n")
 
         print("Calculating max number of contrasting pairs for each significant gene")
@@ -498,7 +498,7 @@ def upgma(d):
             if cluster[k] is None:
                 new_dist.append(1)
             else:
-                new_dist.append((d.get_elm(i,k)*size[i] + d.get_elm(j,k)*size[j]) // new_size)
+                new_dist.append((d.get_elm(i,k)*size[i] + d.get_elm(j,k)*size[j]) / new_size)
 
         # Insert new row/col in d
         new_dist[i] = sys.maxsize

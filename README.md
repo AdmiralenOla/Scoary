@@ -22,6 +22,8 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
+v1.3.3 (9th Jun 2016)
+- BUG FIX: Tree calculation had been broken since 1.3.2 yesterday. Sorry about that.
 
 v1.3.2 (8th Jun 2016)
 - Scoary SHOULD now be compatible with Python 3.x. Please report back if you disagree.
@@ -195,7 +197,7 @@ optional arguments:
                         presence/absence and trait files. NOTE: Even though
                         commas are the default they might mess with the
                         annotation column, and it is therefore recommended to
-                        save your files using semicolon or tab (" ") instead.
+                        save your files using semicolon instead.
                         SCOARY will output files delimited by semicolon
   --version             Display Scoary version, and exit.
 
