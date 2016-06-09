@@ -195,7 +195,7 @@ optional arguments:
                         presence/absence and trait files. NOTE: Even though
                         commas are the default they might mess with the
                         annotation column, and it is therefore recommended to
-                        save your files using semicolon or tab (" ") instead.
+                        save your files using semicolon instead.
                         SCOARY will output files delimited by semicolon
   --version             Display Scoary version, and exit.
 
