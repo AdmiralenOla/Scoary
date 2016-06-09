@@ -498,7 +498,7 @@ def upgma(d):
             if cluster[k] is None:
                 new_dist.append(1)
             else:
-                new_dist.append((d.get_elm(i,k)*size[i] + d.get_elm(j,k)*size[j]) // new_size)
+                new_dist.append((d.get_elm(i,k)*size[i] + d.get_elm(j,k)*size[j]) / new_size)
 
         # Insert new row/col in d
         new_dist[i] = sys.maxsize
