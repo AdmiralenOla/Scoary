@@ -258,7 +258,7 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates):
             name_trait = p[""]
             del p[""]
         elif "Name" in p:
-            name_trait = p["name"]
+            name_trait = p["Name"]
             del p["Name"]
         else:
             sys.exit("Make sure the top-left cell in the traits file is either empty or 'Name'. Do not include empty rows")
