@@ -74,8 +74,8 @@ v1.1 (29th Mar 2016)
 
 ## Dependencies
 
-- Python (Tested in 2.7 and 3.5)
-- [SciPy 0.17 or greater.] (http://www.scipy.org/install.html) Note: 0.16 or lower will **not** work!
+- Python (Tested with versions 2.7 and 3.5)
+- [SciPy] (http://www.scipy.org/install.html) (Tested with versions 0.16 and 0.17)
 
 
 ## Installation
