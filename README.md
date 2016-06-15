@@ -15,6 +15,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [License] (#license)
 - [Etymology] (#etymology)
 - [Bugs] (#bugs)
+- [FAQ] (#faq)
 - [Coming soon] (#coming-soon)
 - [Acknowledgements] (#acknowledgements)
 - [Feedback] (#feedback)
@@ -246,8 +247,16 @@ Scoary is an anagram of "scoring" and "Roary", the pan-genome pipeline. It was n
 
 ## Bugs
 Known bugs:
-- I'm currently (8th Jun 2016) not aware of any bugs.
+- I'm currently (9th Jun 2016) not aware of any bugs.
 - Please report bugs here (Issues) or to me directly at olbb@fhi.no
+
+## FAQ
+- **How can you justify p=0.5 in your pairwise comparisons method? Is this species-specific?**
+
+The reasoning is as follows: Scoary first finds the maximum number of independent contrasting pairs in a phylogenetic tree, irrespective of gene-trait status. Thus, AB-ab pairs should be equally likely as Ab-aB pairs if your null hypothesis is true. Your null hypothesis in this case, is that there is no detectable association between A/a and B/b. If AB-ab pairs are much more common than Ab-aB pairs then you can be confident that the true p was not 0.5. And if this is the case then then there seems to be an association between your A/a (your gene) and your B/b (your phenotype). A justification for this way of testing can be found in Read and Nee, 1995.
+- **Why is my "Best_pairwise_comp_p" higher than my "Worst_pairwise_comp_p"?**
+
+The "best" and "worst" labels are attached to the odds ratio of the gene in the non-population structure-corrected analysis. For example, you may find an odds ratio of 2.0 for a particular gene, meaning presence of the gene was tied to presence of the phenotype. But when you inspect your pairwise comparisons p-values you see that the "best" p-value was 0.2 and the "worst" was 1.0E-5. This means that in your phylogenetic tree, an enrichment of Ab-aB pairs was more common. In other words, the presence of this gene actually seems associated to a _silencing_ of the phenotype, in spite of your original odds ratio.
 
 ## Coming soon
 Please feel free to suggest improvements, point out bugs or methods that could be better optimized.
