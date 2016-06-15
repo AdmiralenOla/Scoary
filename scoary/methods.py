@@ -106,7 +106,8 @@ def main():
             # this actually means all isolates are allowed
             # and included in the analysis
             allowed_isolates = None
-
+            
+        print("Reading gene presence absence file")    
         genedic_and_matrix = Csv_to_dic_Roary(genes,
                                               args.delimiter,
                                               startcol=args.start_col - 1,
@@ -114,11 +115,12 @@ def main():
         genedic = genedic_and_matrix["Roarydic"]
         zeroonesmatrix = genedic_and_matrix["Zero_ones_matrix"]
         strains = genedic_and_matrix["Strains"]
-
+        print("Creating Hamming distance matrix based on gene presence/absence")
         TDM = CreateTriangularDistanceMatrix(zeroonesmatrix, strains)
         QT = PopulateQuadTreeWithDistances(TDM)
+        print("Building UPGMA tree from distance matrix")
         upgmatree = upgma(QT)
-
+        print("Reading traits file")
         traitsdic = Csv_to_dic(traits, args.delimiter, allowed_isolates)
 
         print("Finished loading files into memory.")
