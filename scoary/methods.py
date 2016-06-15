@@ -450,12 +450,10 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
             max_antipairs = Max_pairwise_comparisons["Anti"]
             best_pairwise_comparison_p = ss.binom_test(max_propairs,
                                                        max_total_pairs,
-                                                       0.5,
-                                                       alternative="greater")
+                                                       0.5) / 2
             worst_pairwise_comparison_p = ss.binom_test(max_total_pairs-max_antipairs,
                                                         max_total_pairs,
-                                                        0.5,
-                                                        alternative="greater")
+                                                        0.5) / 2
 
             outfile.write('"' + currentgene + '";"' + str(Trait[currentgene]["NUGN"]) + '";"' + str(Trait[currentgene]["Annotation"]) +
             '";"' + str(Trait[currentgene]["tpgp"]) + '";"' + str(Trait[currentgene]["tngp"]) + '";"' + str(Trait[currentgene]["tpgn"]) +
