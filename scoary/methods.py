@@ -83,11 +83,7 @@ def main():
                         action='store_true')
     parser.add_argument('--delimiter',
                         help='The delimiter between cells in the gene '
-                        'presence/absence and trait files. NOTE: Even though '
-                        'commas are the default they might mess with the '
-                        'annotation column, and it is therefore recommended to '
-                        'save your files using semicolon instead. '
-                        'SCOARY will output files delimited by semicolon',
+                        'presence/absence and trait files. ',
                         default=',',
                         type=str)
     parser.add_argument('--version', help='Display Scoary version, and exit.',
