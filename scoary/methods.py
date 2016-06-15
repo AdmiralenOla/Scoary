@@ -211,7 +211,11 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=0, allowed_isolates=None):
 
     for line in csvfile:
         q = line
-        r[q[genecol]] = {"Non-unique Gene name": q[nugcol], "Annotation": q[anncol]} if roaryfile else {}
+        try:
+            r[q[genecol]] = {"Non-unique Gene name": q[nugcol], "Annotation": q[anncol]} if roaryfile else {}
+        except IndexError:
+            sys.exit("ERROR: Could not read gene presence absence file. Verify that this file is a proper Roary file "
+            "using the specified delimiter (default is ',').")
         # The zero_ones_line represents the presence (1) or absence (0) of a gene. It is used for calculating distances between strains.
         zero_ones_line = []
 
