@@ -152,8 +152,10 @@ def CreateTriangularDistanceMatrix(zeroonesmatrix, strainnames):
     triangular matrix of pairwise Hamming distances.
     The distance d(i,i) is set to 1 for all i.
     """
-
-    hamming_distances = list(spatial.distance.pdist(zeroonesmatrix, 'hamming'))
+    try:
+        hamming_distances = list(spatial.distance.pdist(zeroonesmatrix, 'hamming'))
+    except TypeError:
+        sys.exit("Could not locate scipy.spatial.distance.pdist. Perhaps you have an old version of SciPy installed?")
     nstrains = int((1 + (1 + 8*len(hamming_distances))**0.5)/2)
     TriangularDistanceMatrix = []
     Strain_names = []
@@ -454,12 +456,15 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
             max_total_pairs = Max_pairwise_comparisons["Total"]
             max_propairs = Max_pairwise_comparisons["Pro"]
             max_antipairs = Max_pairwise_comparisons["Anti"]
-            best_pairwise_comparison_p = ss.binom_test(max_propairs,
-                                                       max_total_pairs,
-                                                       0.5) / 2
-            worst_pairwise_comparison_p = ss.binom_test(max_total_pairs-max_antipairs,
-                                                        max_total_pairs,
-                                                        0.5) / 2
+            try:
+                best_pairwise_comparison_p = ss.binom_test(max_propairs,
+                                                           max_total_pairs,
+                                                           0.5) / 2
+                worst_pairwise_comparison_p = ss.binom_test(max_total_pairs-max_antipairs,
+                                                            max_total_pairs,
+                                                            0.5) / 2
+            except TypeError:
+                sys.exit("There was a problem using scipy.stats.binom_test. Ensure you have a recent distribution of SciPy installed.")
 
             outfile.write('"' + currentgene + '";"' + str(Trait[currentgene]["NUGN"]) + '";"' + str(Trait[currentgene]["Annotation"]) +
             '";"' + str(Trait[currentgene]["tpgp"]) + '";"' + str(Trait[currentgene]["tngp"]) + '";"' + str(Trait[currentgene]["tpgn"]) +
