@@ -49,7 +49,8 @@ def main():
     parser.add_argument('-p', '--p_value_cutoff',
                         help='P-value cut-off. SCOARY will not report genes '
                         'with higher p-values than this. Set to 1.0 to report '
-                        'all genes. Default = 0.05',
+                        'all genes. Accepts standard form (e.g. 1E-8). '
+                        'Default = 0.05',
                         default=0.05,
                         type=float)
     parser.add_argument('-c', '--correction',
