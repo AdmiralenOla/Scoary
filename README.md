@@ -15,6 +15,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [License] (#license)
 - [Etymology] (#etymology)
 - [Bugs] (#bugs)
+- [FAQ] (#faq)
 - [Coming soon] (#coming-soon)
 - [Acknowledgements] (#acknowledgements)
 - [Feedback] (#feedback)
@@ -22,6 +23,10 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
+v1.3.4 (16th Jun 2016)
+- Scoary no longer crashes when using Scipy 0.16 instead of 0.17.
+- More information about what's going on is printed. (Useful for very large datasets that take long to analyze)
+
 v1.3.3 (9th Jun 2016)
 - BUG FIX: Tree calculation had been broken since 1.3.2 yesterday. Sorry about that.
 
@@ -74,8 +79,8 @@ v1.1 (29th Mar 2016)
 
 ## Dependencies
 
-- Python (Tested in 2.7 and 3.5)
-- [SciPy 0.17 or greater.] (http://www.scipy.org/install.html) Note: 0.16 or lower will **not** work!
+- Python (Tested with versions 2.7 and 3.5)
+- [SciPy] (http://www.scipy.org/install.html) (Tested with versions 0.16 and 0.17)
 
 
 ## Installation
@@ -174,7 +179,7 @@ optional arguments:
   -p P_VALUE_CUTOFF, --p_value_cutoff P_VALUE_CUTOFF
                         P-value cut-off. SCOARY will not report genes with
                         higher p-values than this. Set to 1.0 to report all
-                        genes. Default = 0.05
+                        genes. Accepts standard form (e.g. 1E-8). Default = 0.05
   -c {Individual,Bonferroni,Benjamini-Hochberg}, --correction {Individual,Bonferroni,Benjamini-Hochberg}
                         Instead of cutting off at the individual test p-value
                         (option -p), use the indicated corrected p-value for
@@ -194,11 +199,7 @@ optional arguments:
                         indexing)
   --delimiter DELIMITER
                         The delimiter between cells in the gene
-                        presence/absence and trait files. NOTE: Even though
-                        commas are the default they might mess with the
-                        annotation column, and it is therefore recommended to
-                        save your files using semicolon instead.
-                        SCOARY will output files delimited by semicolon
+                        presence/absence and trait files.
   --version             Display Scoary version, and exit.
 
 ```
@@ -217,6 +218,9 @@ This will restrict the current analysis to isolates 1,2,4 and 9, and will omit a
 
 #### The -s parameter
 The **-s** parameter is used to indicate to Scoary which column in the gene_presence_absence.csv file is the _first_ column representing an isolate. By default it is set to 15 (1-based indexing).
+
+#### The -p, -m and -c parameters
+These parameters control your output. **-m** sets a hard cut-off on the number of hits reported. With **-p** you can set that no gene with a higher p-value will be reported. (Tip: Set this to 1.0 to report every single gene). You can mix these parameters with **-c**. If you only wanted genes with a Bonferroni-adjusted p-value < 1E-10 you could use _-p 1E-10 -c Bonferroni_.
 
 #### The -u flag
 Calling Scoary with the **-u** flag will cause it to write a newick file of the UPGMA tree that is calculated internally. The tree is based on pairwise Hamming distances in the gene_presence_absence matrix.
@@ -249,9 +253,15 @@ Scoary is freely available under a GPLv3 license.
 Scoary is an anagram of "scoring" and "Roary", the pan-genome pipeline. It was named as an homage to Roary.
 
 ## Bugs
-Known bugs:
-- I'm currently (8th Jun 2016) not aware of any bugs.
 - Please report bugs here (Issues) or to me directly at olbb@fhi.no
+
+## FAQ
+- **How can you justify p=0.5 in your pairwise comparisons method? Is this species-specific?**
+
+The reasoning is as follows: Scoary first finds the maximum number of independent contrasting pairs in a phylogenetic tree, irrespective of gene-trait status. Thus, AB-ab pairs should be equally likely as Ab-aB pairs if your null hypothesis is true. Your null hypothesis in this case, is that there is no detectable association between A/a and B/b. If AB-ab pairs are much more common than Ab-aB pairs then you can be confident that the true p was not 0.5. And if this is the case then then there seems to be an association between your A/a (your gene) and your B/b (your phenotype). A justification for this way of testing can be found in Read and Nee, 1995.
+- **Why is my "Best_pairwise_comp_p" higher than my "Worst_pairwise_comp_p"?**
+
+The "best" and "worst" labels are attached to the odds ratio of the gene in the non-population structure-corrected analysis. For example, you may find an odds ratio of 2.0 for a particular gene, meaning presence of the gene was tied to presence of the phenotype. But when you inspect your pairwise comparisons p-values you see that the "best" p-value was 0.2 and the "worst" was 1.0E-5. This means that in your phylogenetic tree, an enrichment of Ab-aB pairs was more common. In other words, the presence of this gene actually seems associated to a _silencing_ of the phenotype, in spite of your original odds ratio. Note that the odds ratio can be inflated for example by sampling of very closely related isolates.
 
 ## Coming soon
 Please feel free to suggest improvements, point out bugs or methods that could be better optimized.

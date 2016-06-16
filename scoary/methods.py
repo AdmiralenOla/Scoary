@@ -49,7 +49,8 @@ def main():
     parser.add_argument('-p', '--p_value_cutoff',
                         help='P-value cut-off. SCOARY will not report genes '
                         'with higher p-values than this. Set to 1.0 to report '
-                        'all genes. Default = 0.05',
+                        'all genes. Accepts standard form (e.g. 1E-8). '
+                        'Default = 0.05',
                         default=0.05,
                         type=float)
     parser.add_argument('-c', '--correction',
@@ -83,11 +84,7 @@ def main():
                         action='store_true')
     parser.add_argument('--delimiter',
                         help='The delimiter between cells in the gene '
-                        'presence/absence and trait files. NOTE: Even though '
-                        'commas are the default they might mess with the '
-                        'annotation column, and it is therefore recommended to '
-                        'save your files using semicolon instead. '
-                        'SCOARY will output files delimited by semicolon',
+                        'presence/absence and trait files. ',
                         default=',',
                         type=str)
     parser.add_argument('--version', help='Display Scoary version, and exit.',
@@ -110,7 +107,8 @@ def main():
             # this actually means all isolates are allowed
             # and included in the analysis
             allowed_isolates = None
-
+            
+        print("Reading gene presence absence file")    
         genedic_and_matrix = Csv_to_dic_Roary(genes,
                                               args.delimiter,
                                               startcol=args.start_col - 1,
@@ -118,11 +116,12 @@ def main():
         genedic = genedic_and_matrix["Roarydic"]
         zeroonesmatrix = genedic_and_matrix["Zero_ones_matrix"]
         strains = genedic_and_matrix["Strains"]
-
+        print("Creating Hamming distance matrix based on gene presence/absence")
         TDM = CreateTriangularDistanceMatrix(zeroonesmatrix, strains)
         QT = PopulateQuadTreeWithDistances(TDM)
+        print("Building UPGMA tree from distance matrix")
         upgmatree = upgma(QT)
-
+        print("Reading traits file")
         traitsdic = Csv_to_dic(traits, args.delimiter, allowed_isolates)
 
         print("Finished loading files into memory.")
@@ -154,8 +153,10 @@ def CreateTriangularDistanceMatrix(zeroonesmatrix, strainnames):
     triangular matrix of pairwise Hamming distances.
     The distance d(i,i) is set to 1 for all i.
     """
-
-    hamming_distances = list(spatial.distance.pdist(zeroonesmatrix, 'hamming'))
+    try:
+        hamming_distances = list(spatial.distance.pdist(zeroonesmatrix, 'hamming'))
+    except TypeError:
+        sys.exit("Could not locate scipy.spatial.distance.pdist. Perhaps you have an old version of SciPy installed?")
     nstrains = int((1 + (1 + 8*len(hamming_distances))**0.5)/2)
     TriangularDistanceMatrix = []
     Strain_names = []
@@ -215,7 +216,11 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=0, allowed_isolates=None):
 
     for line in csvfile:
         q = line
-        r[q[genecol]] = {"Non-unique Gene name": q[nugcol], "Annotation": q[anncol]} if roaryfile else {}
+        try:
+            r[q[genecol]] = {"Non-unique Gene name": q[nugcol], "Annotation": q[anncol]} if roaryfile else {}
+        except IndexError:
+            sys.exit("ERROR: Could not read gene presence absence file. Verify that this file is a proper Roary file "
+            "using the specified delimiter (default is ',').")
         # The zero_ones_line represents the presence (1) or absence (0) of a gene. It is used for calculating distances between strains.
         zero_ones_line = []
 
@@ -258,7 +263,7 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates):
             name_trait = p[""]
             del p[""]
         elif "Name" in p:
-            name_trait = p["name"]
+            name_trait = p["Name"]
             del p["Name"]
         else:
             sys.exit("Make sure the top-left cell in the traits file is either empty or 'Name'. Do not include empty rows")
@@ -414,7 +419,7 @@ def StoreResults(Results, max_hits, p_cutoff, correctionmethod, upgmatree, GTC):
     A method for storing the results. Calls StoreTraitResult for each trait column in the input file
     """
     for Trait in Results:
-        print("Storing results: " + Trait)
+        print("\nStoring results: " + Trait)
         StoreTraitResult(Results[Trait], Trait, max_hits, p_cutoff, correctionmethod, upgmatree, GTC)
 
 
@@ -443,7 +448,7 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
             # Start with lowest p-value, the one which has key 0 in sort_instructions
             currentgene = sort_instructions[x]
             if (Trait[currentgene][cut_possibilities[correctionmethod]] > p_cutoff):
-                sys.stdout.write("\r100.00%\n")
+                sys.stdout.write("\r100.00%")
                 sys.stdout.flush()
                 break
 
@@ -452,14 +457,15 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
             max_total_pairs = Max_pairwise_comparisons["Total"]
             max_propairs = Max_pairwise_comparisons["Pro"]
             max_antipairs = Max_pairwise_comparisons["Anti"]
-            best_pairwise_comparison_p = ss.binom_test(max_propairs,
-                                                       max_total_pairs,
-                                                       0.5,
-                                                       alternative="greater")
-            worst_pairwise_comparison_p = ss.binom_test(max_total_pairs-max_antipairs,
-                                                        max_total_pairs,
-                                                        0.5,
-                                                        alternative="greater")
+            try:
+                best_pairwise_comparison_p = ss.binom_test(max_propairs,
+                                                           max_total_pairs,
+                                                           0.5) / 2
+                worst_pairwise_comparison_p = ss.binom_test(max_total_pairs-max_antipairs,
+                                                            max_total_pairs,
+                                                            0.5) / 2
+            except TypeError:
+                sys.exit("There was a problem using scipy.stats.binom_test. Ensure you have a recent distribution of SciPy installed.")
 
             outfile.write('"' + currentgene + '";"' + str(Trait[currentgene]["NUGN"]) + '";"' + str(Trait[currentgene]["Annotation"]) +
             '";"' + str(Trait[currentgene]["tpgp"]) + '";"' + str(Trait[currentgene]["tngp"]) + '";"' + str(Trait[currentgene]["tpgn"]) +
