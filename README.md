@@ -179,7 +179,7 @@ optional arguments:
   -p P_VALUE_CUTOFF, --p_value_cutoff P_VALUE_CUTOFF
                         P-value cut-off. SCOARY will not report genes with
                         higher p-values than this. Set to 1.0 to report all
-                        genes. Default = 0.05
+                        genes. Accepts standard form (e.g. 1E-8). Default = 0.05
   -c {Individual,Bonferroni,Benjamini-Hochberg}, --correction {Individual,Bonferroni,Benjamini-Hochberg}
                         Instead of cutting off at the individual test p-value
                         (option -p), use the indicated corrected p-value for
@@ -218,6 +218,9 @@ This will restrict the current analysis to isolates 1,2,4 and 9, and will omit a
 
 #### The -s parameter
 The **-s** parameter is used to indicate to Scoary which column in the gene_presence_absence.csv file is the _first_ column representing an isolate. By default it is set to 15 (1-based indexing).
+
+#### The -p, -m and -c parameters
+These parameters control your output. **-m** sets a hard cut-off on the number of hits reported. With **-p** you can set that no gene with a higher p-value will be reported. (Tip: Set this to 1.0 to report every single gene). You can mix these parameters with **-c**. If you only wanted genes with a Bonferroni-adjusted p-value < 1E-10 you could use _-p 1E-10 -c Bonferroni_.
 
 #### The -u flag
 Calling Scoary with the **-u** flag will cause it to write a newick file of the UPGMA tree that is calculated internally. The tree is based on pairwise Hamming distances in the gene_presence_absence matrix.
