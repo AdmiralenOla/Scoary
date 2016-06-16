@@ -23,6 +23,10 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
+v1.3.4 (16th Jun 2016)
+- Scoary no longer crashes when using Scipy 0.16 instead of 0.17.
+- More information about what's going on is printed. (Useful for very large datasets that take long to analyze)
+
 v1.3.3 (9th Jun 2016)
 - BUG FIX: Tree calculation had been broken since 1.3.2 yesterday. Sorry about that.
 
@@ -246,8 +250,6 @@ Scoary is freely available under a GPLv3 license.
 Scoary is an anagram of "scoring" and "Roary", the pan-genome pipeline. It was named as an homage to Roary.
 
 ## Bugs
-Known bugs:
-- I'm currently (9th Jun 2016) not aware of any bugs.
 - Please report bugs here (Issues) or to me directly at olbb@fhi.no
 
 ## FAQ
