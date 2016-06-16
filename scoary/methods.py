@@ -418,7 +418,7 @@ def StoreResults(Results, max_hits, p_cutoff, correctionmethod, upgmatree, GTC):
     A method for storing the results. Calls StoreTraitResult for each trait column in the input file
     """
     for Trait in Results:
-        print("Storing results: " + Trait)
+        print("\nStoring results: " + Trait)
         StoreTraitResult(Results[Trait], Trait, max_hits, p_cutoff, correctionmethod, upgmatree, GTC)
 
 
@@ -447,7 +447,7 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
             # Start with lowest p-value, the one which has key 0 in sort_instructions
             currentgene = sort_instructions[x]
             if (Trait[currentgene][cut_possibilities[correctionmethod]] > p_cutoff):
-                sys.stdout.write("\r100.00%\n")
+                sys.stdout.write("\r100.00%")
                 sys.stdout.flush()
                 break
 
