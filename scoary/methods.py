@@ -71,7 +71,7 @@ def main():
                         ' strains. SCOARY will read the provided '
                         'comma-separated table of strains and restrict '
                         'analyzes to these.')
-    parser.add_argument('-w' '--write_reduced',
+    parser.add_argument('-w', '--write_reduced',
                         help='Use with -r if you want Scoary to create a new '
                         'gene presence absence file from your reduced set of '
                         'isolates.',
@@ -226,7 +226,6 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14, allowed_isolates=None, wr
     if writereducedset:
         file = open(ReduceSet(genefile,delimiter,startcol,allowed_isolates),"rUb")
         csvfile = csv.reader(file, skipinitialspace=True, delimiter=delimiter)
-        file.close()
     else:
         csvfile = csv.reader(genefile, skipinitialspace=True, delimiter=delimiter)
     header = next(csvfile)
@@ -276,6 +275,8 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14, allowed_isolates=None, wr
             zero_ones_matrix.append(zero_ones_line)
 
     # Transpose list for distance calculation purposes
+    if writereduced:
+        file.close()
     zero_ones_matrix = list(map(list, zip(*zero_ones_matrix)))
     return {"Roarydic": r,
             "Zero_ones_matrix": zero_ones_matrix,
