@@ -147,7 +147,7 @@ def main():
                      args.max_hits,
                      args.p_value_cutoff,
                      args.correction, upgmatree, GTC)
-        print("Finished. Checked a total of %d genes for associations to %d trait(s). "
+        print("\nFinished. Checked a total of %d genes for associations to %d trait(s). "
               "Total time used: %d seconds." % (len(genedic),
                                                 len(traitsdic),
                                                 int(time.time()-starttime)))
