@@ -101,6 +101,8 @@ def main():
     
     if (args.p_value_cutoff > 1.0) or (args.p_value_cutoff =< 0.0):
         sys.exit("P must be between 0.0 and 1.0 or exactly 1.0")
+    if (len(args.delimiter) > 1):
+        sys.exit("Delimiter must be a single character string. There is no support for tab.")
 
     starttime = time.time()
     
