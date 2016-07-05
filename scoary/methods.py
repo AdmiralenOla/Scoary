@@ -106,12 +106,12 @@ def main():
 
     starttime = time.time()
     
-    with open(args.genes, "rUb") as genes, open(args.traits, "rUb") as traits:
+    with open(args.genes, "rU") as genes, open(args.traits, "rU") as traits:
 
         if args.restrict_to is not None:
             allowed_isolates = [isolate
                                 for line in
-                                open(args.restrict_to,"rUb")
+                                open(args.restrict_to,"rU")
                                 for isolate in line.rstrip().split(",")]
         else:
             # Despite the confusing name
@@ -213,7 +213,7 @@ def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None):
     
     print("Writing gene presence absence file for the reduced set of isolates")
     reducedfilename = "gene_presence_absence_reduced_" + time.strftime("_%d_%m_%Y_%H%M") + ".csv"
-    with open(reducedfilename, "wb") as csvout:
+    with open(reducedfilename, "w") as csvout:
         wtr = csv.writer(csvout, delimiter = delimiter)
         newheader = [header[a] for a in allowed_indexes]
         wtr.writerow(newheader)
@@ -229,7 +229,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14, allowed_isolates=None, wr
     """
     r = {}
     if writereducedset:
-        file = open(ReduceSet(genefile,delimiter,startcol,allowed_isolates),"rUb")
+        file = open(ReduceSet(genefile,delimiter,startcol,allowed_isolates),"rU")
         csvfile = csv.reader(file, skipinitialspace=True, delimiter=delimiter)
     else:
         csvfile = csv.reader(genefile, skipinitialspace=True, delimiter=delimiter)
@@ -466,7 +466,7 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
     """
     The method that actually stores the results. Only accepts results from a single trait at a time
     """
-    with open(Traitname + time.strftime("_%d_%m_%Y_%H%M") + ".csv", "wb") as outfile:
+    with open(Traitname + time.strftime("_%d_%m_%Y_%H%M") + ".csv", "w") as outfile:
         # Sort genes by p-value.
         sort_instructions = SortResultsAndSetKey(Trait)
 
@@ -591,7 +591,7 @@ def StoreUPGMAtreeToFile(upgmatree):
     hamming distances in the gene presence/absence matrix
     """
     treefilename = str("Tree" + time.strftime("_%d_%m_%Y_%H%M") + ".nwk")
-    with open(treefilename, "wb") as treefile:
+    with open(treefilename, "w") as treefile:
         Tree = str(upgmatree)
         Tree = Tree.replace("[", "(")
         Tree = Tree.replace("]", ")")
