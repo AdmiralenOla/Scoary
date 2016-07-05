@@ -98,6 +98,9 @@ def main():
                         version=SCOARY_VERSION)
 
     args = parser.parse_args()
+    
+    if (args.p_value_cutoff > 1.0) or (args.p_value_cutoff =< 0.0):
+        sys.exit("P must be between 0.0 and 1.0 or exactly 1.0")
 
     starttime = time.time()
     
