@@ -23,6 +23,11 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
+v1.3.5 (PRE-RELEASE) (5th Jul 2016)
+- You can now use the -w option with -r to write a reduced gene presence/absence file containing only the subset isolates. This ensures that the program will run much faster if you have a large dataset (1000s of isolates) but only want to analyze a subset. Scoary automatically opens and analyzes the newly written file.
+- All files are now opened as binary files. (Should speed up analysis in most cases.)
+- This is a pre-release version. There might still be bugs in the code, in which case I would be grateful if you report them.
+
 v1.3.4 (16th Jun 2016)
 - Scoary no longer crashes when using Scipy 0.16 instead of 0.17.
 - More information about what's going on is printed. (Useful for very large datasets that take long to analyze)
@@ -197,6 +202,9 @@ optional arguments:
                         On which column in the gene presence/absence file do
                         individual strain info start. Default=15. (1-based
                         indexing)
+  -w, --write_reduced   Use with -r if you only want to analyze a subset of your
+                        strains. SCOARY will read the provided comma-separated
+                        table of strains and restrict analyzes to these.
   --delimiter DELIMITER
                         The delimiter between cells in the gene
                         presence/absence and trait files.
@@ -215,6 +223,9 @@ Strain1,Strain2,Strain4,Strain9
 ```
 
 This will restrict the current analysis to isolates 1,2,4 and 9, and will omit all others.
+
+#### The -w flag
+Using the **-w** flag with **-r** will make Scoary write a reduced gene presence/absence file containing only those isolates specified with **-r**. This makes the program run much faster if you are analyzing a small subset of a large dataset.
 
 #### The -s parameter
 The **-s** parameter is used to indicate to Scoary which column in the gene_presence_absence.csv file is the _first_ column representing an isolate. By default it is set to 15 (1-based indexing).
