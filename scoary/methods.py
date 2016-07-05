@@ -206,7 +206,7 @@ def PopulateQuadTreeWithDistances(TDM):
 def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None):
     csvfile = csv.reader(genefile, skipinitialspace=True, delimiter=delimiter)
     header = next(csvfile)
-    allowed_indexes = range(startcol)
+    allowed_indexes = list(range(startcol))
     for c in xrange(len(header)):
         if header[c] in allowed_isolates:
             allowed_indexes.append(c)
