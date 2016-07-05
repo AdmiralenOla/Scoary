@@ -275,7 +275,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14, allowed_isolates=None, wr
             zero_ones_matrix.append(zero_ones_line)
 
     # Transpose list for distance calculation purposes
-    if writereduced:
+    if writereducedset:
         file.close()
     zero_ones_matrix = list(map(list, zip(*zero_ones_matrix)))
     return {"Roarydic": r,
