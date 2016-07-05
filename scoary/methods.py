@@ -71,6 +71,12 @@ def main():
                         ' strains. SCOARY will read the provided '
                         'comma-separated table of strains and restrict '
                         'analyzes to these.')
+    parser.add_argument('-w', '--write_reduced',
+                        help='Use with -r if you want Scoary to create a new '
+                        'gene presence absence file from your reduced set of '
+                        'isolates.',
+                        default=False,
+                        action='store_true')
     parser.add_argument('-s', '--start_col',
                         help='On which column in the gene presence/absence '
                         'file do individual strain info start. Default=15. '
@@ -92,27 +98,35 @@ def main():
                         version=SCOARY_VERSION)
 
     args = parser.parse_args()
+    
+    if (args.p_value_cutoff > 1.0) or (args.p_value_cutoff <= 0.0):
+        sys.exit("P must be between 0.0 and 1.0 or exactly 1.0")
+    if (len(args.delimiter) > 1):
+        sys.exit("Delimiter must be a single character string. There is no support for tab.")
 
     starttime = time.time()
-
+    
     with open(args.genes, "rU") as genes, open(args.traits, "rU") as traits:
 
         if args.restrict_to is not None:
             allowed_isolates = [isolate
                                 for line in
-                                open(args.restrict_to)
+                                open(args.restrict_to,"rU")
                                 for isolate in line.rstrip().split(",")]
         else:
             # Despite the confusing name
             # this actually means all isolates are allowed
             # and included in the analysis
             allowed_isolates = None
+            if args.write_reduced:
+                sys.exit("You cannot use the -w argument without specifying a subset (-r)")
             
         print("Reading gene presence absence file")    
         genedic_and_matrix = Csv_to_dic_Roary(genes,
                                               args.delimiter,
                                               startcol=args.start_col - 1,
-                                              allowed_isolates=allowed_isolates)
+                                              allowed_isolates=allowed_isolates,
+                                              writereducedset=args.write_reduced)
         genedic = genedic_and_matrix["Roarydic"]
         zeroonesmatrix = genedic_and_matrix["Zero_ones_matrix"]
         strains = genedic_and_matrix["Strains"]
@@ -138,7 +152,7 @@ def main():
                      args.max_hits,
                      args.p_value_cutoff,
                      args.correction, upgmatree, GTC)
-        print("Finished. Checked a total of %d genes for associations to %d trait(s). "
+        print("\nFinished. Checked a total of %d genes for associations to %d trait(s). "
               "Total time used: %d seconds." % (len(genedic),
                                                 len(traitsdic),
                                                 int(time.time()-starttime)))
@@ -189,15 +203,38 @@ def PopulateQuadTreeWithDistances(TDM):
         PopulatedQuadtree.insert_row(i, Quadmatrix[i])
     return PopulatedQuadtree
 
+def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None):
+    csvfile = csv.reader(genefile, skipinitialspace=True, delimiter=delimiter)
+    header = next(csvfile)
+    allowed_indexes = list(range(startcol))
+    for c in xrange(len(header)):
+        if header[c] in allowed_isolates:
+            allowed_indexes.append(c)
+    
+    print("Writing gene presence absence file for the reduced set of isolates")
+    reducedfilename = "gene_presence_absence_reduced_" + time.strftime("_%d_%m_%Y_%H%M") + ".csv"
+    with open(reducedfilename, "w") as csvout:
+        wtr = csv.writer(csvout, delimiter = delimiter)
+        newheader = [header[a] for a in allowed_indexes]
+        wtr.writerow(newheader)
+        for r in csvfile:
+            wtr.writerow( tuple(r[a] for a in allowed_indexes) )
+    print("Finished writing reduced gene presence absence list to file " + reducedfilename)
+    return reducedfilename
 
-def Csv_to_dic_Roary(genefile, delimiter, startcol=0, allowed_isolates=None):
+def Csv_to_dic_Roary(genefile, delimiter, startcol=14, allowed_isolates=None, writereducedset=False):
     """
     Converts a gene presence/absence file into dictionaries
     that are readable by Roary
     """
     r = {}
-    csvfile = csv.reader(genefile, skipinitialspace=True)
+    if writereducedset:
+        file = open(ReduceSet(genefile,delimiter,startcol,allowed_isolates),"rU")
+        csvfile = csv.reader(file, skipinitialspace=True, delimiter=delimiter)
+    else:
+        csvfile = csv.reader(genefile, skipinitialspace=True, delimiter=delimiter)
     header = next(csvfile)
+            
     roaryfile = True
 
     strains = header[startcol:]
@@ -243,6 +280,8 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=0, allowed_isolates=None):
             zero_ones_matrix.append(zero_ones_line)
 
     # Transpose list for distance calculation purposes
+    if writereducedset:
+        file.close()
     zero_ones_matrix = list(map(list, zip(*zero_ones_matrix)))
     return {"Roarydic": r,
             "Zero_ones_matrix": zero_ones_matrix,
