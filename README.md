@@ -25,7 +25,6 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 ## What's new?
 v1.3.5 (PRE-RELEASE) (5th Jul 2016)
 - You can now use the -w option with -r to write a reduced gene presence/absence file containing only the subset isolates. This ensures that the program will run much faster if you have a large dataset (1000s of isolates) but only want to analyze a subset. Scoary automatically opens and analyzes the newly written file.
-- All files are now opened as binary files. (Should speed up analysis in most cases.)
 - This is a pre-release version. There might still be bugs in the code, in which case I would be grateful if you report them.
 
 v1.3.4 (16th Jun 2016)
