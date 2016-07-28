@@ -24,6 +24,9 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
+v1.3.6 (28th Jul 2016)
+- Simulated example data is included in the exampledata folder. This is primarily intended as a guide to how input files can look, as well as giving users a quick view at what the program can do. Running Scoary with the --test flag will overrun all other options (except --version) and automatically run the exampledata with default options.
+
 v1.3.5 (PRE-RELEASE) (5th Jul 2016)
 - You can now use the -w option with -r to write a reduced gene presence/absence file containing only the subset isolates. This ensures that the program will run much faster if you have a large dataset (1000s of isolates) but only want to analyze a subset. Scoary automatically opens and analyzes the newly written file.
 - This is a pre-release version. There might still be bugs in the code, in which case I would be grateful if you report them.
@@ -265,6 +268,11 @@ In the exampledata folder you can see an example of how the input files would ty
 Here I have used tetracycline resistance as the phenotype for which we would like to know the genetic basis. In this example, only a single gene controls the expression of tetracycline resistance, although the penetrance of the gene is not 100% (i.e. isolates can have the gene and still be susceptible towards tetracycline), and other, unmeasured factors (for example point mutations) can also induce resistance. 
 
 This particular example very clearly identifies the causal gene (looking at the pairwise comparison p-values), whereas in real experiments the results are sometimes a lot messier.
+
+Running Scoary with the --test flag is equivalent to the following command:
+```
+python ./scoary.py -t ./exampledata/Tetracycline_resistance.csv -g ./exampledata/Gene_presence_absence.csv -u
+```
 
 ## License
 Scoary is freely available under a GPLv3 license.
