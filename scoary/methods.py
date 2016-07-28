@@ -93,11 +93,28 @@ def main():
                         'presence/absence and trait files. ',
                         default=',',
                         type=str)
+    parser.add_argument('--test',
+                        help='Run Scoary on the test set in exampledata, '
+                        'overriding all other parameters. ',
+                        default=False,
+                        action='store_true')
     parser.add_argument('--version', help='Display Scoary version, and exit.',
                         action='version',
                         version=SCOARY_VERSION)
 
     args = parser.parse_args()
+    
+    if args.test:
+		args.correction = 'Individual'
+		args.delimiter = ','
+		args.genes = './exampledata/Gene_presence_absence.csv'
+		args.max_hits = None
+		args.p_value_cutoff = 0.05
+		args.restrict_to = None
+		args.start_col = 15
+		args.traits = './exampledata/Tetracycline_resistance.csv'
+		args.upgma_tree = True
+		args.write_reduced = False
     
     if (args.p_value_cutoff > 1.0) or (args.p_value_cutoff <= 0.0):
         sys.exit("P must be between 0.0 and 1.0 or exactly 1.0")
