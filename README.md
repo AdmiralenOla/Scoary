@@ -12,6 +12,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Output] (#output)
 - [Options] (#options)
 - [Population structure] (#population-structure)
+- [Example data] (#example-data)
 - [License] (#license)
 - [Etymology] (#etymology)
 - [Bugs] (#bugs)
@@ -130,6 +131,8 @@ It should look something like this:
 | Strain3 | 0      | 0      | ... | 1      |
 | ...     | ...    | ...    | ... | ...    |
 | StrainN | 1      | 0      | ... | 0      |
+
+You can see an example of how the input files could look in the exampledata folder.
 
 ## Output
 Scory outputs a single csv file per trait in the traits file. It uses semicolon ";" as a delimiter to avoid conflict with gene annotations that include commas. The results consists of genes that were found to be associated with the trait, sorted according to significance. (By default, Scoary reports all genes with a p-value < 0.05, but the user can change the cut-off value and use adjusted p-values instead)
@@ -255,6 +258,13 @@ The above tree has a maximum of 6 contrasting pairs, and in this tree the pairs 
 The above tree has the same topology and terminal states, and the same number of contrasting pairs, but now we have chosen pairs so that 5 pairs support A->B while 1 pair oppose it (It suggests that A->b / a->B). This is a worst possible pairing which maintains the maximum number of contrasting pairs.
 
 Scoary reports the best (lowest) and worst (highest) p-values, corresponding to the first and the second scenario, respectively. The p-value corresponds to a binomial test using the number of supporting pairs as successes and p=0.5 for each state. A p<0.05 would thus typically be considered as a rejection of the null hypothesis that the expressed phenotype is not associated with the gene.
+
+## Example data
+In the exampledata folder you can see an example of how the input files would typically look. This simulated and completely fictitious data set consists of 100 isolates with around 3000 core genes and a total pan-genome of around 9000 genes. 
+
+Here I have used tetracycline resistance as the phenotype for which we would like to know the genetic basis. In this example, only a single gene controls the expression of tetracycline resistance, although the penetrance of the gene is not 100% (i.e. isolates can have the gene and still be susceptible towards tetracycline), and other, unmeasured factors (for example point mutations) can also induce resistance. 
+
+This particular example very clearly identifies the causal gene (looking at the pairwise comparison p-values), whereas in real experiments the results are sometimes a lot messier.
 
 ## License
 Scoary is freely available under a GPLv3 license.
