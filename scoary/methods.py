@@ -105,16 +105,16 @@ def main():
     args = parser.parse_args()
     
     if args.test:
-		args.correction = 'Individual'
-		args.delimiter = ','
-		args.genes = './exampledata/Gene_presence_absence.csv'
-		args.max_hits = None
-		args.p_value_cutoff = 0.05
-		args.restrict_to = None
-		args.start_col = 15
-		args.traits = './exampledata/Tetracycline_resistance.csv'
-		args.upgma_tree = True
-		args.write_reduced = False
+        args.correction = 'Individual'
+        args.delimiter = ','
+        args.genes = './exampledata/Gene_presence_absence.csv'
+        args.max_hits = None
+        args.p_value_cutoff = 0.05
+        args.restrict_to = None
+        args.start_col = 15
+        args.traits = './exampledata/Tetracycline_resistance.csv'
+        args.upgma_tree = True
+        args.write_reduced = False
     
     if (args.p_value_cutoff > 1.0) or (args.p_value_cutoff <= 0.0):
         sys.exit("P must be between 0.0 and 1.0 or exactly 1.0")
