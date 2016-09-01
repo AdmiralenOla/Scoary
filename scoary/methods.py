@@ -35,13 +35,11 @@ def main():
                         'trait-associated genes' % SCOARY_VERSION,
                         epilog='by Ola Brynildsrud (olbb@fhi.no)')
     parser.add_argument('-t', '--traits',
-                        required=True,
                         help='Input trait table (comma-separated-values). '
                         'Trait presence is indicated by 1, trait absence by 0. '
                         'Assumes strain names in the first column and trait '
                         'names in the first row')
     parser.add_argument('-g', '--genes',
-                        required=True,
                         help='Input gene presence/absence table '
                         '(comma-separated-values) from ROARY. '
                         'Strain names must be equal to those in the trait '
@@ -116,6 +114,9 @@ def main():
         args.upgma_tree = True
         args.write_reduced = False
     
+    if args.traits is None or args.genes is None:
+        sys.exit("The following arguments are required: -t/--traits, -g/--genes")
+
     if (args.p_value_cutoff > 1.0) or (args.p_value_cutoff <= 0.0):
         sys.exit("P must be between 0.0 and 1.0 or exactly 1.0")
     if (len(args.delimiter) > 1):
