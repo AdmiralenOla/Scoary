@@ -35,13 +35,11 @@ def main():
                         'trait-associated genes' % SCOARY_VERSION,
                         epilog='by Ola Brynildsrud (olbb@fhi.no)')
     parser.add_argument('-t', '--traits',
-                        required=True,
                         help='Input trait table (comma-separated-values). '
                         'Trait presence is indicated by 1, trait absence by 0. '
                         'Assumes strain names in the first column and trait '
                         'names in the first row')
     parser.add_argument('-g', '--genes',
-                        required=True,
                         help='Input gene presence/absence table '
                         '(comma-separated-values) from ROARY. '
                         'Strain names must be equal to those in the trait '
@@ -90,9 +88,15 @@ def main():
                         action='store_true')
     parser.add_argument('--delimiter',
                         help='The delimiter between cells in the gene '
-                        'presence/absence and trait files. ',
+                        'presence/absence and trait files, as well as '
+                        'the output file. ',
                         default=',',
                         type=str)
+    parser.add_argument('--no-time',
+                        help='Output file in the form TRAIT.results.csv, '
+                        'instead of TRAIT_TIMESTAMP.csv. ',
+                        default=False,
+                        action='store_true')
     parser.add_argument('--test',
                         help='Run Scoary on the test set in exampledata, '
                         'overriding all other parameters. ',
@@ -105,17 +109,21 @@ def main():
     args = parser.parse_args()
     
     if args.test:
-		args.correction = 'Individual'
-		args.delimiter = ','
-		args.genes = './exampledata/Gene_presence_absence.csv'
-		args.max_hits = None
-		args.p_value_cutoff = 0.05
-		args.restrict_to = None
-		args.start_col = 15
-		args.traits = './exampledata/Tetracycline_resistance.csv'
-		args.upgma_tree = True
-		args.write_reduced = False
+        args.correction = 'Individual'
+        args.delimiter = ','
+        args.genes = './exampledata/Gene_presence_absence.csv'
+        args.max_hits = None
+        args.p_value_cutoff = 0.05
+        args.restrict_to = None
+        args.start_col = 15
+        args.traits = './exampledata/Tetracycline_resistance.csv'
+        args.upgma_tree = True
+        args.write_reduced = False
+        args.no_time = False
     
+    if args.traits is None or args.genes is None:
+        sys.exit("The following arguments are required: -t/--traits, -g/--genes")
+
     if (args.p_value_cutoff > 1.0) or (args.p_value_cutoff <= 0.0):
         sys.exit("P must be between 0.0 and 1.0 or exactly 1.0")
     if (len(args.delimiter) > 1):
@@ -163,12 +171,14 @@ def main():
         GTC = RES_and_GTC["Gene_trait_combinations"]
 
         if args.upgma_tree:
-            StoreUPGMAtreeToFile(upgmatree)
+            StoreUPGMAtreeToFile(upgmatree, no_time=args.no_time)
 
         StoreResults(RES,
                      args.max_hits,
                      args.p_value_cutoff,
-                     args.correction, upgmatree, GTC)
+                     args.correction, upgmatree, GTC,
+                     no_time=args.no_time,
+                     delimiter=args.delimiter)
         print("\nFinished. Checked a total of %d genes for associations to %d trait(s). "
               "Total time used: %d seconds." % (len(genedic),
                                                 len(traitsdic),
@@ -470,30 +480,40 @@ def Perform_statistics(traits, genes):
     return {"statistics": r, "gene_trait": gene_trait}
 
 
-def StoreResults(Results, max_hits, p_cutoff, correctionmethod, upgmatree, GTC):
+def StoreResults(Results, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
+                 no_time=False, delimiter=","):
     """
     A method for storing the results. Calls StoreTraitResult for each trait column in the input file
     """
     for Trait in Results:
         print("\nStoring results: " + Trait)
-        StoreTraitResult(Results[Trait], Trait, max_hits, p_cutoff, correctionmethod, upgmatree, GTC)
+        StoreTraitResult(Results[Trait], Trait, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
+                         no_time, delimiter)
 
 
-def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upgmatree, GTC):
+def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
+                     no_time=False, delimiter=","):
     """
     The method that actually stores the results. Only accepts results from a single trait at a time
     """
-    with open(Traitname + time.strftime("_%d_%m_%Y_%H%M") + ".csv", "w") as outfile:
+    if not no_time:
+        fname = Traitname + time.strftime("_%d_%m_%Y_%H%M") + ".csv"
+    else:
+        fname = Traitname + '.results.csv'
+
+    with open(fname, "w") as outfile:
         # Sort genes by p-value.
         sort_instructions = SortResultsAndSetKey(Trait)
 
         num_results = max_hits if max_hits is not None else len(Trait)
 
         cut_possibilities = {"Individual": "p_v", "Bonferroni": "B_p", "Benjamini-Hochberg": "BH_p"}
-
-        outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;"
-        "Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;Naive_p;Bonferroni_p;Benjamini_H_p;Max_Pairwise_comparisons;"
-        "Max_supporting_pairs;Max_opposing_pairs;Best_pairwise_comp_p;Worst_pairwise_comp_p\n")
+        
+        columns = ["Gene","Non-unique gene name","Annotation","Number_pos_present_in","Number_neg_present_in",
+        "Number_pos_not_present_in","Number_neg_not_present_in","Sensitivity","Specificity","Odds_ratio","Naive_p","Bonferroni_p",
+        "Benjamini_H_p","Max_Pairwise_comparisons","Max_supporting_pairs","Max_opposing_pairs","Best_pairwise_comp_p","Worst_pairwise_comp_p"]
+        
+        outfile.write(delimiter.join(c for c in columns) + "\n")
 
         print("Calculating max number of contrasting pairs for each significant gene")
 
@@ -523,14 +543,14 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
             except TypeError:
                 sys.exit("There was a problem using scipy.stats.binom_test. Ensure you have a recent distribution of SciPy installed.")
 
-            outfile.write('"' + currentgene + '";"' + str(Trait[currentgene]["NUGN"]) + '";"' + str(Trait[currentgene]["Annotation"]) +
-            '";"' + str(Trait[currentgene]["tpgp"]) + '";"' + str(Trait[currentgene]["tngp"]) + '";"' + str(Trait[currentgene]["tpgn"]) +
-            '";"' + str(Trait[currentgene]["tngn"]) + '";"' + str(Trait[currentgene]["sens"]) + '";"' + str(Trait[currentgene]["spes"]) +
-            '";"' + str(Trait[currentgene]["OR"]) + '";"' + str(Trait[currentgene]["p_v"]) + '";"' + str(Trait[currentgene]["B_p"]) +
-            '";"' + str(Trait[currentgene]["BH_p"]) + '";"' + str(max_total_pairs) + '";"' + str(max_propairs) + '";"' + str(max_antipairs) +
-            '";"' + str(best_pairwise_comparison_p) + '";"' + str(worst_pairwise_comparison_p) + '"\n')
-
-
+            outrow = [currentgene, str(Trait[currentgene]["NUGN"]), str(Trait[currentgene]["Annotation"]), str(Trait[currentgene]["tpgp"]),
+            str(Trait[currentgene]["tngp"]), str(Trait[currentgene]["tpgn"]), str(Trait[currentgene]["tngn"]), str(Trait[currentgene]["sens"]),
+            str(Trait[currentgene]["spes"]), str(Trait[currentgene]["OR"]), str(Trait[currentgene]["p_v"]), str(Trait[currentgene]["B_p"]),
+            str(Trait[currentgene]["BH_p"]), str(max_total_pairs), str(max_propairs), str(max_antipairs), str(best_pairwise_comparison_p),
+            str(worst_pairwise_comparison_p)]
+            
+            outfile.write(delimiter.join(c for c in outrow) + "\n")
+            
 def SortResultsAndSetKey(genedic):
     """
     A method for returning a dictionary where genes are sorted by p-value
@@ -602,12 +622,15 @@ def ConvertUPGMAtoPhyloTree(tree, GTC):
             "Anti": MyPhyloTree.max_contrasting_antipairs}
 
 
-def StoreUPGMAtreeToFile(upgmatree):
+def StoreUPGMAtreeToFile(upgmatree, no_time=False):
     """
     A method for printing the UPGMA tree that is built internally from the 
     hamming distances in the gene presence/absence matrix
     """
-    treefilename = str("Tree" + time.strftime("_%d_%m_%Y_%H%M") + ".nwk")
+    if not no_time:
+        treefilename = str("Tree" + time.strftime("_%d_%m_%Y_%H%M") + ".nwk")
+    else:
+        treefilename = str("Tree.nwk")
     with open(treefilename, "w") as treefile:
         Tree = str(upgmatree)
         Tree = Tree.replace("[", "(")

@@ -24,6 +24,11 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
+v1.3.7 (2nd Sep 2016)
+- The no-time argument can now be used to avoid output files (results and tree file) to come with a timestamp in the name. Should make it easier to implement Scoary in automated pipelines. (Credits: Marco Galardini)
+- Comma is now the default delimiter in input and output files. The user can specify another input/output delimiter with the delimiter argument. (Note that the two input files and the output files will all have the same delimiter)
+- Bug fixes that caused python3 problems in 1.3.6 (Credits: Marco Galardini)
+
 v1.3.6 (28th Jul 2016)
 - Simulated example data is included in the exampledata folder. This is primarily intended as a guide to how input files can look, as well as giving users a quick view at what the program can do. Running Scoary with the --test flag will overrun all other options (except --version) and automatically run the exampledata with default options.
 
