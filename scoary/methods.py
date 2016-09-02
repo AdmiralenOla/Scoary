@@ -91,6 +91,11 @@ def main():
                         'presence/absence and trait files. ',
                         default=',',
                         type=str)
+    parser.add_argument('--no-time',
+                        help='Output file in the form TRAIT.results.csv, '
+                        'instead of TRAIT_TIMESTAMP.csv. ',
+                        default=False,
+                        action='store_true')
     parser.add_argument('--test',
                         help='Run Scoary on the test set in exampledata, '
                         'overriding all other parameters. ',
@@ -113,6 +118,7 @@ def main():
         args.traits = './exampledata/Tetracycline_resistance.csv'
         args.upgma_tree = True
         args.write_reduced = False
+        args.no_time = False
     
     if args.traits is None or args.genes is None:
         sys.exit("The following arguments are required: -t/--traits, -g/--genes")
@@ -169,7 +175,8 @@ def main():
         StoreResults(RES,
                      args.max_hits,
                      args.p_value_cutoff,
-                     args.correction, upgmatree, GTC)
+                     args.correction, upgmatree, GTC,
+                     no_time=args.no_time)
         print("\nFinished. Checked a total of %d genes for associations to %d trait(s). "
               "Total time used: %d seconds." % (len(genedic),
                                                 len(traitsdic),
@@ -471,20 +478,28 @@ def Perform_statistics(traits, genes):
     return {"statistics": r, "gene_trait": gene_trait}
 
 
-def StoreResults(Results, max_hits, p_cutoff, correctionmethod, upgmatree, GTC):
+def StoreResults(Results, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
+                 no_time=False):
     """
     A method for storing the results. Calls StoreTraitResult for each trait column in the input file
     """
     for Trait in Results:
         print("\nStoring results: " + Trait)
-        StoreTraitResult(Results[Trait], Trait, max_hits, p_cutoff, correctionmethod, upgmatree, GTC)
+        StoreTraitResult(Results[Trait], Trait, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
+                         no_time)
 
 
-def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upgmatree, GTC):
+def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
+                     no_time=False):
     """
     The method that actually stores the results. Only accepts results from a single trait at a time
     """
-    with open(Traitname + time.strftime("_%d_%m_%Y_%H%M") + ".csv", "w") as outfile:
+    if not no_time:
+        fname = Traitname + time.strftime("_%d_%m_%Y_%H%M") + ".csv"
+    else:
+        fname = Traitname + '.results.csv'
+
+    with open(fname, "w") as outfile:
         # Sort genes by p-value.
         sort_instructions = SortResultsAndSetKey(Trait)
 
