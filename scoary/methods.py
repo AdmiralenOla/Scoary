@@ -88,7 +88,8 @@ def main():
                         action='store_true')
     parser.add_argument('--delimiter',
                         help='The delimiter between cells in the gene '
-                        'presence/absence and trait files. ',
+                        'presence/absence and trait files, as well as '
+                        'the output file. ',
                         default=',',
                         type=str)
     parser.add_argument('--no-time',
@@ -176,7 +177,8 @@ def main():
                      args.max_hits,
                      args.p_value_cutoff,
                      args.correction, upgmatree, GTC,
-                     no_time=args.no_time)
+                     no_time=args.no_time
+                     delimiter=args.delimiter)
         print("\nFinished. Checked a total of %d genes for associations to %d trait(s). "
               "Total time used: %d seconds." % (len(genedic),
                                                 len(traitsdic),
@@ -479,18 +481,18 @@ def Perform_statistics(traits, genes):
 
 
 def StoreResults(Results, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
-                 no_time=False):
+                 no_time=False, delimiter=";"):
     """
     A method for storing the results. Calls StoreTraitResult for each trait column in the input file
     """
     for Trait in Results:
         print("\nStoring results: " + Trait)
         StoreTraitResult(Results[Trait], Trait, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
-                         no_time)
+                         no_time, delimiter)
 
 
 def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
-                     no_time=False):
+                     no_time=False, delimiter=";"):
     """
     The method that actually stores the results. Only accepts results from a single trait at a time
     """
@@ -506,10 +508,12 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
         num_results = max_hits if max_hits is not None else len(Trait)
 
         cut_possibilities = {"Individual": "p_v", "Bonferroni": "B_p", "Benjamini-Hochberg": "BH_p"}
-
-        outfile.write("Gene;Non-unique gene name;Annotation;Number_pos_present_in;Number_neg_present_in;Number_pos_not_present_in;"
-        "Number_neg_not_present_in;Sensitivity;Specificity;Odds_ratio;Naive_p;Bonferroni_p;Benjamini_H_p;Max_Pairwise_comparisons;"
-        "Max_supporting_pairs;Max_opposing_pairs;Best_pairwise_comp_p;Worst_pairwise_comp_p\n")
+        
+        columns = ["Gene","Non-unique gene name","Annotation","Number_pos_present_in","Number_pos_not_present_in",
+        "Number_neg_not_present_in","Sensitivity","Specificity","Odds_ratio","Naive_p","Bonferroni_p","Benjamini_H_p",
+        "Max_Pairwise_comparisons","Max_supporting_pairs","Max_opposing_pairs","Best_pairwise_comp_p","Worst_pairwise_comp_p"]
+        
+        outfile.write(delimiter.join(c for c in columns) + "\n")
 
         print("Calculating max number of contrasting pairs for each significant gene")
 
@@ -539,14 +543,14 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
             except TypeError:
                 sys.exit("There was a problem using scipy.stats.binom_test. Ensure you have a recent distribution of SciPy installed.")
 
-            outfile.write('"' + currentgene + '";"' + str(Trait[currentgene]["NUGN"]) + '";"' + str(Trait[currentgene]["Annotation"]) +
-            '";"' + str(Trait[currentgene]["tpgp"]) + '";"' + str(Trait[currentgene]["tngp"]) + '";"' + str(Trait[currentgene]["tpgn"]) +
-            '";"' + str(Trait[currentgene]["tngn"]) + '";"' + str(Trait[currentgene]["sens"]) + '";"' + str(Trait[currentgene]["spes"]) +
-            '";"' + str(Trait[currentgene]["OR"]) + '";"' + str(Trait[currentgene]["p_v"]) + '";"' + str(Trait[currentgene]["B_p"]) +
-            '";"' + str(Trait[currentgene]["BH_p"]) + '";"' + str(max_total_pairs) + '";"' + str(max_propairs) + '";"' + str(max_antipairs) +
-            '";"' + str(best_pairwise_comparison_p) + '";"' + str(worst_pairwise_comparison_p) + '"\n')
-
-
+            outrow = [currentgene, str(Trait[currentgene]["NUGN"]), str(Trait[currentgene]["Annotation"]), str(Trait[currentgene]["tpgp"]),
+            str(Trait[currentgene]["tngp"]), str(Trait[currentgene]["tpgn"]), str(Trait[currentgene]["tngn"]), str(Trait[currentgene]["sens"]),
+            str(Trait[currentgene]["spes"]), str(Trait[currentgene]["OR"]), str(Trait[currentgene]["p_v"]), str(Trait[currentgene]["B_p"]),
+            str(Trait[currentgene]["BH_p"]), str(max_total_pairs), str(max_propairs), str(max_antipairs), str(best_pairwise_comparison_p),
+            str(worst_pairwise_comparison_p)]
+            
+            outfile.write(delimiter.join(c for c in outrow) + "\n")
+            
 def SortResultsAndSetKey(genedic):
     """
     A method for returning a dictionary where genes are sorted by p-value
