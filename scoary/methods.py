@@ -170,7 +170,7 @@ def main():
         GTC = RES_and_GTC["Gene_trait_combinations"]
 
         if args.upgma_tree:
-            StoreUPGMAtreeToFile(upgmatree)
+            StoreUPGMAtreeToFile(upgmatree, no_time=args.no_time)
 
         StoreResults(RES,
                      args.max_hits,
@@ -618,12 +618,15 @@ def ConvertUPGMAtoPhyloTree(tree, GTC):
             "Anti": MyPhyloTree.max_contrasting_antipairs}
 
 
-def StoreUPGMAtreeToFile(upgmatree):
+def StoreUPGMAtreeToFile(upgmatree, no_time=False):
     """
     A method for printing the UPGMA tree that is built internally from the 
     hamming distances in the gene presence/absence matrix
     """
-    treefilename = str("Tree" + time.strftime("_%d_%m_%Y_%H%M") + ".nwk")
+    if not no_time:
+        treefilename = str("Tree" + time.strftime("_%d_%m_%Y_%H%M") + ".nwk")
+    else:
+        treefilename = str("Tree.nwk")
     with open(treefilename, "w") as treefile:
         Tree = str(upgmatree)
         Tree = Tree.replace("[", "(")
