@@ -177,7 +177,7 @@ def main():
                      args.max_hits,
                      args.p_value_cutoff,
                      args.correction, upgmatree, GTC,
-                     no_time=args.no_time
+                     no_time=args.no_time,
                      delimiter=args.delimiter)
         print("\nFinished. Checked a total of %d genes for associations to %d trait(s). "
               "Total time used: %d seconds." % (len(genedic),
@@ -481,7 +481,7 @@ def Perform_statistics(traits, genes):
 
 
 def StoreResults(Results, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
-                 no_time=False, delimiter=";"):
+                 no_time=False, delimiter=","):
     """
     A method for storing the results. Calls StoreTraitResult for each trait column in the input file
     """
@@ -492,7 +492,7 @@ def StoreResults(Results, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
 
 
 def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
-                     no_time=False, delimiter=";"):
+                     no_time=False, delimiter=","):
     """
     The method that actually stores the results. Only accepts results from a single trait at a time
     """
@@ -509,9 +509,9 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
 
         cut_possibilities = {"Individual": "p_v", "Bonferroni": "B_p", "Benjamini-Hochberg": "BH_p"}
         
-        columns = ["Gene","Non-unique gene name","Annotation","Number_pos_present_in","Number_pos_not_present_in",
-        "Number_neg_not_present_in","Sensitivity","Specificity","Odds_ratio","Naive_p","Bonferroni_p","Benjamini_H_p",
-        "Max_Pairwise_comparisons","Max_supporting_pairs","Max_opposing_pairs","Best_pairwise_comp_p","Worst_pairwise_comp_p"]
+        columns = ["Gene","Non-unique gene name","Annotation","Number_pos_present_in","Number_neg_present_in",
+        "Number_pos_not_present_in","Number_neg_not_present_in","Sensitivity","Specificity","Odds_ratio","Naive_p","Bonferroni_p",
+        "Benjamini_H_p","Max_Pairwise_comparisons","Max_supporting_pairs","Max_opposing_pairs","Best_pairwise_comp_p","Worst_pairwise_comp_p"]
         
         outfile.write(delimiter.join(c for c in columns) + "\n")
 
