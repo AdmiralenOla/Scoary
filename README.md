@@ -24,6 +24,15 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
+v1.4.0 (7th Sep 2016)
+- The correction options are now a lot more sophisticated, and allow multiple restrictions with individual p-values to be set.
+- Fixed a bug that would sometimes result in a too strict Bonferroni p-value in the results.
+- No-time now also applies to the reduced gene presence/absence file.
+- The results sorting now works a little differently. When using only pairwise comparisons filtering, results will be sorted by these p-values. When other filters (Individual, Bonferroni, Benjamini-Hochberg) are used, results will be sorted by these instead.
+- Fixed a bug where the program would crash if you specified a very large max_hits.
+- The citation option has been added, and includes a nifty ASCII logo.
+- Some optimization when using pairwise comparison to filter results.
+
 v1.3.7 (2nd Sep 2016)
 - The no-time argument can now be used to avoid output files (results and tree file) to come with a timestamp in the name. Should make it easier to implement Scoary in automated pipelines. (Credits: Marco Galardini)
 - Comma is now the default delimiter in input and output files. The user can specify another input/output delimiter with the delimiter argument. (Note that the two input files and the output files will all have the same delimiter)
@@ -93,7 +102,7 @@ v1.1 (29th Mar 2016)
 ## Dependencies
 
 - Python (Tested with versions 2.7 and 3.5)
-- [SciPy] (http://www.scipy.org/install.html) (Tested with versions 0.16 and 0.17)
+- [SciPy] (http://www.scipy.org/install.html) (Tested with versions 0.16, 0.17, 0.18)
 
 
 ## Installation
@@ -143,7 +152,7 @@ It should look something like this:
 You can see an example of how the input files could look in the exampledata folder.
 
 ## Output
-Scory outputs a single csv file per trait in the traits file. It uses semicolon ";" as a delimiter to avoid conflict with gene annotations that include commas. The results consists of genes that were found to be associated with the trait, sorted according to significance. (By default, Scoary reports all genes with a p-value < 0.05, but the user can change the cut-off value and use adjusted p-values instead)
+Scory outputs a single csv file per trait in the traits file. It uses comma "," as a delimiter. The results consists of genes that were found to be associated with the trait, sorted according to significance. (By default, Scoary reports all genes with a naive p-value < 0.05, but the user can change the cut-off value and use adjusted p-values instead)
 
 The results file contains the following columns:
 
@@ -173,12 +182,14 @@ The results file contains the following columns:
 ## Options
 Scoary can take a number of optional arguments to tweak the output and make sure it performs as intended:
 ```
-usage: Scoary.py [-h] [-t TRAITS] [-g GENES] [-p P_VALUE_CUTOFF]
-                 [-c {Individual,Bonferroni,Benjamini-Hochberg}] [-m MAX_HITS]
-                 [-r RESTRICT_TO] [-u] [-s START_COL] [--delimiter DELIMITER]
+usage: scoary.py [-h] [-t TRAITS] [-g GENES]
+                 [-p P_VALUE_CUTOFF [P_VALUE_CUTOFF ...]]
+                 [-c [{I,B,BH,PW,EPW} [{I,B,BH,PW,EPW} ...]]] [-m MAX_HITS]
+                 [-r RESTRICT_TO] [-w] [-s START_COL] [-u]
+                 [--delimiter DELIMITER] [--no-time] [--test] [--citation]
                  [--version]
 
-Scoary version v1.3.0 - Screen pan-genome for trait-associated genes
+Scoary version 1.4.0 - Screen pan-genome for trait-associated genes
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -191,35 +202,58 @@ optional arguments:
                         Input gene presence/absence table (comma-separated-
                         values) from ROARY. Strain names must be equal to
                         those in the trait table
-  -p P_VALUE_CUTOFF, --p_value_cutoff P_VALUE_CUTOFF
+  -p P_VALUE_CUTOFF [P_VALUE_CUTOFF ...], --p_value_cutoff P_VALUE_CUTOFF [P_VALUE_CUTOFF ...]
                         P-value cut-off. SCOARY will not report genes with
                         higher p-values than this. Set to 1.0 to report all
-                        genes. Accepts standard form (e.g. 1E-8). Default = 0.05
-  -c {Individual,Bonferroni,Benjamini-Hochberg}, --correction {Individual,Bonferroni,Benjamini-Hochberg}
-                        Instead of cutting off at the individual test p-value
-                        (option -p), use the indicated corrected p-value for
-                        cut-off. Default = use individual test p-value.
+                        genes. Accepts standard form (e.g. 1E-8). Provide a
+                        single value or exactly as many values as correction
+                        criteria and in corresponding order. (See example
+                        under correction). Default = 0.05
+  -c [{I,B,BH,PW,EPW} [{I,B,BH,PW,EPW} ...]], --correction [{I,B,BH,PW,EPW} [{I,B,BH,PW,EPW} ...]]
+                        Use the indicated p-value for cut-off. I=Individual
+                        (naive) p-value. B=Bonferroni adjusted p-value. BH
+                        =Benjamini-Hochberg adjusted p. PW=Best (lowest)
+                        pairwise comparison p. EPW=Entire range of pairwise
+                        comparison p-values. You can enter as many correction
+                        criteria as you would like. These will be associated
+                        with the p_value_cutoffs you enter. For example "-c
+                        Individual PWB -p 0.1 0.05" will apply a naive p-value
+                        cutoff of 0.1 AND additionally require that the entire
+                        range of pairwise comparison values are below 0.05 for
+                        this gene. Default = Individual p-value. (I)
   -m MAX_HITS, --max_hits MAX_HITS
                         Maximum number of hits to report. SCOARY will only
                         report the top max_hits results per trait
   -r RESTRICT_TO, --restrict_to RESTRICT_TO
                         Use if you only want to analyze a subset of your
-                        strains. SCOARY will read the provided comma-separated
+                        strains. Scoary will read the provided comma-separated
                         table of strains and restrict analyzes to these.
-  -u, --upgma_tree      This flag will cause Scoary to write the calculated
-                        UPGMA tree to a newick file
+  -w, --write_reduced   Use with -r if you want Scoary to create a new gene
+                        presence absence file from your reduced set of
+                        isolates. Note: Columns 1-14 (No. sequences, Avg group
+                        size nuc etc) in this file do not reflect the reduced
+                        dataset. These are taken from the full dataset.
   -s START_COL, --start_col START_COL
                         On which column in the gene presence/absence file do
                         individual strain info start. Default=15. (1-based
                         indexing)
-  -w, --write_reduced   Use with -r if you only want to analyze a subset of your
-                        strains. SCOARY will read the provided comma-separated
-                        table of strains and restrict analyzes to these.
+  -u, --upgma_tree      This flag will cause Scoary to write the calculated
+                        UPGMA tree to a newick file
   --delimiter DELIMITER
                         The delimiter between cells in the gene
-                        presence/absence and trait files.
+                        presence/absence and trait files, as well as the
+                        output file.
+  --no-time             Output file in the form TRAIT.results.csv, instead of
+                        TRAIT_TIMESTAMP.csv. When used with the -w argument
+                        will output a reduced gene matrix in the form
+                        gene_presence_absence_reduced.csv rather than
+                        gene_presence_absence_reduced_TIMESTAMP.csv
+  --test                Run Scoary on the test set in exampledata, overriding
+                        all other parameters.
+  --citation            Show citation information, and exit.
   --version             Display Scoary version, and exit.
 
+by Ola Brynildsrud (olbb@fhi.no)
 ```
 #### The -r parameter
 The **-r** parameter is particularly useful, as you can use it to restrict your analysis to a subset of your isolates without altering the gene_presence_absence or trait files. Simply provide a single-line csv file (delimited by ",") with the names of the isolates you would like to include in the current analysis.
@@ -241,7 +275,12 @@ Using the **-w** flag with **-r** will make Scoary write a reduced gene presence
 The **-s** parameter is used to indicate to Scoary which column in the gene_presence_absence.csv file is the _first_ column representing an isolate. By default it is set to 15 (1-based indexing).
 
 #### The -p, -m and -c parameters
-These parameters control your output. **-m** sets a hard cut-off on the number of hits reported. With **-p** you can set that no gene with a higher p-value will be reported. (Tip: Set this to 1.0 to report every single gene). You can mix these parameters with **-c**. If you only wanted genes with a Bonferroni-adjusted p-value < 1E-10 you could use _-p 1E-10 -c Bonferroni_.
+These parameters control your output. **-m** sets a hard cut-off on the number of hits reported. With **-p** you can set that no gene with a higher p-value will be reported. (Tip: Set this to 1.0 to report every single gene). You can mix these parameters with **-c**. If you only wanted genes with a Bonferroni-adjusted p-value < 1E-10 you could use _-p 1E-10 -c B_.
+
+##### Combining filtering options
+From version 1.4.0, you can also mix different restrictions together. For example, you may want to specify that the entire range of pairwise comparisons p-values be < 1E-5, but you still doubt some of your results. You could try to filter your results more strictly by also requiring an Individual (naive) p-value of less than 0.01. You would then use _-c EPW I -p 1E-5 0.01_. You need to enter the -c options and the -p options in the corresponding order. 
+
+Alternatively, you can specify a single (one) p-value, and this will be taken as the filter for all the specified -c options. For example _-c EPW BH -p 0.05_ will filter the results to only include genes where the entire range of pairwise comparison as well as the Benjamini-Hochberg p-values are > 0.05
 
 #### The -u flag
 Calling Scoary with the **-u** flag will cause it to write a newick file of the UPGMA tree that is calculated internally. The tree is based on pairwise Hamming distances in the gene_presence_absence matrix.
@@ -300,7 +339,7 @@ The "best" and "worst" labels are attached to the odds ratio of the gene in the 
 Please feel free to suggest improvements, point out bugs or methods that could be better optimized.
 
 ## Acknowledgements
-- Marco Galardini cleaned stylistic inconsistencies in the code and formatted it according to PEP8.
+- Marco Galardini cleaned my code and made many nifty improvements.
 - The QuadTree and UPGMA implementation was heavily based on code by Christian Storm Pedersen.
 - Inês Mendes pointed out a number of bugs related adjusted p-values and isolate restriction.
 - Eric Deveaud added versioning.

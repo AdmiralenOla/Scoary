@@ -12,6 +12,7 @@ import csv
 import time
 from scipy import stats as ss
 from scipy import spatial
+from .citation import citation
 from .classes import Matrix
 from .classes import QuadTree
 from .classes import PhyloTree
@@ -48,31 +49,50 @@ def main():
                         help='P-value cut-off. SCOARY will not report genes '
                         'with higher p-values than this. Set to 1.0 to report '
                         'all genes. Accepts standard form (e.g. 1E-8). '
+                        'Provide a single value or exactly as many values '
+                        'as correction criteria and in corresponding order. '
+                        '(See example under correction). '
                         'Default = 0.05',
-                        default=0.05,
+                        nargs='+',
+                        default=[0.05],
                         type=float)
     parser.add_argument('-c', '--correction',
-                        help='Instead of cutting off at the individual test '
-                        'p-value (option -p), use the indicated corrected '
+                        help='Use the indicated '
                         'p-value for cut-off. '
-                        'Default = use individual test p-value.',
-                        choices=['Individual',
-                                 'Bonferroni',
-                                 'Benjamini-Hochberg'],
-                        default='Individual')
+                        'I=Individual (naive) p-value. '
+                        'B=Bonferroni adjusted p-value. '
+                        'BH=Benjamini-Hochberg adjusted p. '
+                        'PW=Best (lowest) pairwise comparison p. '
+                        'EPW=Entire range of pairwise comparison p-values. '
+                        'You can enter as many correction criteria as you would like. '
+                        'These will be associated with the p_value_cutoffs you enter. '
+                        'For example "-c Individual PWB -p 0.1 0.05" will apply a naive '
+                        'p-value cutoff of 0.1 AND additionally require that the '
+                        'entire range of pairwise comparison values are below 0.05 '
+                        'for this gene. '
+                        'Default = Individual p-value. (I)',
+                        choices=['I',
+                                 'B',
+                                 'BH',
+                                 'PW',
+                                 'EPW'],
+                        nargs='*',
+                        default=['Individual'])
     parser.add_argument('-m', '--max_hits',
                         help='Maximum number of hits to report. SCOARY will '
                         'only report the top max_hits results per trait',
                         type=int)
     parser.add_argument('-r', '--restrict_to',
                         help='Use if you only want to analyze a subset of your'
-                        ' strains. SCOARY will read the provided '
+                        ' strains. Scoary will read the provided '
                         'comma-separated table of strains and restrict '
                         'analyzes to these.')
     parser.add_argument('-w', '--write_reduced',
                         help='Use with -r if you want Scoary to create a new '
                         'gene presence absence file from your reduced set of '
-                        'isolates.',
+                        'isolates. Note: Columns 1-14 (No. sequences, '
+                        'Avg group size nuc etc) in this file do not reflect '
+                        'the reduced dataset. These are taken from the full dataset.',
                         default=False,
                         action='store_true')
     parser.add_argument('-s', '--start_col',
@@ -94,7 +114,10 @@ def main():
                         type=str)
     parser.add_argument('--no-time',
                         help='Output file in the form TRAIT.results.csv, '
-                        'instead of TRAIT_TIMESTAMP.csv. ',
+                        'instead of TRAIT_TIMESTAMP.csv. When used with the '
+                        '-w argument will output a reduced gene matrix in the '
+                        'form gene_presence_absence_reduced.csv rather than '
+                        'gene_presence_absence_reduced_TIMESTAMP.csv ',
                         default=False,
                         action='store_true')
     parser.add_argument('--test',
@@ -102,18 +125,23 @@ def main():
                         'overriding all other parameters. ',
                         default=False,
                         action='store_true')
+    parser.add_argument('--citation',
+                        help='Show citation information, and exit. ',
+                        default=False,
+                        action='store_true')
     parser.add_argument('--version', help='Display Scoary version, and exit.',
                         action='version',
                         version=SCOARY_VERSION)
 
     args = parser.parse_args()
-    
+    if args.citation:
+        sys.exit(citation())
     if args.test:
-        args.correction = 'Individual'
+        args.correction = ['I','EPW']
         args.delimiter = ','
         args.genes = './exampledata/Gene_presence_absence.csv'
         args.max_hits = None
-        args.p_value_cutoff = 0.05
+        args.p_value_cutoff = [0.05]
         args.restrict_to = None
         args.start_col = 15
         args.traits = './exampledata/Tetracycline_resistance.csv'
@@ -123,14 +151,22 @@ def main():
     
     if args.traits is None or args.genes is None:
         sys.exit("The following arguments are required: -t/--traits, -g/--genes")
-
-    if (args.p_value_cutoff > 1.0) or (args.p_value_cutoff <= 0.0):
+    if not all( [(p <= 1.0 and p > 0.0) for p in args.p_value_cutoff] ):
         sys.exit("P must be between 0.0 and 1.0 or exactly 1.0")
     if (len(args.delimiter) > 1):
         sys.exit("Delimiter must be a single character string. There is no support for tab.")
+    if (len(args.p_value_cutoff) != len(args.correction)) and (len(args.p_value_cutoff) != 1):
+        sys.exit("You can not use more p-value cutoffs than correction methods. Either provide a single "
+        "p-value that will be applied to all correction methods, or provide exactly as many as the number "
+        "of correction methods and in corresponding sequence. e.g. -c Individual Pairwise_both -p 0.1 0.05 "
+        "will apply an individual p-value cutoff of 0.1 AND a pairwise comparisons p-value cutoff of 0.05.")
+    if len(args.p_value_cutoff) == 1:
+        cutoffs = {c : args.p_value_cutoff[0] for c in args.correction}
+    else:
+        cutoffs = dict(list(zip(args.correction, args.p_value_cutoff)))
 
     starttime = time.time()
-    
+
     with open(args.genes, "rU") as genes, open(args.traits, "rU") as traits:
 
         if args.restrict_to is not None:
@@ -146,15 +182,18 @@ def main():
             if args.write_reduced:
                 sys.exit("You cannot use the -w argument without specifying a subset (-r)")
             
-        print("Reading gene presence absence file")    
+        print("Reading gene presence absence file")
+
         genedic_and_matrix = Csv_to_dic_Roary(genes,
                                               args.delimiter,
                                               startcol=args.start_col - 1,
                                               allowed_isolates=allowed_isolates,
-                                              writereducedset=args.write_reduced)
+                                              writereducedset=args.write_reduced,
+                                              no_time=args.no_time)
         genedic = genedic_and_matrix["Roarydic"]
         zeroonesmatrix = genedic_and_matrix["Zero_ones_matrix"]
         strains = genedic_and_matrix["Strains"]
+        
         print("Creating Hamming distance matrix based on gene presence/absence")
         TDM = CreateTriangularDistanceMatrix(zeroonesmatrix, strains)
         QT = PopulateQuadTreeWithDistances(TDM)
@@ -175,8 +214,8 @@ def main():
 
         StoreResults(RES,
                      args.max_hits,
-                     args.p_value_cutoff,
-                     args.correction, upgmatree, GTC,
+                     cutoffs,
+                     upgmatree, GTC,
                      no_time=args.no_time,
                      delimiter=args.delimiter)
         print("\nFinished. Checked a total of %d genes for associations to %d trait(s). "
@@ -230,7 +269,7 @@ def PopulateQuadTreeWithDistances(TDM):
         PopulatedQuadtree.insert_row(i, Quadmatrix[i])
     return PopulatedQuadtree
 
-def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None):
+def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None, no_time=False):
     csvfile = csv.reader(genefile, skipinitialspace=True, delimiter=delimiter)
     header = next(csvfile)
     allowed_indexes = list(range(startcol))
@@ -239,7 +278,11 @@ def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None):
             allowed_indexes.append(c)
     
     print("Writing gene presence absence file for the reduced set of isolates")
-    reducedfilename = "gene_presence_absence_reduced_" + time.strftime("_%d_%m_%Y_%H%M") + ".csv"
+    if no_time:
+        reducedfilename = "gene_presence_absence_reduced.csv"
+    else:
+        reducedfilename = "gene_presence_absence_reduced_" + time.strftime("_%d_%m_%Y_%H%M") + ".csv"
+    
     with open(reducedfilename, "w") as csvout:
         wtr = csv.writer(csvout, delimiter = delimiter)
         newheader = [header[a] for a in allowed_indexes]
@@ -249,14 +292,14 @@ def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None):
     print("Finished writing reduced gene presence absence list to file " + reducedfilename)
     return reducedfilename
 
-def Csv_to_dic_Roary(genefile, delimiter, startcol=14, allowed_isolates=None, writereducedset=False):
+def Csv_to_dic_Roary(genefile, delimiter, startcol=14, allowed_isolates=None, writereducedset=False,no_time=False):
     """
     Converts a gene presence/absence file into dictionaries
     that are readable by Roary
     """
     r = {}
     if writereducedset:
-        file = open(ReduceSet(genefile,delimiter,startcol,allowed_isolates),"rU")
+        file = open(ReduceSet(genefile,delimiter,startcol,allowed_isolates,no_time),"rU")
         csvfile = csv.reader(file, skipinitialspace=True, delimiter=delimiter)
     else:
         csvfile = csv.reader(genefile, skipinitialspace=True, delimiter=delimiter)
@@ -409,7 +452,6 @@ def Setup_results(genedic, traitsdic):
                 p_value = fisher[1]
                 odds_ratio = fisher[0]
                 fisher_calculated_values[obs_tuple] = fisher
-            bonferroni_p = p_value * number_of_tests if (p_value * number_of_tests) < 1.0 else 1.0
             p_value_list.append((gene, p_value))
 
             all_traits[trait][gene] = {
@@ -423,11 +465,11 @@ def Setup_results(genedic, traitsdic):
                 "spes": (float(stat_table["tngn"]) / num_neg * 100) if num_neg > 0 else 0.0,
                 "OR": odds_ratio,
                 "p_v": p_value,
-                "B_p": bonferroni_p,
             }
 
         print("\nAdding p-values adjusted for testing multiple hypotheses")
-        # Now calculate Benjamini-Hochberg p-values
+        
+        # Now calculate Benjamini-Hochberg and Bonferroni p-values
         sorted_p_values = sorted(p_value_list, key=lambda x: x[1])  # Sorted list of tuples: (gene, p-value)
 
         # Find out which p-values are ties
@@ -445,6 +487,7 @@ def Setup_results(genedic, traitsdic):
         # Now add values to dictionaries:
         for gene in genedic:
             if gene in all_traits[trait]:
+                all_traits[trait][gene]["B_p"] = min(all_traits[trait][gene]["p_v"] * number_of_tests , 1.0)
                 all_traits[trait][gene]["BH_p"] = bh_corrected_p_values[gene] if bh_corrected_p_values[gene] < 1.0 else 1.0
 
     return {"Results": all_traits, "Gene_trait_combinations": gene_trait_combinations}
@@ -480,18 +523,18 @@ def Perform_statistics(traits, genes):
     return {"statistics": r, "gene_trait": gene_trait}
 
 
-def StoreResults(Results, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
+def StoreResults(Results, max_hits, cutoffs, upgmatree, GTC,
                  no_time=False, delimiter=","):
     """
     A method for storing the results. Calls StoreTraitResult for each trait column in the input file
     """
     for Trait in Results:
         print("\nStoring results: " + Trait)
-        StoreTraitResult(Results[Trait], Trait, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
+        StoreTraitResult(Results[Trait], Trait, max_hits, cutoffs, upgmatree, GTC,
                          no_time, delimiter)
 
 
-def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upgmatree, GTC,
+def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree, GTC,
                      no_time=False, delimiter=","):
     """
     The method that actually stores the results. Only accepts results from a single trait at a time
@@ -504,10 +547,18 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
     with open(fname, "w") as outfile:
         # Sort genes by p-value.
         sort_instructions = SortResultsAndSetKey(Trait)
+        if max_hits is None:
+            max_hits = len(Trait)
+        num_results = min(max_hits, len(Trait))
+        Filteredresults = {}
 
-        num_results = max_hits if max_hits is not None else len(Trait)
-
-        cut_possibilities = {"Individual": "p_v", "Bonferroni": "B_p", "Benjamini-Hochberg": "BH_p"}
+        cut_possibilities = {
+            "I": "p_v",
+            "B": "B_p",
+            "BH": "BH_p",
+            "PW": "Plowest",
+            "EPW": "Pboth"
+        }
         
         columns = ["Gene","Non-unique gene name","Annotation","Number_pos_present_in","Number_neg_present_in",
         "Number_pos_not_present_in","Number_neg_not_present_in","Sensitivity","Specificity","Odds_ratio","Naive_p","Bonferroni_p",
@@ -523,31 +574,56 @@ def StoreTraitResult(Trait, Traitname, max_hits, p_cutoff, correctionmethod, upg
 
             # Start with lowest p-value, the one which has key 0 in sort_instructions
             currentgene = sort_instructions[x]
-            if (Trait[currentgene][cut_possibilities[correctionmethod]] > p_cutoff):
+
+            Max_pairwise_comparisons = ConvertUPGMAtoPhyloTree(upgmatree, GTC[Traitname][currentgene])
+            Trait[currentgene]["max_total_pairs"] = Max_pairwise_comparisons["Total"]
+            Trait[currentgene]["max_propairs"] = Max_pairwise_comparisons["Pro"]
+            Trait[currentgene]["max_antipairs"] = Max_pairwise_comparisons["Anti"]
+            
+            try:
+                Trait[currentgene]["Pbest"] = ss.binom_test(Trait[currentgene]["max_propairs"],
+                                                            Trait[currentgene]["max_total_pairs"],
+                                                            0.5) / 2
+                Trait[currentgene]["Pworst"] = ss.binom_test(Trait[currentgene]["max_total_pairs"]-Trait[currentgene]["max_antipairs"],
+                                                             Trait[currentgene]["max_total_pairs"],
+                                                             0.5) / 2
+                Trait[currentgene]["Plowest"] = min(Trait[currentgene]["Pbest"], Trait[currentgene]["Pworst"])
+                Trait[currentgene]["Pboth"] = max(Trait[currentgene]["Pbest"], Trait[currentgene]["Pworst"])
+            except TypeError:
+                sys.exit("There was a problem using scipy.stats.binom_test. Ensure you have a recent distribution of SciPy installed.")
+                
+            # Loop can break early if correction not based on pairwise method.
+
+            if (("I" in cutoffs) or \
+            ("B" in cutoffs) or \
+            ("BH" in cutoffs)) and \
+            all( [Trait[currentgene][cut_possibilities[method]] > cutoffs[method] for method in cutoffs] ):
                 sys.stdout.write("\r100.00%")
                 sys.stdout.flush()
                 break
-
-            Max_pairwise_comparisons = ConvertUPGMAtoPhyloTree(upgmatree,
-                                                               GTC[Traitname][currentgene])
-            max_total_pairs = Max_pairwise_comparisons["Total"]
-            max_propairs = Max_pairwise_comparisons["Pro"]
-            max_antipairs = Max_pairwise_comparisons["Anti"]
-            try:
-                best_pairwise_comparison_p = ss.binom_test(max_propairs,
-                                                           max_total_pairs,
-                                                           0.5) / 2
-                worst_pairwise_comparison_p = ss.binom_test(max_total_pairs-max_antipairs,
-                                                            max_total_pairs,
-                                                            0.5) / 2
-            except TypeError:
-                sys.exit("There was a problem using scipy.stats.binom_test. Ensure you have a recent distribution of SciPy installed.")
-
-            outrow = [currentgene, str(Trait[currentgene]["NUGN"]), str(Trait[currentgene]["Annotation"]), str(Trait[currentgene]["tpgp"]),
-            str(Trait[currentgene]["tngp"]), str(Trait[currentgene]["tpgn"]), str(Trait[currentgene]["tngn"]), str(Trait[currentgene]["sens"]),
-            str(Trait[currentgene]["spes"]), str(Trait[currentgene]["OR"]), str(Trait[currentgene]["p_v"]), str(Trait[currentgene]["B_p"]),
-            str(Trait[currentgene]["BH_p"]), str(max_total_pairs), str(max_propairs), str(max_antipairs), str(best_pairwise_comparison_p),
-            str(worst_pairwise_comparison_p)]
+            if all( [Trait[currentgene][cut_possibilities[method]] <= cutoffs[method] for method in cutoffs] ):
+                Filteredresults[currentgene] = Trait[currentgene]
+        
+        # Only sort by pairwise values if they are the only present correction methods
+        if (("PW" in cutoffs) or \
+        ("EPW" in cutoffs)) and \
+        (("I" not in cutoffs) and \
+        ("B" not in cutoffs) and \
+        ("BH" not in cutoffs)):
+            sort_instructions = SortResultsAndSetKeyPairwise(Filteredresults,cutoffs)
+        else:
+            sort_instructions = SortResultsAndSetKey(Filteredresults)
+        
+        print("\nStoring results to file")       
+        num_filteredresults = min(num_results, len(Filteredresults))
+        for x in xrange(num_filteredresults):
+            currentgene = sort_instructions[x]
+           
+            outrow = [currentgene, str(Filteredresults[currentgene]["NUGN"]), str(Filteredresults[currentgene]["Annotation"]), str(Filteredresults[currentgene]["tpgp"]),
+            str(Filteredresults[currentgene]["tngp"]), str(Filteredresults[currentgene]["tpgn"]), str(Filteredresults[currentgene]["tngn"]), str(Filteredresults[currentgene]["sens"]),
+            str(Filteredresults[currentgene]["spes"]), str(Filteredresults[currentgene]["OR"]), str(Filteredresults[currentgene]["p_v"]), str(Filteredresults[currentgene]["B_p"]),
+            str(Filteredresults[currentgene]["BH_p"]), str(Filteredresults[currentgene]["max_total_pairs"]), str(Filteredresults[currentgene]["max_propairs"]), str(Filteredresults[currentgene]["max_antipairs"]),
+            str(Filteredresults[currentgene]["Pbest"]),str(Filteredresults[currentgene]["Pworst"])]
             
             outfile.write(delimiter.join(c for c in outrow) + "\n")
             
@@ -557,8 +633,21 @@ def SortResultsAndSetKey(genedic):
     """
     return {i: gene for (i, gene) in enumerate(sorted(genedic,
                                                       key=lambda x: genedic[x]["p_v"])) }
+                                                      
+def SortResultsAndSetKeyPairwise(genedic,correctionmethod):
+    """
+    A method for returning a dictionary where genes are sorted by pairwise comparison p-values
+    """
+    if "EPW" in correctionmethod:
+        return {i: gene for (i, gene) in enumerate(sorted(genedic,
+                                                          key=lambda x: genedic[x]["Pboth"])) }
 
-
+    elif "PW" in correctionmethod:
+        return {i: gene for (i, gene) in enumerate(sorted(genedic,
+                                                          key=lambda x: genedic[x]["Plowest"])) }
+    else:
+        sys.exit("Something went wrong when using this set of correction methods. Please report this bug")
+                                                     
 def upgma(d):
     """
     Returns a UPGMA tree from a QuadTree distance matrix d. Heavily based on
