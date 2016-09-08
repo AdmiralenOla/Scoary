@@ -24,6 +24,9 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
+v1.4.1 (8th Sep 2016)
+- Fixed a bug where results in the output file did not have quotes around them. This could interfere with annotations that have delimiters (like commas) in them.
+
 v1.4.0 (7th Sep 2016)
 - The correction options are now a lot more sophisticated, and allow multiple restrictions with individual p-values to be set.
 - Fixed a bug that would sometimes result in a too strict Bonferroni p-value in the results.
