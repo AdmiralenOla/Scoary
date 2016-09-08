@@ -110,7 +110,7 @@ v1.1 (29th Mar 2016)
 
 ## Installation
 
-Scoary is a standalone python script and does not require any installation. Simply clone the git repository:
+Scoary is a standalone python script and does not require any installation. Simply download and extract the zip archive or clone the git repository:
 
     git clone https://github.com/AdmiralenOla/Scoary
 
