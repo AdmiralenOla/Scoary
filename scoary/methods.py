@@ -564,7 +564,7 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree, GTC,
         "Number_pos_not_present_in","Number_neg_not_present_in","Sensitivity","Specificity","Odds_ratio","Naive_p","Bonferroni_p",
         "Benjamini_H_p","Max_Pairwise_comparisons","Max_supporting_pairs","Max_opposing_pairs","Best_pairwise_comp_p","Worst_pairwise_comp_p"]
         
-        outfile.write(delimiter.join(c for c in columns) + "\n")
+        outfile.write(delimiter.join('"' + c +'"' for c in columns) + "\n")
 
         print("Calculating max number of contrasting pairs for each significant gene")
 
@@ -625,7 +625,7 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree, GTC,
             str(Filteredresults[currentgene]["BH_p"]), str(Filteredresults[currentgene]["max_total_pairs"]), str(Filteredresults[currentgene]["max_propairs"]), str(Filteredresults[currentgene]["max_antipairs"]),
             str(Filteredresults[currentgene]["Pbest"]),str(Filteredresults[currentgene]["Pworst"])]
             
-            outfile.write(delimiter.join(c for c in outrow) + "\n")
+            outfile.write(delimiter.join('"' + c + '"' for c in outrow) + "\n")
             
 def SortResultsAndSetKey(genedic):
     """
