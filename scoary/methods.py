@@ -77,7 +77,7 @@ def main():
                                  'PW',
                                  'EPW'],
                         nargs='*',
-                        default=['Individual'])
+                        default=['I'])
     parser.add_argument('-m', '--max_hits',
                         help='Maximum number of hits to report. SCOARY will '
                         'only report the top max_hits results per trait',
