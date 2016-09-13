@@ -24,6 +24,9 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
+v1.4.2 (13th Sep 2016)
+- Fixed a bug that would cause Scoary to crash if ran without any -c options.
+
 v1.4.1 (8th Sep 2016)
 - Fixed a bug where results in the output file did not have quotes around them. This could interfere with annotations that have delimiters (like commas) in them.
 
