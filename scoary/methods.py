@@ -206,6 +206,7 @@ def main():
         traitsdic = Csv_to_dic(traits, args.delimiter, allowed_isolates)
 
         print("Finished loading files into memory.")
+        print(filtrationoptions(cutoffs))
         print("Tallying genes and performing statistical analyses")
 
         RES_and_GTC = Setup_results(genedic, traitsdic)
@@ -729,6 +730,12 @@ def StoreUPGMAtreeToFile(upgmatree, no_time=False):
         Tree = Tree.replace("]", ")")
         treefile.write(Tree)
         print("Wrote the UPGMA tree to file: %s" % treefilename)
+        
+def filtrationoptions(cutoffs):
+    translation = {"I": "Individual (Naive)", "B": "Bonferroni", "BH":"Benjamini-Hochberg",
+                   "PW":"Pairwise comparison (Best)", "EPW": "Pairwise comparison (Entire range)"}
+    filters = [str(translation[k]) + ":    " + str(v) for k,v in cutoffs.items()] 
+    return "Filtration options: \n" + "\n".join(filters)
 
 if __name__ == '__main__':
     pass
