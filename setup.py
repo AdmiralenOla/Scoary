@@ -8,7 +8,7 @@ def readme():
 
 
 setup(name='Scoary',
-      version='1.4.3',
+      version='1.5.0',
       description='Microbial pan-GWAS using the output from Roary',
       long_description=readme(),
       classifiers=[
