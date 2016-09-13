@@ -8,12 +8,12 @@ def readme():
 
 
 setup(name='Scoary',
-      version='1.4.1',
+      version='1.4.3',
       description='Microbial pan-GWAS using the output from Roary',
       long_description=readme(),
       classifiers=[
         'Development Status :: 4 - Beta',
-        'License :: OSI Approved :: GPLv2',
+        'License :: OSI Approved :: GPLv3',
         'Programming Language :: Python :: 2.7',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Topic :: Scientific/Engineering :: Medical Science Apps.',
