@@ -18,6 +18,9 @@ from .classes import QuadTree
 from .classes import PhyloTree
 import scoary
 
+import os
+from pkg_resources import resource_string, resource_filename
+
 SCOARY_VERSION = scoary.__version__
 
 # Python 2/3 annoyances
@@ -139,12 +142,12 @@ def main():
     if args.test:
         args.correction = ['I','EPW']
         args.delimiter = ','
-        args.genes = './exampledata/Gene_presence_absence.csv'
+        args.genes = os.path.join(resource_filename(__name__, 'exampledata'), 'Gene_presence_absence.csv')
         args.max_hits = None
         args.p_value_cutoff = [0.05]
         args.restrict_to = None
         args.start_col = 15
-        args.traits = './exampledata/Tetracycline_resistance.csv'
+        args.traits = os.path.join(resource_filename(__name__, 'exampledata'), 'Tetracycline_resistance.csv')
         args.upgma_tree = True
         args.write_reduced = False
         args.no_time = False
