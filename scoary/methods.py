@@ -18,6 +18,9 @@ from .classes import QuadTree
 from .classes import PhyloTree
 import scoary
 
+import os
+from pkg_resources import resource_string, resource_filename
+
 SCOARY_VERSION = scoary.__version__
 
 # Python 2/3 annoyances
@@ -139,12 +142,12 @@ def main():
     if args.test:
         args.correction = ['I','EPW']
         args.delimiter = ','
-        args.genes = './exampledata/Gene_presence_absence.csv'
+        args.genes = os.path.join(resource_filename(__name__, 'exampledata'), 'Gene_presence_absence.csv')
         args.max_hits = None
         args.p_value_cutoff = [0.05]
         args.restrict_to = None
         args.start_col = 15
-        args.traits = './exampledata/Tetracycline_resistance.csv'
+        args.traits = os.path.join(resource_filename(__name__, 'exampledata'), 'Tetracycline_resistance.csv')
         args.upgma_tree = True
         args.write_reduced = False
         args.no_time = False
@@ -203,6 +206,7 @@ def main():
         traitsdic = Csv_to_dic(traits, args.delimiter, allowed_isolates)
 
         print("Finished loading files into memory.")
+        print(filtrationoptions(cutoffs))
         print("Tallying genes and performing statistical analyses")
 
         RES_and_GTC = Setup_results(genedic, traitsdic)
@@ -726,6 +730,12 @@ def StoreUPGMAtreeToFile(upgmatree, no_time=False):
         Tree = Tree.replace("]", ")")
         treefile.write(Tree)
         print("Wrote the UPGMA tree to file: %s" % treefilename)
+        
+def filtrationoptions(cutoffs):
+    translation = {"I": "Individual (Naive)", "B": "Bonferroni", "BH":"Benjamini-Hochberg",
+                   "PW":"Pairwise comparison (Best)", "EPW": "Pairwise comparison (Entire range)"}
+    filters = [str(translation[k]) + ":    " + str(v) for k,v in cutoffs.items()] 
+    return "Filtration options: \n" + "\n".join(filters)
 
 if __name__ == '__main__':
     pass

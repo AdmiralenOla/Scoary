@@ -24,6 +24,10 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
+v1.5.0 (13th Sep 2016)
+- Scoary is now installable via pip! (Thanks go to Anders Goncalves da Silva). The scoary.py script will now be deprecated, but is still available for legacy use. See [Installation] (#installation)
+- The program now also prints out the filtration options being used for the current analysis.
+
 v1.4.2 (13th Sep 2016)
 - Fixed a bug that would cause Scoary to crash if ran without any -c options.
 
@@ -113,6 +117,20 @@ v1.1 (29th Mar 2016)
 
 ## Installation
 
+The easiest way to install Scoary is through the pip package manager:
+
+    pip install git+https://github.com/AdmiralenOla/Scoary.git
+    
+OR, if you need a local (user) installation:
+
+    pip install --user git+https://github.com/AdmiralenOla/Scoary.git
+    
+Finally, to specify a local directory in your user installation:
+
+    pip install --user --install-option="--install-scripts=$HOME/bin" git+https://github.com/AdmiralenOla/Scoary.git
+
+##### Legacy installation
+
 Scoary is a standalone python script and does not require any installation. Simply download and extract the zip archive or clone the git repository:
 
     git clone https://github.com/AdmiralenOla/Scoary
@@ -125,7 +143,11 @@ If you want to add it to your $PATH variable:
 
 ## Usage
 
-    scoary.py -g gene_presence_absence.csv -t traits.csv
+    scoary -g <gene_presence_absence.csv> -t <traits.csv>
+
+##### Legacy usage
+
+    scoary.py -g <gene_presence_absence.csv> -t <traits.csv>
 
 ## Input
 Scoary requires two input files: The gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) and a list of traits to test associations to. 
@@ -346,6 +368,7 @@ Please feel free to suggest improvements, point out bugs or methods that could b
 
 ## Acknowledgements
 - Marco Galardini cleaned my code and made many nifty improvements.
+- Anders Goncalves da Silva made Scoary installable by pip
 - The QuadTree and UPGMA implementation was heavily based on code by Christian Storm Pedersen.
 - Inês Mendes pointed out a number of bugs related adjusted p-values and isolate restriction.
 - Eric Deveaud added versioning.

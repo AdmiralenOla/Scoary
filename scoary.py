@@ -19,4 +19,7 @@
 from scoary import methods
 
 if __name__ == '__main__':
+    print("Warning. Since 1.5.0 scoary.py is deprecated. " \
+    "Install Scoary using 'pip install git+https://github.com/AdmiralenOla/" \
+    "Scoary.git' instead")
     methods.main()
