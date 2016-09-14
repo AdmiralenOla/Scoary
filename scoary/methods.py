@@ -69,7 +69,7 @@ def main():
                         'EPW=Entire range of pairwise comparison p-values. '
                         'You can enter as many correction criteria as you would like. '
                         'These will be associated with the p_value_cutoffs you enter. '
-                        'For example "-c Individual PWB -p 0.1 0.05" will apply a naive '
+                        'For example "-c Individual EPW -p 0.1 0.05" will apply a naive '
                         'p-value cutoff of 0.1 AND additionally require that the '
                         'entire range of pairwise comparison values are below 0.05 '
                         'for this gene. '
