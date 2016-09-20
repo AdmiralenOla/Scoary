@@ -675,7 +675,6 @@ def upgma(d):
     original implementation by Christian Storm Pedersen.
     """
     n = d.dim
-    #cluster = [[x] for x in d.names]
     cluster = [x for x in d.names]
     size = n * [1]
 
@@ -746,15 +745,9 @@ def StoreUPGMAtreeToFile(upgmatree, no_time=False):
         Tree = str(upgmatree)
         Tree = Tree.replace("[", "(")
         Tree = Tree.replace("]", ")")
-<<<<<<< HEAD
-        treefile.write(Tree)
-        print("Wrote the UPGMA tree to file: %s" % treefilename)
-        
-=======
         treefile.write(Tree + ";")
         print("Wrote the UPGMA tree to file: %s" % treefilename)        
 
->>>>>>> master
 def filtrationoptions(cutoffs):
     translation = {"I": "Individual (Naive)", "B": "Bonferroni", "BH":"Benjamini-Hochberg",
                    "PW":"Pairwise comparison (Best)", "EPW": "Pairwise comparison (Entire range)"}
