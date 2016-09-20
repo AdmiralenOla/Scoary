@@ -109,6 +109,10 @@ def main():
                         'calculated UPGMA tree to a newick file',
                         default=False,
                         action='store_true')
+    parser.add_argument('-n', '--newicktree',
+                        help='Supply a custom tree (Newick format) for phylogenetic '
+                        'instead analyses instead of calculating it internally.',
+                        default=None)
     parser.add_argument('--delimiter',
                         help='The delimiter between cells in the gene '
                         'presence/absence and trait files, as well as '
@@ -144,6 +148,7 @@ def main():
         args.delimiter = ','
         args.genes = os.path.join(resource_filename(__name__, 'exampledata'), 'Gene_presence_absence.csv')
         args.max_hits = None
+        args.newicktree = None
         args.p_value_cutoff = [0.05]
         args.restrict_to = None
         args.start_col = 15
@@ -154,6 +159,12 @@ def main():
     
     if args.traits is None or args.genes is None:
         sys.exit("The following arguments are required: -t/--traits, -g/--genes")
+    if not os.path.isfile(args.traits):
+        sys.exit("Could not find the traits file: %s" % args.traits)
+    if not os.path.isfile(args.genes):
+        sys.exit("Could not find the gene presence absence file: %s" % args.genes)
+    if (args.newicktree is not None) and (not os.path.isfile(args.newicktree)):
+        sys.exit("Could not find the custom tree file: %s" % args.newicktree)
     if not all( [(p <= 1.0 and p > 0.0) for p in args.p_value_cutoff] ):
         sys.exit("P must be between 0.0 and 1.0 or exactly 1.0")
     if (len(args.delimiter) > 1):
@@ -197,11 +208,17 @@ def main():
         zeroonesmatrix = genedic_and_matrix["Zero_ones_matrix"]
         strains = genedic_and_matrix["Strains"]
         
-        print("Creating Hamming distance matrix based on gene presence/absence")
-        TDM = CreateTriangularDistanceMatrix(zeroonesmatrix, strains)
-        QT = PopulateQuadTreeWithDistances(TDM)
-        print("Building UPGMA tree from distance matrix")
-        upgmatree = upgma(QT)
+        if (args.newicktree) is None:
+            print("Creating Hamming distance matrix based on gene presence/absence")
+            TDM = CreateTriangularDistanceMatrix(zeroonesmatrix, strains)
+            QT = PopulateQuadTreeWithDistances(TDM)
+            print("Building UPGMA tree from distance matrix")
+            upgmatree = upgma(QT)
+        else:
+            print("Reading custom tree file")
+            from .nwkhandler import ReadTreeFromFile
+            upgmatree = ReadTreeFromFile(args.newicktree)
+        
         print("Reading traits file")
         traitsdic = Csv_to_dic(traits, args.delimiter, allowed_isolates)
 
@@ -658,7 +675,8 @@ def upgma(d):
     original implementation by Christian Storm Pedersen.
     """
     n = d.dim
-    cluster = [[x] for x in d.names]
+    #cluster = [[x] for x in d.names]
+    cluster = [x for x in d.names]
     size = n * [1]
 
     while n > 1:
@@ -728,9 +746,9 @@ def StoreUPGMAtreeToFile(upgmatree, no_time=False):
         Tree = str(upgmatree)
         Tree = Tree.replace("[", "(")
         Tree = Tree.replace("]", ")")
-        treefile.write(Tree)
-        print("Wrote the UPGMA tree to file: %s" % treefilename)
-        
+        treefile.write(Tree + ";")
+        print("Wrote the UPGMA tree to file: %s" % treefilename)        
+
 def filtrationoptions(cutoffs):
     translation = {"I": "Individual (Naive)", "B": "Bonferroni", "BH":"Benjamini-Hochberg",
                    "PW":"Pairwise comparison (Best)", "EPW": "Pairwise comparison (Entire range)"}

@@ -155,14 +155,18 @@ class PhyloTree:
         """
         # First check if left and right are tips (single-element list). Then we need to look up the gene-trait combination value at that node.
         # Also check if left and right nodes are PhyloTrees. If not, recursively create PhyloTrees.
-        if len(leftnode) == 1:
-            self.leftnode = Tip(GTC[leftnode[0]])
+        #if len(leftnode) == 1:
+        #    self.leftnode = Tip(GTC[leftnode[0]])
+        if type(leftnode) is str:
+            self.leftnode = Tip(GTC[leftnode])
         elif isinstance(leftnode, PhyloTree):
             self.leftnode = leftnode
         else:
             self.leftnode = PhyloTree(leftnode=leftnode[0], rightnode=leftnode[1], GTC=GTC, OR=OR)
-        if len(rightnode) == 1:
-            self.rightnode = Tip(GTC[rightnode[0]])
+        #if len(rightnode) == 1:
+        #    self.rightnode = Tip(GTC[rightnode[0]])
+        if type(rightnode) is str:
+            self.rightnode = Tip(GTC[rightnode])
         elif isinstance(rightnode, PhyloTree):
             self.rightnode = rightnode
         else:
