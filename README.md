@@ -24,15 +24,6 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Contact] (#contact)
 
 ## What's new?
-<<<<<<< HEAD
-v1.5.0 (13th Sep 2016)
-- Scoary is now installable via pip! (Thanks go to Anders Goncalves da Silva). The scoary.py script will now be deprecated, but is still available for legacy use. See [Installation] (#installation)
-- The program now also prints out the filtration options being used for the current analysis.
-
-v1.4.2 (13th Sep 2016)
-- Fixed a bug that would cause Scoary to crash if ran without any -c options.
-=======
->>>>>>> master
 
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
