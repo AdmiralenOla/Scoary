@@ -111,7 +111,7 @@ def main():
                         action='store_true')
     parser.add_argument('-n', '--newicktree',
                         help='Supply a custom tree (Newick format) for phylogenetic '
-                        'instead analyses instead of calculating it internally.',
+                        'analyses instead of calculating it internally.',
                         default=None)
     parser.add_argument('--delimiter',
                         help='The delimiter between cells in the gene '
