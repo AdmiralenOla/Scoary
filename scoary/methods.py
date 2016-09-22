@@ -217,7 +217,10 @@ def main():
         else:
             print("Reading custom tree file")
             from .nwkhandler import ReadTreeFromFile
-            upgmatree = ReadTreeFromFile(args.newicktree)
+            upgmatree, members = ReadTreeFromFile(args.newicktree)
+            if sorted(strains) != sorted(members):
+                sys.exit("ERROR: Please make sure that isolates in your custom tree "
+                "match those in your gene presence absence file.")	
         
         print("Reading traits file")
         traitsdic = Csv_to_dic(traits, args.delimiter, allowed_isolates)
