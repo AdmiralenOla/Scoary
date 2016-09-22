@@ -49,20 +49,6 @@ Finally, to specify a local directory in your user installation:
 
 ##### Legacy installation
 
-The easiest way to install Scoary is through the pip package manager:
-
-    pip install git+https://github.com/AdmiralenOla/Scoary.git
-    
-OR, if you need a local (user) installation:
-
-    pip install --user git+https://github.com/AdmiralenOla/Scoary.git
-    
-Finally, to specify a local directory in your user installation:
-
-    pip install --user --install-option="--install-scripts=$HOME/bin" git+https://github.com/AdmiralenOla/Scoary.git
-
-##### Legacy installation
-
 Scoary is a standalone python script and does not require any installation. Simply download and extract the zip archive or clone the git repository:
 
     git clone https://github.com/AdmiralenOla/Scoary
