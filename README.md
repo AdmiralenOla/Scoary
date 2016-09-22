@@ -33,6 +33,8 @@ All changes are logged in the [CHANGELOG](CHANGELOG.md)
 - [SciPy] (http://www.scipy.org/install.html) (Tested with versions 0.16, 0.17, 0.18)
 - (If you supply custom trees: ete3 AND six)
 
+Note that ete3 and six are not automatically installed. You can do `pip install ete3 six` to get them
+
 ## Installation
 
 The easiest way to install Scoary is through the pip package manager:
