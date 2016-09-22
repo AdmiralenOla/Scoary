@@ -269,7 +269,7 @@ This particular example very clearly identifies the causal gene (looking at the 
 
 Running Scoary with the --test flag is equivalent to the following command:
 ```
-python ./scoary.py -t ./exampledata/Tetracycline_resistance.csv -g ./exampledata/Gene_presence_absence.csv -u
+python ./scoary.py -t ./exampledata/Tetracycline_resistance.csv -g ./exampledata/Gene_presence_absence.csv -u -c I EPW
 ```
 
 ## License
