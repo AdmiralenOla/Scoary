@@ -31,7 +31,7 @@ All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
 - Python (Tested with versions 2.7 and 3.5)
 - [SciPy] (http://www.scipy.org/install.html) (Tested with versions 0.16, 0.17, 0.18)
-
+- (If you supply custom trees: ete3 AND six)
 
 ## Installation
 
@@ -57,7 +57,6 @@ and you're ready to use Scoary.
 If you want to add it to your $PATH variable:
 
     export PATH="/Path/to/Scoary:$PATH"
-
 
 ## Usage
 
@@ -131,11 +130,11 @@ Scoary can take a number of optional arguments to tweak the output and make sure
 usage: scoary.py [-h] [-t TRAITS] [-g GENES]
                  [-p P_VALUE_CUTOFF [P_VALUE_CUTOFF ...]]
                  [-c [{I,B,BH,PW,EPW} [{I,B,BH,PW,EPW} ...]]] [-m MAX_HITS]
-                 [-r RESTRICT_TO] [-w] [-s START_COL] [-u]
+                 [-r RESTRICT_TO] [-w] [-s START_COL] [-u] [-n NEWICKTREE]
                  [--delimiter DELIMITER] [--no-time] [--test] [--citation]
                  [--version]
 
-Scoary version 1.4.0 - Screen pan-genome for trait-associated genes
+Scoary version 1.5.1 - Screen pan-genome for trait-associated genes
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -157,13 +156,13 @@ optional arguments:
                         under correction). Default = 0.05
   -c [{I,B,BH,PW,EPW} [{I,B,BH,PW,EPW} ...]], --correction [{I,B,BH,PW,EPW} [{I,B,BH,PW,EPW} ...]]
                         Use the indicated p-value for cut-off. I=Individual
-                        (naive) p-value. B=Bonferroni adjusted p-value. BH
-                        =Benjamini-Hochberg adjusted p. PW=Best (lowest)
+                        (naive) p-value. B=Bonferroni adjusted p-value.
+                        BH=Benjamini-Hochberg adjusted p. PW=Best (lowest)
                         pairwise comparison p. EPW=Entire range of pairwise
                         comparison p-values. You can enter as many correction
                         criteria as you would like. These will be associated
                         with the p_value_cutoffs you enter. For example "-c
-                        Individual PWB -p 0.1 0.05" will apply a naive p-value
+                        Individual EPW -p 0.1 0.05" will apply a naive p-value
                         cutoff of 0.1 AND additionally require that the entire
                         range of pairwise comparison values are below 0.05 for
                         this gene. Default = Individual p-value. (I)
@@ -185,6 +184,10 @@ optional arguments:
                         indexing)
   -u, --upgma_tree      This flag will cause Scoary to write the calculated
                         UPGMA tree to a newick file
+  -n NEWICKTREE, --newicktree NEWICKTREE
+                        Supply a custom tree (Newick format) for phylogenetic
+                        instead analyses instead of calculating it internally.
+
   --delimiter DELIMITER
                         The delimiter between cells in the gene
                         presence/absence and trait files, as well as the
@@ -230,6 +233,9 @@ Alternatively, you can specify a single (one) p-value, and this will be taken as
 
 #### The -u flag
 Calling Scoary with the **-u** flag will cause it to write a newick file of the UPGMA tree that is calculated internally. The tree is based on pairwise Hamming distances in the gene_presence_absence matrix.
+
+### The -n parameter
+Can be used to supply a custom phylogenetic tree (in newick format) to Scoary. This tree will be used for calculating contrasting pairs rather than Scoary using the gene presence absence file for UPGMA calculation.
 
 ## Population structure
 Scoary implements the pairwise comparisons algorithm (Read & Nee, 1995; Maddison, 2000) to identify the maximum number of non-intersecting pairs of isolates that contrast in the state of both gene and trait. It does this by creating an UPGMA tree from the information contained in the gene_presence_absence matrix, annotating tips with gene and trait status, and recursively traversing the tree for each gene that were significant in the initial analysis. (i.e. those with p<0.05 if settings are left at default.)
