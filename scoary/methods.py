@@ -106,7 +106,7 @@ def main():
                         type=int)
     parser.add_argument('-u', '--upgma_tree',
                         help='This flag will cause Scoary to write the '
-                        'calculated UPGMA tree to a newick file',
+                        'calculated UPGMA tree (or custom tree) to a newick file',
                         default=False,
                         action='store_true')
     parser.add_argument('-n', '--newicktree',
