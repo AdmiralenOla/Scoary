@@ -1,4 +1,8 @@
 #CHANGELOG
+v1.5.1 (22nd Sep 2016)
+- Users can now provide a custom tree that will be used for analysis instead of the internally calculated one.
+- Changed the way trees are written to file. Leaf nodes will no longer have "double" distance. The tree files are now also rooted, which allows them to be read by other software
+- Fixed some typos and added a lot of exception throwing for when the user is trying strange things, such as pointing to files that don't exist.
 
 v1.5.0 (13th Sep 2016)
 - Scoary is now installable via pip! (Thanks go to Anders Goncalves da Silva). The scoary.py script will now be deprecated, but is still available for legacy use. See [Installation] (#installation)
