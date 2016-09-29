@@ -31,9 +31,19 @@ All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
 - Python (Tested with versions 2.7 and 3.5)
 - [SciPy] (http://www.scipy.org/install.html) (Tested with versions 0.16, 0.17, 0.18)
-- (If you supply custom trees: ete3 AND six)
+
+#### If you supply custom trees (Optional)
+
+- ete3
+- six
 
 Note that ete3 and six are not automatically installed. You can do `pip install ete3 six` to get them
+
+#### Using the GUI (Optional)
+
+- Tkinter/ttk
+
+Tkinter/ttk is already part of most python distributions. If you lack it consider getting Homebrew/Linuxbrew and running `brew install python --with-tcl-tk`
 
 ## Installation
 
@@ -45,7 +55,7 @@ OR, if you need a local (user) installation:
 
     pip install --user git+https://github.com/AdmiralenOla/Scoary.git
     
-Finally, to specify a local directory in your user installation:
+OR, to specify a local directory in your user installation:
 
     pip install --user --install-option="--install-scripts=$HOME/bin" git+https://github.com/AdmiralenOla/Scoary.git
 
