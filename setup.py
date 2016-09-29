@@ -1,6 +1,6 @@
 
 from setuptools import setup
-from scoary import __version__
+from scoary import __version__ as sv
 
 
 def readme():
@@ -9,7 +9,7 @@ def readme():
 
 
 setup(name='scoary',
-      version=scoary.__version__,
+      version=sv,
       description='Microbial pan-GWAS using the output from Roary',
       long_description=readme(),
       classifiers=[
@@ -22,7 +22,7 @@ setup(name='scoary',
       ],
       keywords=['microbial', 'genomics', 'GWAS', 'Roary'],
       url='https://github.com/AdmiralenOla/Scoary',
-      download_url='https://github.com/AdmiralenOla/Scoary/tarball/v1.5.0'
+      download_url='https://github.com/AdmiralenOla/Scoary/tarball/v1.5.0',
       author='Ola Brynildsrud',
       author_email='ola.brynildsrud@fhi.no',
       license='GPLv3',
