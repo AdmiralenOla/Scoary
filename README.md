@@ -236,7 +236,7 @@ Alternatively, you can specify a single (one) p-value, and this will be taken as
 #### The -u flag
 Calling Scoary with the **-u** flag will cause it to write a newick file of the UPGMA tree that is calculated internally. The tree is based on pairwise Hamming distances in the gene_presence_absence matrix.
 
-### The -n parameter
+#### The -n parameter
 Can be used to supply a custom phylogenetic tree (in newick format) to Scoary. This tree will be used for calculating contrasting pairs rather than Scoary using the gene presence absence file for UPGMA calculation.
 
 ## Population structure
