@@ -55,8 +55,6 @@ except ImportError:
     sys.exit("Need to be able to import argparse")
     
 try:
-    #from .methods import __version__ as scoaryversion
-    #from .methods import *# as sm
     import scoary.methods as sm
     import scoary
 except ImportError:
@@ -73,7 +71,8 @@ class ScoaryGUI(Tkinter.Tk):
         self.parent = parent
 
         self.Scoary_parameters = {"GPA": None, "Trait":None,"Tree":None,"Restrict":None,"Writetree": False, "Delimiter":",", 
-                                "Startcol": "15", "Maxhits":None,"Notime":False, "Cutoffs": {"I": [1,0.05], "B": [0,1.0], "BH": [0,1.0], "PW": [0,1.0], "EPW": [1,0.05]}
+                                "Startcol": "15", "Maxhits":None,"Notime":False, "Outdir":None,
+                                "Cutoffs": {"I": [1,0.05], "B": [0,1.0], "BH": [0,1.0], "PW": [0,1.0], "EPW": [1,0.05]}
                                 }
         self.initialize_menu()
         
@@ -168,6 +167,11 @@ class ScoaryGUI(Tkinter.Tk):
         board.Restrictentry = Tkinter.Entry(board, textvariable=self.RestrictVariable,width=60)
         board.Restrictentry.grid(column=0,row=3,sticky='W',columnspan=2)
         self.RestrictVariable.set("(Optional) Path to file naming isolates to include")
+        
+        self.Outputdir = Tkinter.StringVar()
+        board.Outputentry = Tkinter.Entry(board, textvariable=self.Outputdir,width=60)
+        board.Outputentry.grid(column=0,row=4,sticky='W',columnspan=2)
+        self.Outputdir.set("(Optional) Output directory")
 
         browsebuttonGPA = Tkinter.Button(board, text=u"Browse...", command=self.BrowseButtonClickGPA)
         browsebuttonGPA.grid(column=1,row=0,sticky='e')
@@ -181,20 +185,23 @@ class ScoaryGUI(Tkinter.Tk):
         browsebuttonRestrict = Tkinter.Button(board,text=u"Browse...",command=self.BrowseButtonClickRestrict)
         browsebuttonRestrict.grid(column=1,row=3,sticky='e')
         
+        browsebuttonOutput = Tkinter.Button(board,text=u"Browse...",command=self.BrowseButtonClickOutput)
+        browsebuttonOutput.grid(column=1,row=4,sticky='e')
+        
         # Initialize frame for cutoffs
         board.pframe = Tkinter.LabelFrame(board,text="Cut-offs",relief='ridge')
-        board.pframe.grid(column=0,row=4,sticky='w')
+        board.pframe.grid(column=0,row=5,sticky='w')
         self.initialize_pvalueframe()
         
         # Initialize frame for misc options
         board.miscframe = Tkinter.LabelFrame(board,text="Misc options",relief='ridge')
-        board.miscframe.grid(column=1,row=4,sticky='e')
+        board.miscframe.grid(column=1,row=5,sticky='e')
         self.initialize_miscopts()
         
         ## Create extra space
         
         board.emptyspace = Tkinter.Frame(board)
-        board.emptyspace.grid(column=0,row=5,columnspan=2,pady=(40,40))
+        board.emptyspace.grid(column=0,row=6,columnspan=2,pady=(30,30))
         
         masterbuttonfont = ("Courier", 16)
         
@@ -314,7 +321,7 @@ class ScoaryGUI(Tkinter.Tk):
         Placeholder button. Planned short information about the method
         """
         topwin = Tkinter.Toplevel(self)
-        button = Tkinter.Button(topwin,text=str("Placeholder"))
+        button = Tkinter.Button(topwin,text=str("https://github.com/AdmiralenOla/Scoary"))
         button.pack()
         
     def BrowseButtonClickGPA(self):
@@ -344,6 +351,13 @@ class ScoaryGUI(Tkinter.Tk):
         """
         myfile = tkFileDialog.askopenfilename(filetypes=[('comma-separated values','.csv'),('all files','.*')])
         self.RestrictVariable.set(myfile)            
+        
+    def BrowseButtonClickOutput(self):
+        """
+        Browse button for choosing output dir
+        """
+        mydir = tkFileDialog.askdirectory(mustexist=True)
+        self.Outputdir.set(mydir)
     
     def HelpButton(self):
         """
@@ -355,11 +369,11 @@ class ScoaryGUI(Tkinter.Tk):
         """
         Sets all variables to defaults
         """
-        # Go through all variables and set them to defaults:
         self.GPAentryVariable.set("Path to gene presence absence file")
         self.TraitsentryVariable.set("Path to traits/phenotype file")
         self.TreeentryVariable.set("(Optional) Path to custom tree file")
         self.RestrictVariable.set("(Optional) Path to file naming isolates to include")
+        self.Outputdir.set("")
         self.maxhitsvar.set("")
         self.delimvar.set(",")
         self.scvar.set("15")
@@ -384,6 +398,7 @@ class ScoaryGUI(Tkinter.Tk):
         self.TraitsentryVariable.set(str(os.path.join(resource_filename(__name__, 'exampledata'), 'Tetracycline_resistance.csv')))
         self.TreeentryVariable.set("")
         self.RestrictVariable.set("")
+        self.Outputdir.set("./")
         self.maxhitsvar.set("")
         self.delimvar.set(",")
         self.scvar.set("15")
@@ -409,6 +424,7 @@ class ScoaryGUI(Tkinter.Tk):
         self.Scoary_parameters["GPA"] = self.GPAentryVariable.get()
         self.Scoary_parameters["Traits"] = self.TraitsentryVariable.get()
         self.Scoary_parameters["Tree"] = self.TreeentryVariable.get()
+        self.Scoary_parameters["Outdir"] = self.Outputdir.get()
         self.Scoary_parameters["Restrict"] = self.RestrictVariable.get()
         self.Scoary_parameters["Writetree"] = self.writetreevar.get()
         self.Scoary_parameters["Delimiter"] = self.delimvar.get()
@@ -436,7 +452,6 @@ class ScoaryGUI(Tkinter.Tk):
         citation=False
         RunScoary = True
         correction = []
-        print(self.Scoary_parameters)
         p_value_cutoff = []
         for m in self.Scoary_parameters["Cutoffs"]:
             if self.Scoary_parameters["Cutoffs"][m][0] == 1:
@@ -458,20 +473,22 @@ class ScoaryGUI(Tkinter.Tk):
             RunScoary = False
         newicktree = self.Scoary_parameters["Tree"] if self.Scoary_parameters["Tree"] not in ["", "(Optional) Path to custom tree file"] else None
         no_time = True if self.Scoary_parameters["Notime"] == 1 else False
+        outdir = self.Scoary_parameters["Outdir"] if self.Scoary_parameters["Outdir"] not in ["","(Optional) Output directory"] else "./"
         restrict_to = self.Scoary_parameters["Restrict"] if self.Scoary_parameters["Restrict"] not in ["", "(Optional) Path to file naming isolates to include"] else None
         start_col = self.Scoary_parameters["Startcol"]
         test = False
         traits = self.Scoary_parameters["Traits"] if self.Scoary_parameters["Traits"] not in ["","Path to traits/phenotype file"] else None
         upgma_tree = True if self.Scoary_parameters["Writetree"] == 1 else False
         write_reduced=False
-        
+               
         myargs = argparse.Namespace(citation=citation, correction=correction, p_value_cutoff=p_value_cutoff, delimiter=delimiter, genes=genes, max_hits=max_hits, newicktree=newicktree,no_time=no_time,restrict_to=restrict_to,
-        start_col=start_col,test=test,traits=traits,upgma_tree=upgma_tree,write_reduced=write_reduced)
+        outdir=outdir,start_col=start_col,test=test,traits=traits,upgma_tree=upgma_tree,write_reduced=write_reduced)
         
+        print myargs
         if RunScoary:
             try:
                 
-                sm.main(args=myargs, cutoffs=dict(list(zip(correction, p_value_cutoff))),statusbar=sys.stdout)
+                sm.main(args=myargs, cutoffs=dict(list(zip(correction, p_value_cutoff))),statusbar=sys.stdout,outdir=outdir)
                 
             except SystemExit as SE:
                 # Set status bar color to red?
