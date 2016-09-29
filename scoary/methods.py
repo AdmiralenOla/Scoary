@@ -40,6 +40,7 @@ def main(**kwargs):
         args = kwargs["args"]
         cutoffs = kwargs["cutoffs"]
         sys.stdout = kwargs["statusbar"]
+        outdir = kwargs["outdir"]
     
     if args.citation:
         sys.exit(citation())
@@ -50,6 +51,7 @@ def main(**kwargs):
         args.genes = os.path.join(resource_filename(__name__, 'exampledata'), 'Gene_presence_absence.csv')
         args.max_hits = None
         args.newicktree = None
+        args.outdir = './'
         args.p_value_cutoff = [0.05,0.05]
         args.restrict_to = None
         args.start_col = 15
@@ -58,11 +60,19 @@ def main(**kwargs):
         args.write_reduced = False
         args.no_time = False
         cutoffs = {"I": 0.05, "EPW": 0.05}
-    
+        
+    if not args.outdir.endswith("/"):
+        args.outdir += "/"
     if args.traits is None or args.genes is None:
         sys.exit("The following arguments are required: -t/--traits, -g/--genes")
     if not os.path.isfile(args.traits):
         sys.exit("Could not find the traits file: %s" % args.traits)
+    if not os.path.isdir(args.outdir):
+        print("Outdir does not exist, checking for write permissions")
+        if os.access(args.outdir, os.W_OK) and os.access(args.outdir, os.X_OK):
+            print("Appear to have write permission to outdir")
+        else:
+            sys.exit("Need to have write (and exec) permission to outdir")
     if not os.path.isfile(args.genes):
         sys.exit("Could not find the gene presence absence file: %s" % args.genes)
     if (args.newicktree is not None) and (not os.path.isfile(args.newicktree)):
@@ -76,7 +86,7 @@ def main(**kwargs):
         "p-value that will be applied to all correction methods, or provide exactly as many as the number "
         "of correction methods and in corresponding sequence. e.g. -c Individual Pairwise_both -p 0.1 0.05 "
         "will apply an individual p-value cutoff of 0.1 AND a pairwise comparisons p-value cutoff of 0.05.")
-
+        
     starttime = time.time()
     
     # Start analysis
@@ -96,7 +106,6 @@ def main(**kwargs):
                 sys.exit("You cannot use the -w argument without specifying a subset (-r)")
             
         print("Reading gene presence absence file")
-        sys.stdout.flush()
         
         genedic_and_matrix = Csv_to_dic_Roary(genes,
                                               args.delimiter,
@@ -134,12 +143,13 @@ def main(**kwargs):
         GTC = RES_and_GTC["Gene_trait_combinations"]
 
         if args.upgma_tree:
-            StoreUPGMAtreeToFile(upgmatree, no_time=args.no_time)
+            StoreUPGMAtreeToFile(upgmatree, outdir, no_time=args.no_time)
 
         StoreResults(RES,
                      args.max_hits,
                      cutoffs,
                      upgmatree, GTC,
+                     args.outdir,
                      no_time=args.no_time,
                      delimiter=args.delimiter)
         print("\nFinished. Checked a total of %d genes for associations to %d trait(s). "
@@ -448,25 +458,25 @@ def Perform_statistics(traits, genes):
 
 
 def StoreResults(Results, max_hits, cutoffs, upgmatree, GTC,
-                 no_time=False, delimiter=","):
+                 outdir, no_time=False, delimiter=","):
     """
     A method for storing the results. Calls StoreTraitResult for each trait column in the input file
     """
     for Trait in Results:
         print("\nStoring results: " + Trait)
         StoreTraitResult(Results[Trait], Trait, max_hits, cutoffs, upgmatree, GTC,
-                         no_time, delimiter)
+                         outdir, no_time, delimiter)
 
 
 def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree, GTC,
-                     no_time=False, delimiter=","):
+                     outdir, no_time=False, delimiter=","):
     """
     The method that actually stores the results. Only accepts results from a single trait at a time
     """
     if not no_time:
-        fname = Traitname + time.strftime("_%d_%m_%Y_%H%M") + ".csv"
+        fname = outdir + Traitname + time.strftime("_%d_%m_%Y_%H%M") + ".csv"
     else:
-        fname = Traitname + '.results.csv'
+        fname = outdir + Traitname + '.results.csv'
 
     with open(fname, "w") as outfile:
         # Sort genes by p-value.
@@ -635,15 +645,15 @@ def ConvertUPGMAtoPhyloTree(tree, GTC):
             "Anti": MyPhyloTree.max_contrasting_antipairs}
 
 
-def StoreUPGMAtreeToFile(upgmatree, no_time=False):
+def StoreUPGMAtreeToFile(upgmatree, outdir, no_time=False):
     """
     A method for printing the UPGMA tree that is built internally from the 
     hamming distances in the gene presence/absence matrix
     """
     if not no_time:
-        treefilename = str("Tree" + time.strftime("_%d_%m_%Y_%H%M") + ".nwk")
+        treefilename = str(outdir + "Tree" + time.strftime("_%d_%m_%Y_%H%M") + ".nwk")
     else:
-        treefilename = str("Tree.nwk")
+        treefilename = str(outdir + "Tree.nwk")
     with open(treefilename, "w") as treefile:
         Tree = str(upgmatree)
         Tree = Tree.replace("[", "(")
@@ -683,6 +693,9 @@ def ScoaryArgumentParser():
                         '(comma-separated-values) from ROARY. '
                         'Strain names must be equal to those in the trait '
                         'table')
+    parser.add_argument('-o', '--outdir',
+                        help='Directory to place output files. Default = .',
+                        default='./')
     parser.add_argument('-p', '--p_value_cutoff',
                         help='P-value cut-off. SCOARY will not report genes '
                         'with higher p-values than this. Set to 1.0 to report '
