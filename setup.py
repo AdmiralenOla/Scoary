@@ -22,7 +22,7 @@ setup(name='scoary',
       ],
       keywords=['microbial', 'genomics', 'GWAS', 'Roary'],
       url='https://github.com/AdmiralenOla/Scoary',
-      download_url='https://github.com/AdmiralenOla/Scoary/tarball/v1.5.0
+      download_url='https://github.com/AdmiralenOla/Scoary/tarball/v1.5.0'
       author='Ola Brynildsrud',
       author_email='ola.brynildsrud@fhi.no',
       license='GPLv3',
