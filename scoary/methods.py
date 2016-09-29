@@ -37,10 +37,10 @@ def main(**kwargs):
     if len(kwargs) == 0:
         args, cutoffs = ScoaryArgumentParser()
     else:
-		args = kwargs["args"]
-		cutoffs = kwargs["cutoffs"]
-		sys.stdout = kwargs["statusbar"]
-	
+        args = kwargs["args"]
+        cutoffs = kwargs["cutoffs"]
+        sys.stdout = kwargs["statusbar"]
+    
     if args.citation:
         sys.exit(citation())
    
@@ -120,7 +120,7 @@ def main(**kwargs):
             upgmatree, members = ReadTreeFromFile(args.newicktree)
             if sorted(strains) != sorted(members):
                 sys.exit("ERROR: Please make sure that isolates in your custom tree "
-                "match those in your gene presence absence file.")	
+                "match those in your gene presence absence file.")    
         
         print("Reading traits file")
         traitsdic = Csv_to_dic(traits, args.delimiter, allowed_isolates)
