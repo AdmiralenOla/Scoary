@@ -55,8 +55,10 @@ except ImportError:
     sys.exit("Need to be able to import argparse")
     
 try:
-    from scoary import __version__ as scoaryversion
-    from scoary import methods as sm
+    #from .methods import __version__ as scoaryversion
+    #from .methods import *# as sm
+    import scoary.methods as sm
+    import scoary
 except ImportError:
     sys.exit("Could not find the main Scoary executable") 
 
@@ -498,7 +500,7 @@ class ScoaryGUI(Tkinter.Tk):
         "Please cite as: \n" \
         "Brynildsrud O. Scoary: \n" \
         "Microbial Pan-GWAS. \n" \
-        "https://github.com/AdmiralenOla/Scoary" % scoaryversion
+        "https://github.com/AdmiralenOla/Scoary" % scoary.__version__
         return text
         
     def Photobase64(self):
@@ -641,9 +643,12 @@ class StdoutToLabel(Tkinter.Label):
     @property
     def encoding(self):
         return self.defstdout.encoding
-
-if __name__ == "__main__":
+        
+def main():
     root = ScoaryGUI(None)
     root.title("Scoary")
     root.geometry("800x400")
     root.mainloop()
+    
+if __name__ == "__main__":
+    pass
