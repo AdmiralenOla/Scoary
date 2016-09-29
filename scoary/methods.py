@@ -29,133 +29,35 @@ try:
 except NameError:
     xrange = range
 
-def main():
+def main(**kwargs):
     """
     The main function of Scoary.
     """
-    # Parse arguments.
-    parser = argparse.ArgumentParser(
-            description='Scoary version %s - Screen pan-genome for '
-                        'trait-associated genes' % SCOARY_VERSION,
-                        epilog='by Ola Brynildsrud (olbb@fhi.no)')
-    parser.add_argument('-t', '--traits',
-                        help='Input trait table (comma-separated-values). '
-                        'Trait presence is indicated by 1, trait absence by 0. '
-                        'Assumes strain names in the first column and trait '
-                        'names in the first row')
-    parser.add_argument('-g', '--genes',
-                        help='Input gene presence/absence table '
-                        '(comma-separated-values) from ROARY. '
-                        'Strain names must be equal to those in the trait '
-                        'table')
-    parser.add_argument('-p', '--p_value_cutoff',
-                        help='P-value cut-off. SCOARY will not report genes '
-                        'with higher p-values than this. Set to 1.0 to report '
-                        'all genes. Accepts standard form (e.g. 1E-8). '
-                        'Provide a single value or exactly as many values '
-                        'as correction criteria and in corresponding order. '
-                        '(See example under correction). '
-                        'Default = 0.05',
-                        nargs='+',
-                        default=[0.05],
-                        type=float)
-    parser.add_argument('-c', '--correction',
-                        help='Use the indicated '
-                        'p-value for cut-off. '
-                        'I=Individual (naive) p-value. '
-                        'B=Bonferroni adjusted p-value. '
-                        'BH=Benjamini-Hochberg adjusted p. '
-                        'PW=Best (lowest) pairwise comparison p. '
-                        'EPW=Entire range of pairwise comparison p-values. '
-                        'You can enter as many correction criteria as you would like. '
-                        'These will be associated with the p_value_cutoffs you enter. '
-                        'For example "-c I EPW -p 0.1 0.05" will apply a naive '
-                        'p-value cutoff of 0.1 AND additionally require that the '
-                        'entire range of pairwise comparison values are below 0.05 '
-                        'for this gene. '
-                        'Default = Individual p-value. (I)',
-                        choices=['I',
-                                 'B',
-                                 'BH',
-                                 'PW',
-                                 'EPW'],
-                        nargs='*',
-                        default=['I'])
-    parser.add_argument('-m', '--max_hits',
-                        help='Maximum number of hits to report. SCOARY will '
-                        'only report the top max_hits results per trait',
-                        type=int)
-    parser.add_argument('-r', '--restrict_to',
-                        help='Use if you only want to analyze a subset of your'
-                        ' strains. Scoary will read the provided '
-                        'comma-separated table of strains and restrict '
-                        'analyzes to these.')
-    parser.add_argument('-w', '--write_reduced',
-                        help='Use with -r if you want Scoary to create a new '
-                        'gene presence absence file from your reduced set of '
-                        'isolates. Note: Columns 1-14 (No. sequences, '
-                        'Avg group size nuc etc) in this file do not reflect '
-                        'the reduced dataset. These are taken from the full dataset.',
-                        default=False,
-                        action='store_true')
-    parser.add_argument('-s', '--start_col',
-                        help='On which column in the gene presence/absence '
-                        'file do individual strain info start. Default=15. '
-                        '(1-based indexing)',
-                        default=15,
-                        type=int)
-    parser.add_argument('-u', '--upgma_tree',
-                        help='This flag will cause Scoary to write the '
-                        'calculated UPGMA tree (or custom tree) to a newick file',
-                        default=False,
-                        action='store_true')
-    parser.add_argument('-n', '--newicktree',
-                        help='Supply a custom tree (Newick format) for phylogenetic '
-                        'analyses instead of calculating it internally.',
-                        default=None)
-    parser.add_argument('--delimiter',
-                        help='The delimiter between cells in the gene '
-                        'presence/absence and trait files, as well as '
-                        'the output file. ',
-                        default=',',
-                        type=str)
-    parser.add_argument('--no-time',
-                        help='Output file in the form TRAIT.results.csv, '
-                        'instead of TRAIT_TIMESTAMP.csv. When used with the '
-                        '-w argument will output a reduced gene matrix in the '
-                        'form gene_presence_absence_reduced.csv rather than '
-                        'gene_presence_absence_reduced_TIMESTAMP.csv ',
-                        default=False,
-                        action='store_true')
-    parser.add_argument('--test',
-                        help='Run Scoary on the test set in exampledata, '
-                        'overriding all other parameters. ',
-                        default=False,
-                        action='store_true')
-    parser.add_argument('--citation',
-                        help='Show citation information, and exit. ',
-                        default=False,
-                        action='store_true')
-    parser.add_argument('--version', help='Display Scoary version, and exit.',
-                        action='version',
-                        version=SCOARY_VERSION)
-
-    args = parser.parse_args()
+    # If main has been ran from the GUI, then args already exists
+    if len(kwargs) == 0:
+        args, cutoffs = ScoaryArgumentParser()
+    else:
+		args = kwargs["args"]
+		cutoffs = kwargs["cutoffs"]
+		sys.stdout = kwargs["statusbar"]
+	
     if args.citation:
         sys.exit(citation())
+   
     if args.test:
         args.correction = ['I','EPW']
         args.delimiter = ','
         args.genes = os.path.join(resource_filename(__name__, 'exampledata'), 'Gene_presence_absence.csv')
         args.max_hits = None
         args.newicktree = None
-        args.p_value_cutoff = [0.05]
+        args.p_value_cutoff = [0.05,0.05]
         args.restrict_to = None
         args.start_col = 15
         args.traits = os.path.join(resource_filename(__name__, 'exampledata'), 'Tetracycline_resistance.csv')
         args.upgma_tree = True
         args.write_reduced = False
         args.no_time = False
+        cutoffs = {"I": 0.05, "EPW": 0.05}
     
     if args.traits is None or args.genes is None:
         sys.exit("The following arguments are required: -t/--traits, -g/--genes")
@@ -174,13 +76,10 @@ def main():
         "p-value that will be applied to all correction methods, or provide exactly as many as the number "
         "of correction methods and in corresponding sequence. e.g. -c Individual Pairwise_both -p 0.1 0.05 "
         "will apply an individual p-value cutoff of 0.1 AND a pairwise comparisons p-value cutoff of 0.05.")
-    if len(args.p_value_cutoff) == 1:
-        cutoffs = {c : args.p_value_cutoff[0] for c in args.correction}
-    else:
-        cutoffs = dict(list(zip(args.correction, args.p_value_cutoff)))
 
     starttime = time.time()
-
+    
+    # Start analysis
     with open(args.genes, "rU") as genes, open(args.traits, "rU") as traits:
 
         if args.restrict_to is not None:
@@ -197,10 +96,11 @@ def main():
                 sys.exit("You cannot use the -w argument without specifying a subset (-r)")
             
         print("Reading gene presence absence file")
-
+        sys.stdout.flush()
+        
         genedic_and_matrix = Csv_to_dic_Roary(genes,
                                               args.delimiter,
-                                              startcol=args.start_col - 1,
+                                              startcol=int(args.start_col) - 1,
                                               allowed_isolates=allowed_isolates,
                                               writereducedset=args.write_reduced,
                                               no_time=args.no_time)
@@ -752,10 +652,137 @@ def StoreUPGMAtreeToFile(upgmatree, no_time=False):
         print("Wrote the UPGMA tree to file: %s" % treefilename)        
 
 def filtrationoptions(cutoffs):
+    """
+    Converts between easy keys (I, B, etc) and long names of filtration options, for printing
+    to the runlog
+    """
     translation = {"I": "Individual (Naive)", "B": "Bonferroni", "BH":"Benjamini-Hochberg",
                    "PW":"Pairwise comparison (Best)", "EPW": "Pairwise comparison (Entire range)"}
     filters = [str(translation[k]) + ":    " + str(v) for k,v in cutoffs.items()] 
     return "Filtration options: \n" + "\n".join(filters)
+    
+
+def ScoaryArgumentParser():
+    """
+    Function for parsing the arguments separate from the main function.
+    Makes it easier for other scripts to run Scoary without artificially
+    constructing a command line
+    """
+    # Parse arguments.
+    parser = argparse.ArgumentParser(
+            description='Scoary version %s - Screen pan-genome for '
+                        'trait-associated genes' % SCOARY_VERSION,
+                        epilog='by Ola Brynildsrud (olbb@fhi.no)')
+    parser.add_argument('-t', '--traits',
+                        help='Input trait table (comma-separated-values). '
+                        'Trait presence is indicated by 1, trait absence by 0. '
+                        'Assumes strain names in the first column and trait '
+                        'names in the first row')
+    parser.add_argument('-g', '--genes',
+                        help='Input gene presence/absence table '
+                        '(comma-separated-values) from ROARY. '
+                        'Strain names must be equal to those in the trait '
+                        'table')
+    parser.add_argument('-p', '--p_value_cutoff',
+                        help='P-value cut-off. SCOARY will not report genes '
+                        'with higher p-values than this. Set to 1.0 to report '
+                        'all genes. Accepts standard form (e.g. 1E-8). '
+                        'Provide a single value or exactly as many values '
+                        'as correction criteria and in corresponding order. '
+                        '(See example under correction). '
+                        'Default = 0.05',
+                        nargs='+',
+                        default=[0.05],
+                        type=float)
+    parser.add_argument('-c', '--correction',
+                        help='Use the indicated '
+                        'p-value for cut-off. '
+                        'I=Individual (naive) p-value. '
+                        'B=Bonferroni adjusted p-value. '
+                        'BH=Benjamini-Hochberg adjusted p. '
+                        'PW=Best (lowest) pairwise comparison p. '
+                        'EPW=Entire range of pairwise comparison p-values. '
+                        'You can enter as many correction criteria as you would like. '
+                        'These will be associated with the p_value_cutoffs you enter. '
+                        'For example "-c Individual EPW -p 0.1 0.05" will apply a naive '
+                        'p-value cutoff of 0.1 AND additionally require that the '
+                        'entire range of pairwise comparison values are below 0.05 '
+                        'for this gene. '
+                        'Default = Individual p-value. (I)',
+                        choices=['I',
+                                 'B',
+                                 'BH',
+                                 'PW',
+                                 'EPW'],
+                        nargs='*',
+                        default=['I'])
+    parser.add_argument('-m', '--max_hits',
+                        help='Maximum number of hits to report. SCOARY will '
+                        'only report the top max_hits results per trait',
+                        type=int)
+    parser.add_argument('-r', '--restrict_to',
+                        help='Use if you only want to analyze a subset of your'
+                        ' strains. Scoary will read the provided '
+                        'comma-separated table of strains and restrict '
+                        'analyzes to these.')
+    parser.add_argument('-w', '--write_reduced',
+                        help='Use with -r if you want Scoary to create a new '
+                        'gene presence absence file from your reduced set of '
+                        'isolates. Note: Columns 1-14 (No. sequences, '
+                        'Avg group size nuc etc) in this file do not reflect '
+                        'the reduced dataset. These are taken from the full dataset.',
+                        default=False,
+                        action='store_true')
+    parser.add_argument('-s', '--start_col',
+                        help='On which column in the gene presence/absence '
+                        'file do individual strain info start. Default=15. '
+                        '(1-based indexing)',
+                        default=15,
+                        type=int)
+    parser.add_argument('-u', '--upgma_tree',
+                        help='This flag will cause Scoary to write the '
+                        'calculated UPGMA tree to a newick file',
+                        default=False,
+                        action='store_true')
+    parser.add_argument('-n', '--newicktree',
+                        help='Supply a custom tree (Newick format) for phylogenetic '
+                        'instead analyses instead of calculating it internally.',
+                        default=None)
+    parser.add_argument('--delimiter',
+                        help='The delimiter between cells in the gene '
+                        'presence/absence and trait files, as well as '
+                        'the output file. ',
+                        default=',',
+                        type=str)
+    parser.add_argument('--no-time',
+                        help='Output file in the form TRAIT.results.csv, '
+                        'instead of TRAIT_TIMESTAMP.csv. When used with the '
+                        '-w argument will output a reduced gene matrix in the '
+                        'form gene_presence_absence_reduced.csv rather than '
+                        'gene_presence_absence_reduced_TIMESTAMP.csv ',
+                        default=False,
+                        action='store_true')
+    parser.add_argument('--test',
+                        help='Run Scoary on the test set in exampledata, '
+                        'overriding all other parameters. ',
+                        default=False,
+                        action='store_true')
+    parser.add_argument('--citation',
+                        help='Show citation information, and exit. ',
+                        default=False,
+                        action='store_true')
+    parser.add_argument('--version', help='Display Scoary version, and exit.',
+                        action='version',
+                        version=SCOARY_VERSION)
+
+    args = parser.parse_args()
+    
+    if len(args.p_value_cutoff) == 1:
+        cutoffs = {c : args.p_value_cutoff[0] for c in args.correction}
+    else:
+        cutoffs = dict(list(zip(args.correction, args.p_value_cutoff)))
+        
+    return args, cutoffs
 
 if __name__ == '__main__':
     pass
