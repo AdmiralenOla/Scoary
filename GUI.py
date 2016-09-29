@@ -64,8 +64,8 @@ from pkg_resources import resource_string, resource_filename
 
 class ScoaryGUI(Tkinter.Tk):
     """
-	Create the main GUI window
-	"""
+    Create the main GUI window
+    """
     def __init__(self,parent):
         Tkinter.Tk.__init__(self,parent)
         self.parent = parent
@@ -101,9 +101,9 @@ class ScoaryGUI(Tkinter.Tk):
         ######## MENUS ########
         
     def initialize_menu(self):
-		"""
-		Initialize the menu at the top
-		"""
+        """
+        Initialize the menu at the top
+        """
         self.menubar = Tkinter.Menu(self,relief="flat")
         filemenu = Tkinter.Menu(self.menubar,tearoff=0)
         filemenu.add_command(label="About",command=self.AboutScoary)
@@ -121,17 +121,17 @@ class ScoaryGUI(Tkinter.Tk):
         self.config(menu=self.menubar)        
         
     def initialize_citation(self):
-		"""
-		Initialize the citation frame - below the logo
-		"""
+        """
+        Initialize the citation frame - below the logo
+        """
         myfontstyle = ("Arial",8)
         self.citation = Tkinter.Label(self.citationframe, text=self.citationtext(),anchor='center',justify='center', font=myfontstyle)
         self.citation.pack(expand=True)
         
     def initialize_statusframe(self):
-		"""
-		Initialize the frame and statusbar occupying the bottom
-		"""
+        """
+        Initialize the frame and statusbar occupying the bottom
+        """
         frame = self.bottompart
         
         frame.pb = ttk.Progressbar(frame,orient='horizontal',mode='determinate',maximum=100)
@@ -142,9 +142,9 @@ class ScoaryGUI(Tkinter.Tk):
         sys.stdout = StdoutToLabel(frame.lab, progressbar=frame.pb)
     
     def initialize_controlboard(self):
-		"""
-		Initialize the controlboard - where all the settings are set.
-		"""
+        """
+        Initialize the controlboard - where all the settings are set.
+        """
         board = self.nepart
         
         self.GPAentryVariable = Tkinter.StringVar()
@@ -206,9 +206,9 @@ class ScoaryGUI(Tkinter.Tk):
         HelpButton.grid(column=0,row=0)
         
     def initialize_miscopts(self):
-		"""
-		Initialize the miscellaneous options
-		"""
+        """
+        Initialize the miscellaneous options
+        """
         board = self.nepart
         miscframe = board.miscframe
         
@@ -251,9 +251,9 @@ class ScoaryGUI(Tkinter.Tk):
         miscframe.writetree.grid(row=4,column=0,sticky='w')
         
     def initialize_pvalueframe(self):
-		"""
-		Initialize the filtration controlboard
-		"""
+        """
+        Initialize the filtration controlboard
+        """
         board = self.nepart
         pframe = board.pframe
         
@@ -308,51 +308,51 @@ class ScoaryGUI(Tkinter.Tk):
         ######## EVENTS ########
         
     def AboutScoary(self):
-		"""
-		Placeholder button. Planned short information about the method
-		"""
+        """
+        Placeholder button. Planned short information about the method
+        """
         topwin = Tkinter.Toplevel(self)
         button = Tkinter.Button(topwin,text=str("Placeholder"))
         button.pack()
         
     def BrowseButtonClickGPA(self):
-		"""
-		Browse button for gene presence absence field
-		"""
+        """
+        Browse button for gene presence absence field
+        """
         myfile = tkFileDialog.askopenfilename(filetypes=[('comma-separated values', '.csv'), ('all files','.*')])
         self.GPAentryVariable.set(myfile)
         
     def BrowseButtonClickTraits(self):
-		"""
-		Browse button for traits field
-		"""
+        """
+        Browse button for traits field
+        """
         myfile = tkFileDialog.askopenfilename(filetypes=[('comma-separated values', '.csv'), ('all files','.*')])
         self.TraitsentryVariable.set(myfile)
         
     def BrowseButtonClickTreeFile(self):
-		"""
-		Browse button for tree field
-		"""
+        """
+        Browse button for tree field
+        """
         myfile = tkFileDialog.askopenfilename(filetypes=[('newick tree files', '.nwk'), ('all files','.*')])
         self.TreeentryVariable.set(myfile)
         
     def BrowseButtonClickRestrict(self):
-		"""
-		Browse button for isolate restriction field
-		"""
+        """
+        Browse button for isolate restriction field
+        """
         myfile = tkFileDialog.askopenfilename(filetypes=[('comma-separated values','.csv'),('all files','.*')])
         self.RestrictVariable.set(myfile)            
     
     def HelpButton(self):
-		"""
-		Placeholder button. Redirects to website
-		"""
+        """
+        Placeholder button. Redirects to website
+        """
         print("Visit https://github.com/AdmiralenOla/Scoary for help")
         
     def ClearAll(self):
-		"""
-		Sets all variables to defaults
-		"""
+        """
+        Sets all variables to defaults
+        """
         # Go through all variables and set them to defaults:
         self.GPAentryVariable.set("Path to gene presence absence file")
         self.TraitsentryVariable.set("Path to traits/phenotype file")
@@ -375,9 +375,9 @@ class ScoaryGUI(Tkinter.Tk):
         self.pEPW.set("0.05")
         
     def TestExample(self):
-		"""
-		Sets all variables corresponding to --test in the methods script
-		"""
+        """
+        Sets all variables corresponding to --test in the methods script
+        """
         self.GPAentryVariable.set(str(os.path.join(resource_filename(__name__, 'exampledata'), 'Gene_presence_absence.csv'))) # DOES NOT WORK
         self.TraitsentryVariable.set(str(os.path.join(resource_filename(__name__, 'exampledata'), 'Tetracycline_resistance.csv')))
         self.TreeentryVariable.set("")
@@ -401,9 +401,9 @@ class ScoaryGUI(Tkinter.Tk):
         ######## RUNNING THE ANALYSIS ########
         
     def RunAnalysis(self):
-		"""
-		Upon click "Run analysis" - Reads all the set parameters and calls run method
-		"""
+        """
+        Upon click "Run analysis" - Reads all the set parameters and calls run method
+        """
         self.Scoary_parameters["GPA"] = self.GPAentryVariable.get()
         self.Scoary_parameters["Traits"] = self.TraitsentryVariable.get()
         self.Scoary_parameters["Tree"] = self.TreeentryVariable.get()
@@ -427,10 +427,10 @@ class ScoaryGUI(Tkinter.Tk):
         self.PrepareScoaryCMDline()
         
     def PrepareScoaryCMDline(self):
-		"""
-		Prepares arguments to correspond with argparse namespace and runs.
-		Listens to sys.stdout and updates statusbar while scoary runs
-		"""
+        """
+        Prepares arguments to correspond with argparse namespace and runs.
+        Listens to sys.stdout and updates statusbar while scoary runs
+        """
         citation=False
         RunScoary = True
         correction = []
@@ -483,17 +483,17 @@ class ScoaryGUI(Tkinter.Tk):
     ######## MISC METHODS ########
         
     def initialize_logo(self):
-		"""
-		Initialize logo
-		"""
+        """
+        Initialize logo
+        """
         photo=Tkinter.PhotoImage(data=self.Photobase64())
         self.logocanvas.img = photo
         self.logocanvas.create_image(0,0,anchor='nw',image=photo)
         
     def citationtext(self):
-		"""
-		Returns citation info
-		"""
+        """
+        Returns citation info
+        """
         text = "SCOARY version %s \n\n" \
         "Please cite as: \n" \
         "Brynildsrud O. Scoary: \n" \
@@ -502,9 +502,9 @@ class ScoaryGUI(Tkinter.Tk):
         return text
         
     def Photobase64(self):
-		"""
-		base64 encoding of the logo
-		"""
+        """
+        base64 encoding of the logo
+        """
         photo= """
         R0lGODlh+gD6AOf/AAABAAEEAAMGAgcJBQoMCAwPCw8RDhIUERYYFhkbGRwdGx8gHiIkISYoJSstKjsrLkArL0gqJ00pI0QsJzEyMEQtLT8wMkYvL0IxLkUwM0svMDQ2M0IyNE0wMUQzMEMzNUoyMjY4NUQ1N0Y1\
         MkI3ODk7OEc3OUk5PEU7PD4/PU07OUU9QkE/Q04+QD9DRUFDQERETVBBSEtDSE1DQ0dFSEZHRVRDRlZDQUFJUUlLSD1PWVRKSjhRWkxOSzRVY1xMUEdSXj5VZFBST0BWYFNVUjRcbl9VWFZYVWJVUT9ebEtdaDZj\
