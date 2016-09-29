@@ -1,6 +1,6 @@
 
 from setuptools import setup
-from scoary import __version__ as scoaryversion
+from scoary import __version__
 
 
 def readme():
@@ -9,7 +9,7 @@ def readme():
 
 
 setup(name='scoary',
-      version=scoaryversion,
+      version=scoary.__version__,
       description='Microbial pan-GWAS using the output from Roary',
       long_description=readme(),
       classifiers=[
@@ -34,7 +34,9 @@ setup(name='scoary',
       test_suite='nose.collector',
       tests_require=[],
       entry_points={
-          'console_scripts': ['scoary=scoary.methods:main'],
+          'console_scripts': ['scoary=scoary.methods:main',
+                             'scoary_GUI=scoary.GUI:main'],
+      
       },
       include_package_data=True,
       zip_safe=False)
