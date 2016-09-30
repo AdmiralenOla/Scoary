@@ -82,7 +82,7 @@ class ScoaryGUI(Tkinter.Tk):
         self.bottompart.pack(side='bottom',expand=True,fill='both')
         
         self.nwpart = Tkinter.Frame(self.toppart,height="350",width="250")
-        self.nepart = Tkinter.LabelFrame(self.toppart,height="350",width="550",text="Control panel") # Now the controlboard
+        self.nepart = Tkinter.LabelFrame(self.toppart,height="350",width="550",text="Control panel")
         self.nwpart.pack(side='left',expand=False)
         self.nepart.pack(side='right',expand=True)
         
@@ -484,7 +484,6 @@ class ScoaryGUI(Tkinter.Tk):
         myargs = argparse.Namespace(citation=citation, correction=correction, p_value_cutoff=p_value_cutoff, delimiter=delimiter, genes=genes, max_hits=max_hits, newicktree=newicktree,no_time=no_time,restrict_to=restrict_to,
         outdir=outdir,start_col=start_col,test=test,traits=traits,upgma_tree=upgma_tree,write_reduced=write_reduced)
         
-        print myargs
         if RunScoary:
             try:
                 
@@ -665,6 +664,7 @@ def main():
     root = ScoaryGUI(None)
     root.title("Scoary")
     root.geometry("800x400")
+    root.resizable(0,0)
     root.mainloop()
     
 if __name__ == "__main__":
