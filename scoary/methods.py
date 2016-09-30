@@ -40,7 +40,6 @@ def main(**kwargs):
         args = kwargs["args"]
         cutoffs = kwargs["cutoffs"]
         sys.stdout = kwargs["statusbar"]
-        outdir = kwargs["outdir"]
     
     if args.citation:
         sys.exit(citation())

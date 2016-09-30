@@ -487,7 +487,7 @@ class ScoaryGUI(Tkinter.Tk):
         if RunScoary:
             try:
                 
-                sm.main(args=myargs, cutoffs=dict(list(zip(correction, p_value_cutoff))),statusbar=sys.stdout,outdir=outdir)
+                sm.main(args=myargs, cutoffs=dict(list(zip(correction, p_value_cutoff))),statusbar=sys.stdout)
                 
             except SystemExit as SE:
                 # Set status bar color to red?
