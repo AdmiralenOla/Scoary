@@ -8,8 +8,13 @@ def readme():
         return f.read()
 
 
+<<<<<<< HEAD
 setup(name='scoary',
       version=sv,
+=======
+setup(name='Scoary',
+      version='1.5.1',
+>>>>>>> master
       description='Microbial pan-GWAS using the output from Roary',
       long_description=readme(),
       classifiers=[
