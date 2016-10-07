@@ -47,19 +47,23 @@ Tkinter/ttk is already part of most python distributions. If you lack it conside
 
 ## Installation
 
-The easiest way to install Scoary is through the pip package manager:
+The easiest way to install Scoary is with the pip package manager:
 
-    pip install git+https://github.com/AdmiralenOla/Scoary.git
-    
+    pip install scoary
+        
 OR, if you need a local (user) installation:
 
-    pip install --user git+https://github.com/AdmiralenOla/Scoary.git
+    pip install --user scoary
     
 OR, to specify a local directory in your user installation:
 
     pip install --user --install-option="--install-scripts=$HOME/bin" git+https://github.com/AdmiralenOla/Scoary.git
+    
+**(Not recommended)** You can install the latest development version like this
 
-##### Legacy installation
+    pip install git+https://github.com/AdmiralenOla/Scoary.git@development
+
+##### Legacy installation (Deprecated)
 
 Scoary is a standalone python script and does not require any installation. Simply download and extract the zip archive or clone the git repository:
 
@@ -73,8 +77,17 @@ If you want to add it to your $PATH variable:
 ## Usage
 
     scoary -g <gene_presence_absence.csv> -t <traits.csv>
+    
+##### Using the GUI
+Those allergic to command line usage might want to use
 
-##### Legacy usage
+    scoary_GUI
+
+to bring up a graphical interface. It is fairly intuitive, has a progress bar and can show you an example. Note that if you use the GUI Scoary will be much slower than usual (especially of you are doing lots of permutations), so it is not recommended for users that are proficient in command line usage.
+
+![Scoary GUI](https://cloud.githubusercontent.com/assets/14874487/19184086/c0488388-8c7b-11e6-99e0-7bca0a7ab6ed.png)
+
+##### Legacy usage (Deprecated)
 
     scoary.py -g <gene_presence_absence.csv> -t <traits.csv>
 
@@ -133,20 +146,21 @@ The results file contains the following columns:
 | Max_opposing_pairs | The maximum number of these pairs (Max_pairwise_comparisons) that oppose A->B or A->b, depending on the odds ratio. |
 | Best_pairwise_comp_p | The p-value corresponding to the highest possible number of supporting pairs and the lowest possible number of opposing pairs, e.g. the lowest p-value you could end up with when picking a set of maximum number of pairs. |
 | Worst_pairwise_comp_p | The p-value corresponding to the lowest possible number of supporting pairs and the highest possible number of opposing pairs, e.g. the highest p-value you could end up with when picking a set of maximum number of pairs. |
+| Empirical_p | Empirical p-value after permutations and ranking of all test estimators. The test estimator used is number of successes (ie. AB-ab supporting pairs) divided by the number of trials (ie. the maximum number of contrasting pairs). This test estimator seem to approach a normal distribution. Empirical p is calculated by (r+1)/(n+1) where r is the number of estimators that exceed the unpermuted estimator in value and n is the total number of permutations. |
 
 
 
 ## Options
 Scoary can take a number of optional arguments to tweak the output and make sure it performs as intended:
 ```
-usage: scoary.py [-h] [-t TRAITS] [-g GENES]
-                 [-p P_VALUE_CUTOFF [P_VALUE_CUTOFF ...]]
-                 [-c [{I,B,BH,PW,EPW} [{I,B,BH,PW,EPW} ...]]] [-m MAX_HITS]
-                 [-r RESTRICT_TO] [-w] [-s START_COL] [-u] [-n NEWICKTREE]
-                 [--delimiter DELIMITER] [--no-time] [--test] [--citation]
-                 [--version]
+usage: scoary [-h] [-t TRAITS] [-g GENES] [-o OUTDIR]
+              [-p P_VALUE_CUTOFF [P_VALUE_CUTOFF ...]]
+              [-c [{I,B,BH,PW,EPW,P} [{I,B,BH,PW,EPW,P} ...]]] [-e PERMUTE]
+              [-m MAX_HITS] [-r RESTRICT_TO] [-w] [-s START_COL] [-u]
+              [-n NEWICKTREE] [--delimiter DELIMITER] [--threads THREADS]
+              [--no-time] [--test] [--citation] [--version]
 
-Scoary version 1.5.1 - Screen pan-genome for trait-associated genes
+Scoary version 1.6.1 - Screen pan-genome for trait-associated genes
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -159,25 +173,47 @@ optional arguments:
                         Input gene presence/absence table (comma-separated-
                         values) from ROARY. Strain names must be equal to
                         those in the trait table
+  -o OUTDIR, --outdir OUTDIR
+                        Directory to place output files. Default = .
   -p P_VALUE_CUTOFF [P_VALUE_CUTOFF ...], --p_value_cutoff P_VALUE_CUTOFF [P_VALUE_CUTOFF ...]
-                        P-value cut-off. SCOARY will not report genes with
-                        higher p-values than this. Set to 1.0 to report all
-                        genes. Accepts standard form (e.g. 1E-8). Provide a
-                        single value or exactly as many values as correction
-                        criteria and in corresponding order. (See example
-                        under correction). Default = 0.05
-  -c [{I,B,BH,PW,EPW} [{I,B,BH,PW,EPW} ...]], --correction [{I,B,BH,PW,EPW} [{I,B,BH,PW,EPW} ...]]
-                        Use the indicated p-value for cut-off. I=Individual
-                        (naive) p-value. B=Bonferroni adjusted p-value.
-                        BH=Benjamini-Hochberg adjusted p. PW=Best (lowest)
-                        pairwise comparison p. EPW=Entire range of pairwise
-                        comparison p-values. You can enter as many correction
+                        P-value cut-off / alpha level. For Fishers,
+                        Bonferronis, and Benjamini-Hochbergs tests, SCOARY
+                        will not report genes with higher p-values than this.
+                        For empirical p-values, this is treated as an alpha
+                        level instead. I.e. 0.02 will filter all genes except
+                        the lower and upper percentile from this test. Run
+                        with "-p 1.0" to report all genes. Accepts standard
+                        form (e.g. 1E-8). Provide a single value (applied to
+                        all) or exactly as many values as correction criteria
+                        and in corresponding order. (See example under
+                        correction). Default = 0.05
+  -c [{I,B,BH,PW,EPW,P} [{I,B,BH,PW,EPW,P} ...]], --correction [{I,B,BH,PW,EPW,P} [{I,B,BH,PW,EPW,P} ...]]
+                        Apply the indicated filtration measure. I=Individual
+                        (naive) p-value. B=Bonferroni adjusted p-value. BH
+                        =Benjamini-Hochberg adjusted p. PW=Best (lowest)
+                        pairwise comparison. EPW=Entire range of pairwise
+                        comparison p-values. P=Empirical p-value from
+                        permutations. You can enter as many correction
                         criteria as you would like. These will be associated
-                        with the p_value_cutoffs you enter. For example "-c
-                        Individual EPW -p 0.1 0.05" will apply a naive p-value
-                        cutoff of 0.1 AND additionally require that the entire
+                        with the p_value_cutoffs you enter. For example "-c I
+                        EPW -p 0.1 0.05" will apply the following cutoffs:
+                        Naive p-value must be lower than 0.1 AND the entire
                         range of pairwise comparison values are below 0.05 for
-                        this gene. Default = Individual p-value. (I)
+                        this gene. Note that the empirical p-values should be
+                        interpreted at both tails. Therefore, running "-c P -p
+                        0.05" will apply an alpha of 0.05 to the empirical
+                        (permuted) p-values, i.e. it will filter everything
+                        except the upper and lower 2.5 percent of the
+                        distribution. Default = Individual p-value. (I)
+  -e PERMUTE, --permute PERMUTE
+                        Perform N number of permutations of the significant
+                        results post-analysis. Each permutation will do a
+                        label switching of the phenotype and a new p-value is
+                        calculated according to this new dataset. After all N
+                        permutations are completed, the results are ordered in
+                        ascending order, and the percentile of the original
+                        result in the permuted p-value distribution is
+                        reported.
   -m MAX_HITS, --max_hits MAX_HITS
                         Maximum number of hits to report. SCOARY will only
                         report the top max_hits results per trait
@@ -199,11 +235,11 @@ optional arguments:
   -n NEWICKTREE, --newicktree NEWICKTREE
                         Supply a custom tree (Newick format) for phylogenetic
                         instead analyses instead of calculating it internally.
-
   --delimiter DELIMITER
                         The delimiter between cells in the gene
                         presence/absence and trait files, as well as the
                         output file.
+  --threads THREADS     Number of threads to use. Default = 1
   --no-time             Output file in the form TRAIT.results.csv, instead of
                         TRAIT_TIMESTAMP.csv. When used with the -w argument
                         will output a reduced gene matrix in the form
@@ -216,6 +252,7 @@ optional arguments:
 
 by Ola Brynildsrud (olbb@fhi.no)
 ```
+
 #### The -r parameter
 The **-r** parameter is particularly useful, as you can use it to restrict your analysis to a subset of your isolates without altering the gene_presence_absence or trait files. Simply provide a single-line csv file (delimited by ",") with the names of the isolates you would like to include in the current analysis.
 
@@ -248,6 +285,9 @@ Calling Scoary with the **-u** flag will cause it to write a newick file of the 
 
 #### The -n parameter
 Can be used to supply a custom phylogenetic tree (in newick format) to Scoary. This tree will be used for calculating contrasting pairs rather than Scoary using the gene presence absence file for UPGMA calculation.
+
+#### Post-analysis label-switching permutations
+Use **-e X** to permute the dataset X times, rank the test estimators (number of successes (AB-ab pairs) / total number of contrasting pairs (ie. AB-ab and Ab-aB)) and report the unpermuted test estimator's empirical p-value. Calculated as (r+1)/(n+1) where r is the number of estimators that exceed the unpermuted estimator in value and n is the total number of permutations (North, Curtis and Sham, 2002). Empirical p-values are great for deciding if your result looks significant just by coincidence or by a true association. The permutation procedure destroys the relationship between the variant and the phenotype, making the null hypothesis true. Each permutation test estimator is sampled under the null hypothesis. If these data look like your real data, you're in trouble. So if your empirical p-value is not low, chances are you seeing a false positive results even if your other p-values (Bonferroni, pairwise comparisons etc) indicate significance of the variant. You can use empirical p-values as a results filter by using **-c P**. 
 
 ## Population structure
 Scoary implements the pairwise comparisons algorithm (Read & Nee, 1995; Maddison, 2000) to identify the maximum number of non-intersecting pairs of isolates that contrast in the state of both gene and trait. It does this by creating an UPGMA tree from the information contained in the gene_presence_absence matrix, annotating tips with gene and trait status, and recursively traversing the tree for each gene that were significant in the initial analysis. (i.e. those with p<0.05 if settings are left at default.)
@@ -300,7 +340,8 @@ The reasoning is as follows: Scoary first finds the maximum number of independen
 The "best" and "worst" labels are attached to the odds ratio of the gene in the non-population structure-corrected analysis. For example, you may find an odds ratio of 2.0 for a particular gene, meaning presence of the gene was tied to presence of the phenotype. But when you inspect your pairwise comparisons p-values you see that the "best" p-value was 0.2 and the "worst" was 1.0E-5. This means that in your phylogenetic tree, an enrichment of Ab-aB pairs was more common. In other words, the presence of this gene actually seems associated to a _silencing_ of the phenotype, in spite of your original odds ratio. Note that the odds ratio can be inflated for example by sampling of very closely related isolates.
 
 ## Coming soon
-Please feel free to suggest improvements, point out bugs or methods that could be better optimized.
+- Multiprocessing also when using the GUI. (The GUI currently only uses a single thread. See Issues).
+- Please feel free to suggest improvements, point out bugs or methods that could be better optimized.
 
 ## Acknowledgements
 - Marco Galardini cleaned my code and made many nifty improvements.
