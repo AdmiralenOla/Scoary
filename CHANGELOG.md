@@ -1,4 +1,12 @@
 #CHANGELOG
+v1.6.1 (7th Oct 2016)
+- Added a GUI, callable as scoary_GUI
+- Added post-analysis label-switching permutations, and the option to filter on empirical p-values
+- Added multiprocessing to speed up permutations
+- Added a second column in the phenotype exampledata
+- Adds an outdir option
+- Now available through PyPi
+
 v1.5.1 (22nd Sep 2016)
 - Users can now provide a custom tree that will be used for analysis instead of the internally calculated one.
 - Changed the way trees are written to file. Leaf nodes will no longer have "double" distance. The tree files are now also rooted, which allows them to be read by other software
