@@ -153,18 +153,16 @@ class PhyloTree:
         """
         Constructs a phylotree and links it to its left and right nodes
         """
-        # First check if left and right are tips (single-element list). Then we need to look up the gene-trait combination value at that node.
+        # First check if left and right are tips (type = str). Then we need to look up the gene-trait combination value at that node.
         # Also check if left and right nodes are PhyloTrees. If not, recursively create PhyloTrees.
-        #if len(leftnode) == 1:
-        #    self.leftnode = Tip(GTC[leftnode[0]])
+
         if type(leftnode) is str:
             self.leftnode = Tip(GTC[leftnode])
         elif isinstance(leftnode, PhyloTree):
             self.leftnode = leftnode
         else:
             self.leftnode = PhyloTree(leftnode=leftnode[0], rightnode=leftnode[1], GTC=GTC, OR=OR)
-        #if len(rightnode) == 1:
-        #    self.rightnode = Tip(GTC[rightnode[0]])
+
         if type(rightnode) is str:
             self.rightnode = Tip(GTC[rightnode])
         elif isinstance(rightnode, PhyloTree):
@@ -358,37 +356,41 @@ class PhyloTree:
             max_pairs_1100 = self.leftnode.maxvalues["AB"] + self.rightnode.maxvalues["ab"] + 1
             max_propairs_1100 = self.leftnode.max_propairs["AB"] + self.rightnode.max_propairs["ab"]
             max_antipairs_1100 = self.leftnode.max_antipairs["AB"] + self.rightnode.max_antipairs["ab"]
-            if self.OR < 1:
-                max_antipairs_1100 += 1
-            else:
-                max_propairs_1100 += 1
+            #if self.OR < 1:
+            #    max_antipairs_1100 += 1
+            #else:
+            #    max_propairs_1100 += 1
+            max_propairs_1100 += 1
 
         if self.leftnode.maxvalues["ab"] > -1 and self.rightnode.maxvalues["AB"] > -1:
             max_pairs_0011 = self.leftnode.maxvalues["ab"] + self.rightnode.maxvalues["AB"] + 1
             max_propairs_0011 = self.leftnode.max_propairs["ab"] + self.rightnode.max_propairs["AB"]
             max_antipairs_0011 = self.leftnode.max_antipairs["ab"] + self.rightnode.max_antipairs["AB"]
-            if self.OR < 1:
-                max_antipairs_0011 += 1
-            else:
-                max_propairs_0011 += 1
+            #if self.OR < 1:
+            #    max_antipairs_0011 += 1
+            #else:
+            #    max_propairs_0011 += 1
+            max_propairs_0011 += 1
 
         if self.leftnode.maxvalues["Ab"] > -1 and self.rightnode.maxvalues["aB"] > -1:
             max_pairs_1001 = self.leftnode.maxvalues["Ab"] + self.rightnode.maxvalues["aB"] + 1
             max_propairs_1001 = self.leftnode.max_propairs["Ab"] + self.rightnode.max_propairs["aB"]
             max_antipairs_1001 = self.leftnode.max_antipairs["Ab"] + self.rightnode.max_antipairs["aB"]# + 1
-            if self.OR < 1:
-                max_propairs_1001 += 1
-            else:
-                max_antipairs_1001 += 1
+            #if self.OR < 1:
+            #    max_propairs_1001 += 1
+            #else:
+            #    max_antipairs_1001 += 1
+            max_antipairs_1001 += 1
 
         if self.leftnode.maxvalues["aB"] > -1 and self.rightnode.maxvalues["Ab"] > -1:
             max_pairs_0110 = self.leftnode.maxvalues["aB"] + self.rightnode.maxvalues["Ab"] + 1
             max_propairs_0110 = self.leftnode.max_propairs["aB"] + self.rightnode.max_propairs["Ab"]
             max_antipairs_0110 = self.leftnode.max_antipairs["aB"] + self.rightnode.max_antipairs["Ab"]
-            if self.OR < 1:
-                max_propairs_0110 += 1
-            else:
-                max_antipairs_0110 += 1
+            #if self.OR < 1:
+            #    max_propairs_0110 += 1
+            #else:
+            #    max_antipairs_0110 += 1
+            max_antipairs_0110 += 1
 
         max_pairs = max(max_pairs_nofree, max_pairs_1100, max_pairs_0011, max_pairs_1001, max_pairs_0110)
 
