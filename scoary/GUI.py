@@ -9,6 +9,7 @@ olbb@fhi.no
 """
 
 import sys, os
+import threading
 
 try:
     import Tkinter
@@ -71,8 +72,8 @@ class ScoaryGUI(Tkinter.Tk):
         self.parent = parent
 
         self.Scoary_parameters = {"GPA": None, "Trait":None,"Tree":None,"Restrict":None,"Writetree": False, "Delimiter":",", 
-                                "Startcol": "15", "Maxhits":None,"Notime":False, "Outdir":None,
-                                "Cutoffs": {"I": [1,0.05], "B": [0,1.0], "BH": [0,1.0], "PW": [0,1.0], "EPW": [1,0.05]}
+                                "Startcol": "15", "Maxhits":None,"Notime":False, "Outdir":None, "Permutations":0,
+                                "Cutoffs": {"I": [1,0.05], "B": [0,1.0], "BH": [0,1.0], "PW": [0,1.0], "EPW": [1,0.05], "P":[0,1.0]},                                
                                 }
         self.initialize_menu()
         
@@ -174,19 +175,19 @@ class ScoaryGUI(Tkinter.Tk):
         self.Outputdir.set("(Optional) Output directory")
 
         browsebuttonGPA = Tkinter.Button(board, text=u"Browse...", command=self.BrowseButtonClickGPA)
-        browsebuttonGPA.grid(column=1,row=0,sticky='e')
+        browsebuttonGPA.grid(column=2,row=0,sticky='e')
         
         browsebuttonTraits = Tkinter.Button(board,text=u"Browse...", command=self.BrowseButtonClickTraits)
-        browsebuttonTraits.grid(column=1,row=1,sticky='e')
+        browsebuttonTraits.grid(column=2,row=1,sticky='e')
         
         browsebuttonTreeFile = Tkinter.Button(board,text=u"Browse...", command=self.BrowseButtonClickTreeFile)
-        browsebuttonTreeFile.grid(column=1,row=2,sticky='e')
+        browsebuttonTreeFile.grid(column=2,row=2,sticky='e')
         
         browsebuttonRestrict = Tkinter.Button(board,text=u"Browse...",command=self.BrowseButtonClickRestrict)
-        browsebuttonRestrict.grid(column=1,row=3,sticky='e')
+        browsebuttonRestrict.grid(column=2,row=3,sticky='e')
         
         browsebuttonOutput = Tkinter.Button(board,text=u"Browse...",command=self.BrowseButtonClickOutput)
-        browsebuttonOutput.grid(column=1,row=4,sticky='e')
+        browsebuttonOutput.grid(column=2,row=4,sticky='e')
         
         # Initialize frame for cutoffs
         board.pframe = Tkinter.LabelFrame(board,text="Cut-offs",relief='ridge')
@@ -195,13 +196,13 @@ class ScoaryGUI(Tkinter.Tk):
         
         # Initialize frame for misc options
         board.miscframe = Tkinter.LabelFrame(board,text="Misc options",relief='ridge')
-        board.miscframe.grid(column=1,row=5,sticky='e')
+        board.miscframe.grid(column=1,row=5,sticky='e',columnspan=2)
         self.initialize_miscopts()
         
         ## Create extra space
         
         board.emptyspace = Tkinter.Frame(board)
-        board.emptyspace.grid(column=0,row=6,columnspan=2,pady=(30,30))
+        board.emptyspace.grid(column=0,row=6,columnspan=3,pady=(20,20))
         
         masterbuttonfont = ("Courier", 16)
         
@@ -221,43 +222,59 @@ class ScoaryGUI(Tkinter.Tk):
         board = self.nepart
         miscframe = board.miscframe
         
+        # Max hits
         self.mhtext = Tkinter.StringVar()
         miscframe.mhlab = Tkinter.Label(miscframe,textvariable=self.mhtext)
         miscframe.mhlab.grid(column=0,row=0,sticky='w')
         self.mhtext.set("Max hits")
         
         self.maxhitsvar = Tkinter.StringVar()
-        miscframe.maxhitsentry = Tkinter.Entry(miscframe,textvariable=self.maxhitsvar,width=10)
+        miscframe.maxhitsentry = Tkinter.Entry(miscframe,textvariable=self.maxhitsvar,width=8)
         miscframe.maxhitsentry.grid(column=1,row=0)
         self.maxhitsvar.set("")
         
+        # Delimiter
         self.delimtext = Tkinter.StringVar()
         miscframe.delim = Tkinter.Label(miscframe,textvariable=self.delimtext)
         miscframe.delim.grid(column=0,row=1,sticky='w')
         self.delimtext.set("Delimiter")
         
         self.delimvar=Tkinter.StringVar()
-        miscframe.delimentry=Tkinter.Entry(miscframe,textvariable=self.delimvar,width=10)
+        miscframe.delimentry=Tkinter.Entry(miscframe,textvariable=self.delimvar,width=8)
         miscframe.delimentry.grid(column=1,row=1)
         self.delimvar.set(",")
         
+        # Starting column
         self.sctext = Tkinter.StringVar()
         miscframe.sclab = Tkinter.Label(miscframe,textvariable=self.sctext)
         miscframe.sclab.grid(row=2,column=0,sticky='w')
-        self.sctext.set("Startcol in GPA file")
+        self.sctext.set("Startcol GPA file")
         
         self.scvar = Tkinter.StringVar()
-        miscframe.sc = Tkinter.Entry(miscframe,textvariable=self.scvar,width=10)
+        miscframe.sc = Tkinter.Entry(miscframe,textvariable=self.scvar,width=8)
         miscframe.sc.grid(row=2,column=1)
         self.scvar.set("15")
         
+        # Permutations
+        self.permtext = Tkinter.StringVar()
+        miscframe.permlab = Tkinter.Label(miscframe,textvariable=self.permtext)
+        miscframe.permlab.grid(row=3,column=0,sticky='w')
+        self.permtext.set("Permutations")
+        
+        self.permvar = Tkinter.StringVar()
+        miscframe.perm = Tkinter.Entry(miscframe,textvariable=self.permvar,width=8)
+        miscframe.perm.grid(row=3,column=1)
+        self.permvar.set("0")
+        
+        # No timestamp
         self.notimevar = Tkinter.IntVar()
         miscframe.notime = Tkinter.Checkbutton(miscframe,text=u"No timestamp",onvalue=1,offvalue=0,variable=self.notimevar)
-        miscframe.notime.grid(row=3,column=0,sticky='w')
+        miscframe.notime.grid(row=5,column=0,sticky='w')
         
+        # Write tree
         self.writetreevar = Tkinter.IntVar()
-        miscframe.writetree = Tkinter.Checkbutton(miscframe,text=u"Write tree to file",onvalue=1,offvalue=0,variable=self.writetreevar)
-        miscframe.writetree.grid(row=4,column=0,sticky='w')
+        miscframe.writetree = Tkinter.Checkbutton(miscframe,text=u"Write tree",onvalue=1,offvalue=0,variable=self.writetreevar)
+        miscframe.writetree.grid(row=6,column=0,sticky='w')
         
     def initialize_pvalueframe(self):
         """
@@ -275,18 +292,21 @@ class ScoaryGUI(Tkinter.Tk):
         self.pPWVar = Tkinter.IntVar()
         self.pEPWVar = Tkinter.IntVar()
         self.pEPWVar.set(1)
+        self.pPermVar = Tkinter.IntVar()
         
         pframe.pNcheck = Tkinter.Checkbutton(pframe,text=u"Naive (Fisher's)",onvalue=1,offvalue=0, variable=self.pVar)
         pframe.pBcheck = Tkinter.Checkbutton(pframe,text=u"Bonferroni",onvalue=1,offvalue=0, variable=self.pBVar)
         pframe.pBHcheck = Tkinter.Checkbutton(pframe,text=u"Benjamini-Hochberg",onvalue=1,offvalue=0, variable=self.pBHVar)
         pframe.pPWcheck = Tkinter.Checkbutton(pframe,text=u"Pairwise comparison (Best)",onvalue=1,offvalue=0, variable=self.pPWVar)
         pframe.pEPWcheck = Tkinter.Checkbutton(pframe,text=u"Pairwise comparison (Entire)",onvalue=1,offvalue=0, variable=self.pEPWVar)
+        pframe.pPermcheck = Tkinter.Checkbutton(pframe,text=u"Empirical p-value (Permutation)", onvalue=1,offvalue=0, variable=self.pPermVar)
         
         pframe.pNcheck.grid(column=0,row=0,sticky='w')
         pframe.pBcheck.grid(column=0,row=1,sticky='w')
         pframe.pBHcheck.grid(column=0,row=2,sticky='w')
         pframe.pPWcheck.grid(column=0,row=3,sticky='w')
         pframe.pEPWcheck.grid(column=0,row=4,sticky='w')
+        pframe.pPermcheck.grid(column=0,row=5,sticky='w')
         
         # Add p-value entry cells
         
@@ -295,24 +315,28 @@ class ScoaryGUI(Tkinter.Tk):
         self.pBH = Tkinter.StringVar()
         self.pPW = Tkinter.StringVar()
         self.pEPW = Tkinter.StringVar()
+        self.pPerm = Tkinter.StringVar()
         
         pframe.pNaiveEntry = Tkinter.Entry(pframe,textvariable=self.pNaive,width=8)
         pframe.pBonfEntry = Tkinter.Entry(pframe,textvariable=self.pBonf,width=8)
         pframe.pBHEntry = Tkinter.Entry(pframe,textvariable=self.pBH,width=8)
         pframe.pPWEntry = Tkinter.Entry(pframe,textvariable=self.pPW,width=8)
         pframe.pEPWEntry = Tkinter.Entry(pframe,textvariable=self.pEPW,width=8)
+        pframe.pPermEntry = Tkinter.Entry(pframe,textvariable=self.pPerm,width=8)
         
         pframe.pNaiveEntry.grid(column=1,row=0,sticky='w')
         pframe.pBonfEntry.grid(column=1,row=1,sticky='w')
         pframe.pBHEntry.grid(column=1,row=2,sticky='w')
         pframe.pPWEntry.grid(column=1,row=3,sticky='w')
         pframe.pEPWEntry.grid(column=1,row=4,sticky='w')
+        pframe.pPermEntry.grid(column=1,row=5,sticky='w')
         
         self.pNaive.set("0.05")
         self.pBonf.set("1.0")
         self.pBH.set("1.0")
         self.pPW.set("1.0")
         self.pEPW.set("0.05")
+        self.pPerm.set("1.0")
         
         ######## EVENTS ########
         
@@ -379,6 +403,7 @@ class ScoaryGUI(Tkinter.Tk):
         self.scvar.set("15")
         self.notimevar.set(0)
         self.writetreevar.set(0)
+        self.permvar.set("0")
         self.pVar.set(1)
         self.pBVar.set(0)
         self.pBHVar.set(0)
@@ -389,12 +414,13 @@ class ScoaryGUI(Tkinter.Tk):
         self.pBH.set("1.0")
         self.pPW.set("1.0")
         self.pEPW.set("0.05")
+        self.pPerm.set("1.0")
         
     def TestExample(self):
         """
         Sets all variables corresponding to --test in the methods script
         """
-        self.GPAentryVariable.set(str(os.path.join(resource_filename(__name__, 'exampledata'), 'Gene_presence_absence.csv'))) # DOES NOT WORK
+        self.GPAentryVariable.set(str(os.path.join(resource_filename(__name__, 'exampledata'), 'Gene_presence_absence.csv')))
         self.TraitsentryVariable.set(str(os.path.join(resource_filename(__name__, 'exampledata'), 'Tetracycline_resistance.csv')))
         self.TreeentryVariable.set("")
         self.RestrictVariable.set("")
@@ -404,6 +430,7 @@ class ScoaryGUI(Tkinter.Tk):
         self.scvar.set("15")
         self.notimevar.set(0)
         self.writetreevar.set(0)
+        self.permvar.set("0")
         self.pVar.set(1)
         self.pBVar.set(0)
         self.pBHVar.set(0)
@@ -414,6 +441,7 @@ class ScoaryGUI(Tkinter.Tk):
         self.pBH.set("1.0")
         self.pPW.set("1.0")
         self.pEPW.set("0.05")
+        self.pPerm.set("1.0")
         
         ######## RUNNING THE ANALYSIS ########
         
@@ -431,6 +459,7 @@ class ScoaryGUI(Tkinter.Tk):
         self.Scoary_parameters["Startcol"] = self.scvar.get()
         self.Scoary_parameters["Maxhits"] = self.maxhitsvar.get()
         self.Scoary_parameters["Notime"] = self.notimevar.get()
+        self.Scoary_parameters["Permutations"] = self.permvar.get()
         self.Scoary_parameters["Cutoffs"]["I"][0] = self.pVar.get()
         self.Scoary_parameters["Cutoffs"]["I"][1] = self.pNaive.get()
         self.Scoary_parameters["Cutoffs"]["B"][0] = self.pBVar.get()
@@ -441,6 +470,8 @@ class ScoaryGUI(Tkinter.Tk):
         self.Scoary_parameters["Cutoffs"]["PW"][1] = self.pPW.get()
         self.Scoary_parameters["Cutoffs"]["EPW"][0] = self.pEPWVar.get()
         self.Scoary_parameters["Cutoffs"]["EPW"][1] = self.pEPW.get()
+        self.Scoary_parameters["Cutoffs"]["P"][0] = self.pPermVar.get()
+        self.Scoary_parameters["Cutoffs"]["P"][1] = self.pPerm.get()
         
         self.PrepareScoaryCMDline()
         
@@ -471,24 +502,31 @@ class ScoaryGUI(Tkinter.Tk):
             print("Please enter a real number (or nothing) in the max hits field")
             max_hits = None
             RunScoary = False
+        try:    
+            permutations = abs(int(self.Scoary_parameters["Permutations"])) if self.Scoary_parameters["Permutations"] not in [""] else 0
+        except ValueError:
+            print("Please enter a real number (or nothing) in the max hits field")
+            permutations = 0
+            RunScoary = False
         newicktree = self.Scoary_parameters["Tree"] if self.Scoary_parameters["Tree"] not in ["", "(Optional) Path to custom tree file"] else None
         no_time = True if self.Scoary_parameters["Notime"] == 1 else False
         outdir = self.Scoary_parameters["Outdir"] if self.Scoary_parameters["Outdir"] not in ["","(Optional) Output directory"] else "./"
         restrict_to = self.Scoary_parameters["Restrict"] if self.Scoary_parameters["Restrict"] not in ["", "(Optional) Path to file naming isolates to include"] else None
         start_col = self.Scoary_parameters["Startcol"]
         test = False
+        threads = 1
         traits = self.Scoary_parameters["Traits"] if self.Scoary_parameters["Traits"] not in ["","Path to traits/phenotype file"] else None
         upgma_tree = True if self.Scoary_parameters["Writetree"] == 1 else False
         write_reduced=False
                
         myargs = argparse.Namespace(citation=citation, correction=correction, p_value_cutoff=p_value_cutoff, delimiter=delimiter, genes=genes, max_hits=max_hits, newicktree=newicktree,no_time=no_time,restrict_to=restrict_to,
-        outdir=outdir,start_col=start_col,test=test,traits=traits,upgma_tree=upgma_tree,write_reduced=write_reduced)
+        outdir=outdir,permute=permutations,start_col=start_col,test=test,threads=threads,traits=traits,upgma_tree=upgma_tree,write_reduced=write_reduced)
         
         if RunScoary:
             try:
                 
                 sm.main(args=myargs, cutoffs=dict(list(zip(correction, p_value_cutoff))),statusbar=sys.stdout)
-                
+
             except SystemExit as SE:
                 # Set status bar color to red?
                 if str(SE) == "0":
