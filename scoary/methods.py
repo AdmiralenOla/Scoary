@@ -795,7 +795,6 @@ def Permute(tree, GTC, permutations, cutoffs):
         print("Number of permutations too few. The absolute minimum is 10.")
         proceed = False
     if proceed:
-        x = 0
         for i in xrange(permutations):
             # Make a permutation using random.shuffle
             PermutedGTC = PermuteGTC(GTCcopy)
@@ -808,7 +807,6 @@ def Permute(tree, GTC, permutations, cutoffs):
             # If, after more than 20 iterations, emp_p is ever higher than 0.1, abort
             emp_p = (r+1.0)/(permutations+1.0)
             if i >= 20 and emp_p > 0.1:
-                emp_p = "> 0.1"
                 break
             # After more than 100 iterations, be stricter. Demand that emp_p is at
             # most twice the size of the cutoffs (If there is no cutoff, continue)
