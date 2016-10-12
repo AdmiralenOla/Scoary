@@ -664,15 +664,23 @@ def PairWiseComparisonThreaded(nestedlist):
         resultscontainer[currentgene] = {}
         
         Max_pairwise_comparisons = ConvertUPGMAtoPhyloTree(tree, GTC[currentgene])
+
         resultscontainer[currentgene]["max_total_pairs"] = Max_pairwise_comparisons["Total"]
         resultscontainer[currentgene]["max_propairs"] = Max_pairwise_comparisons["Pro"]
         resultscontainer[currentgene]["max_antipairs"] = Max_pairwise_comparisons["Anti"]
         
+        # Switch definition of "best" and "worst" if antipairs outnumber propairs
+        if Max_pairwise_comparisons["Pro"] >= Max_pairwise_comparisons["Anti"]:
+            Pbest = "Pbest"
+            Pworst = "Pworst"
+        else:
+            Pbest = "Pworst"
+            Pworst = "Pbest"
         try:
-            resultscontainer[currentgene]["Pbest"] = ss.binom_test(resultscontainer[currentgene]["max_propairs"],
+            resultscontainer[currentgene][Pbest] = ss.binom_test(resultscontainer[currentgene]["max_propairs"],
                                                                    resultscontainer[currentgene]["max_total_pairs"],
                                                                    0.5)
-            resultscontainer[currentgene]["Pworst"] = ss.binom_test(resultscontainer[currentgene]["max_total_pairs"]-resultscontainer[currentgene]["max_antipairs"],
+            resultscontainer[currentgene][Pworst] = ss.binom_test(resultscontainer[currentgene]["max_total_pairs"]-resultscontainer[currentgene]["max_antipairs"],
                                                                     resultscontainer[currentgene]["max_total_pairs"],
                                                                     0.5)
             resultscontainer[currentgene]["Plowest"] = min(resultscontainer[currentgene]["Pbest"], resultscontainer[currentgene]["Pworst"])
@@ -928,6 +936,7 @@ def ConvertUPGMAtoPhyloTree(tree, GTC):
     """
 
     # TRAVERSING TREE: For each binary division - go to left until hit tip. Then go back
+    # Remove OR calculation in upcoming version - no longer needed.
     num_AB = float(list(GTC.values()).count("AB"))
     num_Ab = float(list(GTC.values()).count("Ab"))
     num_aB = float(list(GTC.values()).count("aB"))
