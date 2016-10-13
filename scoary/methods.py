@@ -63,6 +63,7 @@ def main(**kwargs):
         args.upgma_tree = True
         args.write_reduced = False
         args.no_time = False
+        args.collapse = False
         cutoffs = {"I": 0.05, "EPW": 0.05}
         
     if not args.outdir.endswith("/"):
@@ -159,7 +160,7 @@ def main(**kwargs):
         print(filtrationoptions(cutoffs))
         print("Tallying genes and performing statistical analyses")
 
-        RES_and_GTC = Setup_results(genedic, traitsdic)
+        RES_and_GTC = Setup_results(genedic, traitsdic, args.collapse)
         RES = RES_and_GTC["Results"]
         GTC = RES_and_GTC["Gene_trait_combinations"]
 
@@ -343,7 +344,7 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates):
     return r
 
 
-def Setup_results(genedic, traitsdic):
+def Setup_results(genedic, traitsdic, collapse):
     """
     This is the method that actually does all the counting of genes,
     calculation of p-values and post-test adjustment of p-values.
@@ -401,8 +402,7 @@ def Setup_results(genedic, traitsdic):
             # Should consider adding a softer correlation required than 100%,
             # i.e. genes that are highly co-distributed should perhaps be merged
             # earlier?
-            
-            if stats["hash"] in distributions:
+            if stats["hash"] in distributions and collapse:
                 # Find out which gene is correlated
                 corr_gene = distributions[stats["hash"]]
                 # Collapse the two genes
@@ -418,7 +418,7 @@ def Setup_results(genedic, traitsdic):
                 distributions[stats["hash"]] = gene
                 mergedgenes = False
                 gene_trait_combinations[trait][gene] = stats["gene_trait"]
-                
+  
             obs_table = [[stat_table["tpgp"],
                           stat_table["tpgn"]],
                          [stat_table["tngp"],
@@ -497,7 +497,7 @@ def Perform_statistics(traits, genes):
     """
     r = {"tpgp": 0, "tpgn": 0, "tngp": 0, "tngn": 0}  # tpgn = trait positive, gene negative
     gene_trait = {}
-    distributions_hash = ""
+    distribution_hash = ""
     for t in traits:  # For each strain
         try:
             if int(traits[t]) == 1 and genes[t] == 1:
@@ -1123,6 +1123,11 @@ def ScoaryArgumentParser():
                         'the output file. ',
                         default=',',
                         type=str)
+    parser.add_argument('--collapse',
+                        help='Add this to collapse correlated genes (genes that have '
+                        'identical distribution patterns in the sample) into merged units. ',
+                        default=False,
+                        action='store_true')
     parser.add_argument('--threads',
                         help='Number of threads to use. Default = 1',
                         type=int,

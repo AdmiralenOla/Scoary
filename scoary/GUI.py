@@ -518,9 +518,10 @@ class ScoaryGUI(Tkinter.Tk):
         traits = self.Scoary_parameters["Traits"] if self.Scoary_parameters["Traits"] not in ["","Path to traits/phenotype file"] else None
         upgma_tree = True if self.Scoary_parameters["Writetree"] == 1 else False
         write_reduced=False
+        collapse=False
                
         myargs = argparse.Namespace(citation=citation, correction=correction, p_value_cutoff=p_value_cutoff, delimiter=delimiter, genes=genes, max_hits=max_hits, newicktree=newicktree,no_time=no_time,restrict_to=restrict_to,
-        outdir=outdir,permute=permutations,start_col=start_col,test=test,threads=threads,traits=traits,upgma_tree=upgma_tree,write_reduced=write_reduced)
+        outdir=outdir,permute=permutations,start_col=start_col,test=test,threads=threads,traits=traits,upgma_tree=upgma_tree,write_reduced=write_reduced,collapse=collapse)
         
         if RunScoary:
             try:
