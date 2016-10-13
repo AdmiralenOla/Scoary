@@ -1,4 +1,9 @@
 #CHANGELOG
+v1.6.2 (13th Oct 2016)
+-Collapsing correlated genes is now optional, controlled with the --collapse flag
+-Fixed a bug where the collapsing duplicated some genes
+-Collapsing is default to False in GUI mode
+
 v1.6.1 (7th Oct 2016)
 - Added a GUI, callable as scoary_GUI
 - Added post-analysis label-switching permutations, and the option to filter on empirical p-values
