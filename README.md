@@ -57,11 +57,7 @@ OR, if you need a local (user) installation:
     
 OR, to specify a local directory in your user installation:
 
-    pip install --user --install-option="--install-scripts=$HOME/bin" git+https://github.com/AdmiralenOla/Scoary.git
-    
-**(Not recommended)** You can install the latest development version like this
-
-    pip install git+https://github.com/AdmiralenOla/Scoary.git@development
+    pip install --user --install-option="--install-scripts=$HOME/bin" scoary
 
 ##### Legacy installation (Deprecated)
 
