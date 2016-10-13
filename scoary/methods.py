@@ -371,6 +371,7 @@ def Setup_results(genedic, traitsdic):
         # Additionally, we need a dictionary to, for each gene
         # hold the gene-trait status (e.g "AB" or "ab" of each strain)
         gene_trait_combinations[trait] = {}
+        distributions = {}
 
         i = 0  # Progress
         for gene in genedic:
@@ -401,20 +402,23 @@ def Setup_results(genedic, traitsdic):
             # i.e. genes that are highly co-distributed should perhaps be merged
             # earlier?
             
-            # Note: This approach consumes extra time. Can it be optimized?
-            if stats["gene_trait"] in gene_trait_combinations[trait].values():
+            if stats["hash"] in distributions:
                 # Find out which gene is correlated
-                corr_gene = list(gene_trait_combinations[trait].keys())[list(gene_trait_combinations[trait].values()).index(stats["gene_trait"])]
+                corr_gene = distributions[stats["hash"]]
                 # Collapse the two genes
                 newgenename = corr_gene + "-" + gene
-                gene_trait_combinations[trait][newgenename] = stats["gene_trait"]
+                distributions[stats["hash"]] = newgenename
                 # Remove 1 from the number of tests
                 number_of_tests -= 1
                 mergedgenes = True
+                
+                del(gene_trait_combinations[trait][corr_gene])
+                gene_trait_combinations[trait][newgenename] = stats["gene_trait"]
             else:
-                gene_trait_combinations[trait][gene] = stats["gene_trait"]
+                distributions[stats["hash"]] = gene
                 mergedgenes = False
-
+                gene_trait_combinations[trait][gene] = stats["gene_trait"]
+                
             obs_table = [[stat_table["tpgp"],
                           stat_table["tpgn"]],
                          [stat_table["tngp"],
@@ -446,6 +450,7 @@ def Setup_results(genedic, traitsdic):
                 "p_v": p_value}
                 p_value_list.append((gene, p_value))
             else:
+                del(all_traits[trait][corr_gene])
                 all_traits[trait][newgenename] = {
                 "NUGN": "",
                 "Annotation": "Merged genes",
@@ -492,19 +497,24 @@ def Perform_statistics(traits, genes):
     """
     r = {"tpgp": 0, "tpgn": 0, "tngp": 0, "tngn": 0}  # tpgn = trait positive, gene negative
     gene_trait = {}
+    distributions_hash = ""
     for t in traits:  # For each strain
         try:
             if int(traits[t]) == 1 and genes[t] == 1:
                 r["tpgp"] += 1
+                distribution_hash += "1"
                 gene_trait[t] = "AB"
             elif int(traits[t]) == 1 and genes[t] == 0:
                 r["tpgn"] += 1
+                distribution_hash += "0"
                 gene_trait[t] = "aB"
             elif int(traits[t]) == 0 and genes[t] == 1:
                 r["tngp"] += 1
+                distribution_hash += "1"
                 gene_trait[t] = "Ab"
             elif int(traits[t]) == 0 and genes[t] == 0:
                 r["tngn"] += 1
+                distribution_hash += "0"
                 gene_trait[t] = "ab"
             else:
                 sys.exit("There was a problem with comparing your traits and gene presence/absence files."
@@ -513,7 +523,7 @@ def Perform_statistics(traits, genes):
         except KeyError:
             print("\nError occured when trying to find " + str(t) + " in the genes file.")
             sys.exit("Make sure strains are named the same in your traits file as in your gene presence/absence file")
-    return {"statistics": r, "gene_trait": gene_trait}
+    return {"statistics": r, "hash": int(distribution_hash, 2), "gene_trait": gene_trait}
 
 def StoreResults(Results, max_hits, cutoffs, upgmatree, GTC,
                  outdir, permutations, num_threads, no_time=False, delimiter=","):
