@@ -4,7 +4,7 @@ from scoary import __version__ as sv
 
 
 def readme():
-    with open('README.md') as f:
+    with open('README_pypi.md') as f:
         return f.read()
 
 
