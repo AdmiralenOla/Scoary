@@ -156,7 +156,7 @@ usage: scoary [-h] [-t TRAITS] [-g GENES] [-o OUTDIR]
               [-n NEWICKTREE] [--delimiter DELIMITER] [--threads THREADS]
               [--no-time] [--test] [--citation] [--version]
 
-Scoary version 1.6.1 - Screen pan-genome for trait-associated genes
+Scoary version 1.6.2 - Screen pan-genome for trait-associated genes
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -235,6 +235,9 @@ optional arguments:
                         The delimiter between cells in the gene
                         presence/absence and trait files, as well as the
                         output file.
+  --collapse            Add this to collapse correlated genes (genes that have
+                        identical distribution patterns in the sample) into
+                        merged units.
   --threads THREADS     Number of threads to use. Default = 1
   --no-time             Output file in the form TRAIT.results.csv, instead of
                         TRAIT_TIMESTAMP.csv. When used with the -w argument
@@ -283,7 +286,10 @@ Calling Scoary with the **-u** flag will cause it to write a newick file of the 
 Can be used to supply a custom phylogenetic tree (in newick format) to Scoary. This tree will be used for calculating contrasting pairs rather than Scoary using the gene presence absence file for UPGMA calculation.
 
 #### Post-analysis label-switching permutations
-Use **-e X** to permute the dataset X times, rank the test estimators (number of successes (AB-ab pairs) / total number of contrasting pairs (ie. AB-ab and Ab-aB)) and report the unpermuted test estimator's empirical p-value. Calculated as (r+1)/(n+1) where r is the number of estimators that exceed the unpermuted estimator in value and n is the total number of permutations (North, Curtis and Sham, 2002). Empirical p-values are great for deciding if your result looks significant just by coincidence or by a true association. The permutation procedure destroys the relationship between the variant and the phenotype, making the null hypothesis true. Each permutation test estimator is sampled under the null hypothesis. If these data look like your real data, you're in trouble. So if your empirical p-value is not low, chances are you seeing a false positive results even if your other p-values (Bonferroni, pairwise comparisons etc) indicate significance of the variant. You can use empirical p-values as a results filter by using **-c P**. 
+Use **-e X** to permute the dataset X times, rank the test estimators (number of successes (AB-ab pairs) / total number of contrasting pairs (ie. AB-ab and Ab-aB)) and report the unpermuted test estimator's empirical p-value. Calculated as (r+1)/(n+1) where r is the number of estimators that exceed the unpermuted estimator in value and n is the total number of permutations (North, Curtis and Sham, 2002). Empirical p-values are great for deciding if your result looks significant just by coincidence or by a true association. The permutation procedure destroys the relationship between the variant and the phenotype, making the null hypothesis true. Each permutation test estimator is sampled under the null hypothesis. If these data look like your real data, you're in trouble. So if your empirical p-value is not low, chances are you seeing a false positive results even if your other p-values (Bonferroni, pairwise comparisons etc) indicate significance of the variant. You can use empirical p-values as a results filter by using **-c P**.
+
+#### The --collapse flag
+Adding this flag to the command line will collapse genes that are identically distributed in your sample. For example, plasmid genes are often inherited together and as such will not add any information individually. From a statistical point of view, this is more correct, as in the opposite case the program will test (and correct for) multiple identical null hypotheses, thus unfairly penalizing your results by multiple comparisons correction.
 
 ## Population structure
 Scoary implements the pairwise comparisons algorithm (Read & Nee, 1995; Maddison, 2000) to identify the maximum number of non-intersecting pairs of isolates that contrast in the state of both gene and trait. It does this by creating an UPGMA tree from the information contained in the gene_presence_absence matrix, annotating tips with gene and trait status, and recursively traversing the tree for each gene that were significant in the initial analysis. (i.e. those with p<0.05 if settings are left at default.)
@@ -309,7 +315,9 @@ Scoary reports the best (lowest) and worst (highest) p-values, corresponding to 
 ## Example data
 In the exampledata folder you can see an example of how the input files would typically look. This simulated and completely fictitious data set consists of 100 isolates with around 3000 core genes and a total pan-genome of around 9000 genes. 
 
-Here I have used tetracycline resistance as the phenotype for which we would like to know the genetic basis. In this example, only a single gene controls the expression of tetracycline resistance, although the penetrance of the gene is not 100% (i.e. isolates can have the gene and still be susceptible towards tetracycline), and other, unmeasured factors (for example point mutations) can also induce resistance. 
+Here I have used tetracycline resistance as the phenotype for which we would like to know the genetic basis. In this example, only a single gene controls the expression of tetracycline resistance, although the penetrance of the gene is not 100% (i.e. isolates can have the gene and still be susceptible towards tetracycline), and other, unmeasured factors (for example point mutations) can also induce resistance.
+
+For demonstration purposes I have also included a second phenotype, called Bogus, which has been generated completely at random, and so doesn't have any association to any of the genes in the gene presence/absence file.
 
 This particular example very clearly identifies the causal gene (looking at the pairwise comparison p-values), whereas in real experiments the results are sometimes a lot messier.
 
