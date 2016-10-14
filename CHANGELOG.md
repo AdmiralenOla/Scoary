@@ -1,4 +1,9 @@
 #CHANGELOG
+v1.6.3 (14th Oct 2016)
+- Removed OR calculation from PhyloTree class
+- Now prints collapse option to stdout
+- Cleaned up threading method
+
 v1.6.2 (13th Oct 2016)
 - Collapsing correlated genes is now optional, controlled with the --collapse flag
 - Fixed a bug where the collapsing duplicated some genes
