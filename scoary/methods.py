@@ -157,7 +157,7 @@ def main(**kwargs):
         traitsdic = Csv_to_dic(traits, args.delimiter, allowed_isolates)
 
         print("Finished loading files into memory.")
-        print(filtrationoptions(cutoffs))
+        print(filtrationoptions(cutoffs, args.collapse))
         print("Tallying genes and performing statistical analyses")
 
         RES_and_GTC = Setup_results(genedic, traitsdic, args.collapse)
@@ -314,7 +314,6 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14, allowed_isolates=None, wr
     return {"Roarydic": r,
             "Zero_ones_matrix": zero_ones_matrix,
             "Strains": strain_names_allowed}
-
 
 def Csv_to_dic(csvfile, delimiter, allowed_isolates):
     """
@@ -589,18 +588,18 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree, GTC,
             # The Progress variable holds the total progress status of the subprocesses. It is locked, but can be written to by all subprocs
             Progress = Value("h",0)
             pool = Pool(processes = num_threads,initializer=initProcess,initargs=(Progress,))
-            argumentlist = {"si":sort_instructions,"tree":upgmatree,"GTC": GTC[Traitname],"cutoffs": cutoffs,"cp": cut_possibilities,"perm":permutations,"Trait":Trait}
+            argumentlist = {"si":sort_instructions,"tree":upgmatree,"GTC": GTC[Traitname],"cutoffs": cutoffs,"cp": cut_possibilities,"perm":permutations,"Trait":Trait, "Threaded": True}
             all_args = [ (domains[x], dict(argumentlist)) for x in xrange(len(domains)) ] # Need to make a copy of dict to prevent then from pointing to the same object
         
-            Threadresults = pool.imap(PairWiseComparisonThreaded,all_args)
+            Threadresults = pool.imap(PairWiseComparisons,all_args)
 
             pool.close()
             pool.join()
         else:
             domains = list(xrange(num_results))
-            argumentlist = {"si":sort_instructions,"tree":upgmatree,"GTC": GTC[Traitname],"cutoffs": cutoffs,"cp": cut_possibilities,"perm":permutations,"Trait":Trait}
+            argumentlist = {"si":sort_instructions,"tree":upgmatree,"GTC": GTC[Traitname],"cutoffs": cutoffs,"cp": cut_possibilities,"perm":permutations,"Trait":Trait, "Threaded": False}
             all_args = (domains, argumentlist)
-            Threadresults = [PairWiseComparisonUnThreaded(all_args)]
+            Threadresults = [PairWiseComparisons(all_args)]
         sys.stdout.write("\r100.00%")
         sys.stdout.flush()
 
@@ -647,7 +646,7 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree, GTC,
 def initProcess(share):
     scoary.Progress = share
             
-def PairWiseComparisonThreaded(nestedlist):
+def PairWiseComparisons(nestedlist):
     """
     A threaded version of the pairwise comparisons correction method. Also calculates permutations.
     """
@@ -659,16 +658,22 @@ def PairWiseComparisonThreaded(nestedlist):
     cutposs = nestedlist[1]["cp"]
     permutations = nestedlist[1]["perm"]
     Trait = nestedlist[1]["Trait"]
+    Threaded = nestedlist[1]["Threaded"]
     
     resultscontainer = {}
     num_tot_res = len(Trait)
+    progress = 0.0
 
     for genenumber in domain:
-        with scoary.Progress.get_lock():
-            scoary.Progress.value += 1
-        sys.stdout.write("\r{:.2%}".format(float(scoary.Progress.value)/num_tot_res))
-        sys.stdout.flush()
-        
+        if Threaded:
+            with scoary.Progress.get_lock():
+                scoary.Progress.value += 1
+            sys.stdout.write("\r{:.2%}".format(float(scoary.Progress.value)/num_tot_res))
+            sys.stdout.flush()
+        else:
+            progress += 1.0
+            sys.stdout.write("\r{:.2%}".format(progress/num_tot_res))
+            sys.stdout.flush()
         # Start with lowest p-value, the one which has key 0 in sort_instructions
         currentgene = sort_instructions[genenumber]
         resultscontainer[currentgene] = {}
@@ -716,68 +721,6 @@ def PairWiseComparisonThreaded(nestedlist):
             resultscontainer[currentgene]["Empirical_p"] = empirical_p_perm
     
     return resultscontainer
-    
-def PairWiseComparisonUnThreaded(nestedlist):
-    """
-    An unthreaded version of the pairwise comparisons correction method. Also calculates permutations.
-    """
-    domain = nestedlist[0]
-    sort_instructions = nestedlist[1]["si"]
-    tree = nestedlist[1]["tree"]
-    GTC = nestedlist[1]["GTC"]
-    cutoffs = nestedlist[1]["cutoffs"]
-    cutposs = nestedlist[1]["cp"]
-    permutations = nestedlist[1]["perm"]
-    Trait = nestedlist[1]["Trait"]
-    
-    resultscontainer = {}
-    num_tot_res = len(Trait)
-    Progress = 0.0
-    for genenumber in domain:
-        Progress += 1.0
-        sys.stdout.write("\r{:.2%}".format(Progress/num_tot_res))
-        sys.stdout.flush()
-        
-        # Start with lowest p-value, the one which has key 0 in sort_instructions
-        currentgene = sort_instructions[genenumber]
-        resultscontainer[currentgene] = {}
-        
-        Max_pairwise_comparisons = ConvertUPGMAtoPhyloTree(tree, GTC[currentgene])
-        resultscontainer[currentgene]["max_total_pairs"] = Max_pairwise_comparisons["Total"]
-        resultscontainer[currentgene]["max_propairs"] = Max_pairwise_comparisons["Pro"]
-        resultscontainer[currentgene]["max_antipairs"] = Max_pairwise_comparisons["Anti"]
-        
-        try:
-            resultscontainer[currentgene]["Pbest"] = ss.binom_test(resultscontainer[currentgene]["max_propairs"],
-                                                                   resultscontainer[currentgene]["max_total_pairs"],
-                                                                   0.5)
-            resultscontainer[currentgene]["Pworst"] = ss.binom_test(resultscontainer[currentgene]["max_total_pairs"]-resultscontainer[currentgene]["max_antipairs"],
-                                                                    resultscontainer[currentgene]["max_total_pairs"],
-                                                                    0.5)
-            resultscontainer[currentgene]["Plowest"] = min(resultscontainer[currentgene]["Pbest"], resultscontainer[currentgene]["Pworst"])
-            resultscontainer[currentgene]["Pboth"] = max(resultscontainer[currentgene]["Pbest"], resultscontainer[currentgene]["Pworst"])
-        except TypeError:
-            sys.exit("There was a problem using scipy.stats.binom_test. Ensure you have a recent distribution of SciPy installed.")
-          
-        # Loop can break early if filtration includes non-pairwise correction measures, because if these
-        # are all above the p then we are not interested in the pairwise results
-        
-        resultscontainer[currentgene]["p_v"] = Trait[currentgene]["p_v"]
-        resultscontainer[currentgene]["B_p"] = Trait[currentgene]["B_p"]
-        resultscontainer[currentgene]["BH_p"] = Trait[currentgene]["BH_p"]
-        
-        if decideifbreak(cutoffs, resultscontainer[currentgene]):
-            # Remove gene from the results
-            del(resultscontainer[currentgene])
-            break    
-
-        # This is also the place to add permutations - AFTER it has been verified that the current gene passes all filtration filters
-        if permutations >= 10:
-            empirical_p_perm = Permute(tree=tree,GTC=GTC[currentgene],permutations=permutations,cutoffs=cutoffs)
-            resultscontainer[currentgene]["Empirical_p"] = empirical_p_perm
-    
-    return resultscontainer
-    
     
 def Permute(tree, GTC, permutations, cutoffs):
     """
@@ -944,16 +887,9 @@ def ConvertUPGMAtoPhyloTree(tree, GTC):
     """
 
     # TRAVERSING TREE: For each binary division - go to left until hit tip. Then go back
-    # Remove OR calculation in upcoming version - no longer needed.
-    num_AB = float(list(GTC.values()).count("AB"))
-    num_Ab = float(list(GTC.values()).count("Ab"))
-    num_aB = float(list(GTC.values()).count("aB"))
-    num_ab = float(list(GTC.values()).count("ab"))
-    OR = ((num_AB + 1)/(num_Ab + 1)) / ((num_aB + 1)/(num_ab + 1))  # Use pseudocounts to avoid 0 or inf OR.
     MyPhyloTree = PhyloTree(leftnode=tree[0],
                             rightnode=tree[1],
-                            GTC=GTC,
-                            OR=OR)
+                            GTC=GTC)
 
     return {"Total": MyPhyloTree.max_contrasting_pairs,
             "Pro": MyPhyloTree.max_contrasting_propairs,
@@ -977,7 +913,7 @@ def StoreUPGMAtreeToFile(upgmatree, outdir, no_time=False):
         treefile.write(Tree + ";")
         print("Wrote the UPGMA tree to file: %s" % treefilename)        
 
-def filtrationoptions(cutoffs):
+def filtrationoptions(cutoffs, collapse):
     """
     Converts between easy keys (I, B, etc) and long names of filtration options, for printing
     to the runlog
@@ -986,6 +922,7 @@ def filtrationoptions(cutoffs):
                    "PW":"Pairwise comparison (Best)", "EPW": "Pairwise comparison (Entire range)",
                    "P": "Empirical p-value (permutation-based)"}
     filters = [str(translation[k]) + ":    " + str(v) for k,v in cutoffs.items()] 
+    filters.append("Collapse genes:    " + str(collapse))
     return "Filtration options: \n" + "\n".join(filters)
     
 def decideifbreak(cutoffs, currentgene):
