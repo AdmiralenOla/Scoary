@@ -730,6 +730,7 @@ def Permute(tree, GTC, permutations, cutoffs):
     ordered p-values resulting from the permutation.
     """
     proceed = True
+    #aborted = False
     # Guard the original GTC against changes by making a copy
     GTCcopy = dict(GTC)
     # r is the number of replicates with a larger test statistic than the unpermuted
@@ -747,6 +748,7 @@ def Permute(tree, GTC, permutations, cutoffs):
     if permutations < 10:
         print("Number of permutations too few. The absolute minimum is 10.")
         proceed = False
+
     if proceed:
         for i in xrange(permutations):
             # Make a permutation using random.shuffle
@@ -757,20 +759,16 @@ def Permute(tree, GTC, permutations, cutoffs):
                 r += 1
 
             # Check how many estimators are higher than the unpermuted
-            # If, after more than 20 iterations, emp_p is ever higher than 0.1, abort
+            # If, after more than 30 iterations, r indicates a p > 0.1, abort
+            if i >= 30:
+                if (1 - ss.binom.cdf(r,i,0.1)) < 0.05:
+                    emp_p = (r+1.0)/(i+1.0)
+                    break
+        else:
             emp_p = (r+1.0)/(permutations+1.0)
-            if i >= 20 and emp_p > 0.1:
-                break
-            # After more than 100 iterations, be stricter. Demand that emp_p is at
-            # most twice the size of the cutoffs (If there is no cutoff, continue)
-            if i >= 100:
-                if "P" in cutoffs:
-                    if emp_p > ( 2.0 * cutoffs["P"] ):
-                        break
     else:
         return None
     
-    emp_p = (r+1.0)/(permutations+1.0)
     return emp_p
 
 def PermuteGTC(GTC):
