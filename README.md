@@ -345,6 +345,11 @@ The "best" and "worst" labels are attached to the odds ratio of the gene in the 
 - **Can I use this for SNPs/kmers?**
 
 In theory yes, but it requires some tinkering. Obviously you couldn't take the input file directly from Roary. You'd have to create the input file yourself. In theory, this shouldn't be too hard. Just have each row be a single SNP/kmer rather than a gene. Note that each variant has to be binary, so if you have SNPs with three (or more) alleles this complicates interpretations, particularly if they have differential effect on the outcome.
+- **A lot of my empirical p-values are identical. Bug?**
+
+Not really. In order to save time, Scoary calculates the empirical p-values as it goes through permutations. If it sees early on that a particular variant is not interesting (e.g. empirical p-value above 0.1) it does not waste any more resources on this variant. As a result, note that higher empirical p-values are less accurate (because they have been calculated from fewer permutations).
+- **Can I use this for SNPs/kmers?**
+
 - **Can I use this for archea?**
 
 Honestly, I don't know enough about archea to say for sure.
