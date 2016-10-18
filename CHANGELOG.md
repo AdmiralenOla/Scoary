@@ -1,4 +1,7 @@
 #CHANGELOG
+v1.6.4 (18th Oct 2016)
+- Made the permutations algorithm faster by implementing a dynamic cutoff
+
 v1.6.3 (14th Oct 2016)
 - Removed OR calculation from PhyloTree class
 - Now prints collapse option to stdout
