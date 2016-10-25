@@ -1,4 +1,7 @@
 #CHANGELOG
+v1.6.5 (25th Oct 2016)
+- Added the README_pypi.md file so that setup.py can be used to build/install locally if pip not installed.
+
 v1.6.4 (18th Oct 2016)
 - Made the permutations algorithm faster by implementing a dynamic cutoff
 
