@@ -1,4 +1,8 @@
 #CHANGELOG
+v1.6.6 (9th Nov 2016)
+- Changed citation.
+- Scoary is now available through Zenodo.
+
 v1.6.5 (25th Oct 2016)
 - Added the README_pypi.md file so that setup.py can be used to build/install locally if pip not installed.
 
