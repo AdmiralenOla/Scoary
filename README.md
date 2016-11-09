@@ -25,7 +25,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
-**LATEST VERSION - 1.6.5**
+**LATEST VERSION - 1.6.6**
 
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
