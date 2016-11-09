@@ -374,7 +374,7 @@ Most certainly not.
 I greatly appreciate any feedback, even negative. If you like (or dislike) Scoary, please feel free to tell your friends and colleagues about it. If you don't have friends or colleagues, please feel free to rant about it on your blog or social media profile.
 
 ## Citation
-Manuscript not yet published.
+Manuscript accepted. Link/doi to follow soon. For now, please cite as Brynildsrud, O. Scoary - Microbial pan-GWAS. https://github.com/AdmiralenOla/scoary 
 
 ## Contact
 Ola Brynildsrud (ola.brynildsrud@fhi.no)
