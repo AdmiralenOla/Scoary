@@ -1,4 +1,7 @@
 #CHANGELOG
+v1.6.7 (28th Nov 2016)
+- Scoary article is now out! Updated Readme and citation.
+
 v1.6.6 (9th Nov 2016)
 - Changed citation.
 - Scoary is now available through Zenodo.

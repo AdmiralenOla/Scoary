@@ -553,9 +553,11 @@ class ScoaryGUI(Tkinter.Tk):
         """
         text = "SCOARY version %s \n\n" \
         "Please cite as: \n" \
-        "Brynildsrud O. Scoary: \n" \
-        "Microbial Pan-GWAS. \n" \
-        "https://github.com/AdmiralenOla/Scoary" % scoary.__version__
+        "Brynildsrud O, Bohlin J, Scheffer L, \n" \
+        "Eldholm V. Rapid scoring of genes in \n" \
+        "microbial pan-genome-wide association \n" \
+        "studies with Scoary. Genome Biol. \n" \
+        "2016;17:238" % scoary.__version__
         return text
         
     def Photobase64(self):
