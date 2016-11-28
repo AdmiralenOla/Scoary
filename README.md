@@ -2,7 +2,7 @@
 
 Scoary is designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome and the traits. It reports a list of genes sorted by strength of association per trait.
 
-+[![DOI](https://zenodo.org/badge/51000172.svg)](https://zenodo.org/badge/latestdoi/51000172)
+[![DOI](https://zenodo.org/badge/51000172.svg)](https://zenodo.org/badge/latestdoi/51000172)
 
 ## Contents
 - [What's new] (#whats-new)
@@ -376,7 +376,7 @@ I greatly appreciate any feedback, even negative. If you like (or dislike) Scoar
 
 ## Citation
 If you use Scoary, please consider citing:
-Brynildsrud O, Bohlin J, Scheffer L, Eldholm V. Rapid scoring of genes in microbial pan-genome-wide association studies with Scoary. Genome Biol. 2016;17:238
+**Brynildsrud O, Bohlin J, Scheffer L, Eldholm V.** Rapid scoring of genes in microbial pan-genome-wide association studies with Scoary. _Genome Biol_. 2016;17:238
 
 The article is Open Access, and can be found using DOI: 10.1186/s13059-016-1108-8
 
