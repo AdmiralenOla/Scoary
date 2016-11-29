@@ -26,7 +26,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
-**LATEST VERSION - 1.6.6**
+**LATEST VERSION - 1.6.7**
 
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
@@ -375,7 +375,10 @@ Most certainly not.
 I greatly appreciate any feedback, even negative. If you like (or dislike) Scoary, please feel free to tell your friends and colleagues about it. If you don't have friends or colleagues, please feel free to rant about it on your blog or social media profile.
 
 ## Citation
-Manuscript accepted. Link/doi to follow soon. For now, please cite as Brynildsrud, O. Scoary - Microbial pan-GWAS. https://github.com/AdmiralenOla/scoary 
+If you use Scoary, please consider citing:
+**Brynildsrud O, Bohlin J, Scheffer L, Eldholm V.** Rapid scoring of genes in microbial pan-genome-wide association studies with Scoary. _Genome Biol_. 2016;17:238
+
+The article is Open Access, and can be found using DOI: 10.1186/s13059-016-1108-8
 
 ## Contact
 Ola Brynildsrud (ola.brynildsrud@fhi.no)
