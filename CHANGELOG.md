@@ -1,4 +1,7 @@
 #CHANGELOG
+v1.6.8 (29th Nov 2016)
+- Bugfix: Addition of numpy.float64 and long were causing problems on some systems. Now converted to float beforehand. (Fixes #43)
+
 v1.6.7 (28th Nov 2016)
 - Scoary article is now out! Updated Readme and citation.
 

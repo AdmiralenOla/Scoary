@@ -192,7 +192,7 @@ def CreateTriangularDistanceMatrix(zeroonesmatrix, strainnames):
     The distance d(i,i) is set to 1 for all i.
     """
     try:
-        hamming_distances = list(spatial.distance.pdist(zeroonesmatrix, 'hamming'))
+        hamming_distances = [float(h) for h in list(spatial.distance.pdist(zeroonesmatrix, 'hamming'))]
     except TypeError:
         sys.exit("Could not locate scipy.spatial.distance.pdist. Perhaps you have an old version of SciPy installed?")
     nstrains = int((1 + (1 + 8*len(hamming_distances))**0.5)/2)
