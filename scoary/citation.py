@@ -26,9 +26,9 @@ def citation():
 
 
     If you use Scoary, please cite:
-    Brynildsrud O, Bohlin J, Scheffer L, Eldholm V. Rapid scoring of genes
-    in microbial pan-genome-wide association studies with Scoary. Genome
-    Biol. 2016;17:238.
+    Brynildsrud O, Bohlin J, Scheffer L, Eldholm V. Rapid scoring of 
+    genes in microbial pan-genome-wide association studies with Scoary.
+    Genome Biol. 2016;17:238.
 
     '''
     return(cite)
