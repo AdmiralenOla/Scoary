@@ -1,4 +1,9 @@
 #CHANGELOG
+v1.6.9 (Dec 2016)
+- Scoary now handles missing data specified in the traits file as "NA", "-" or ".".
+- Now also handles missing isolates (rows) in the traits file.
+- Stylistic changes, including line lengths formats to conform with PEP8.
+
 v1.6.8 (29th Nov 2016)
 - Bugfix: Addition of numpy.float64 and long were causing problems on some systems. Now converted to float beforehand. (Fixes #43)
 

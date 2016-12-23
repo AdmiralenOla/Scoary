@@ -35,6 +35,10 @@ Documentation
 -------------
 The most updated documentation for scoary is found at `the project site <https://github.com/AdmiralenOla/Scoary>`_
 
+Citation
+--------
+If you use Scoary, please citing our `paper <https://dx.doi.org/10.1186/s13059-016-1108-8>`_
+
 License
 -------
 Scoary is freely available under a GPLv3 license.

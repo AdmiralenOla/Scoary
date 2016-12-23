@@ -10,6 +10,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 - [Installation] (#installation)
 - [Usage] (#usage)
 - [Input] (#input)
+- [Missing data] (#missing-data)
 - [Output] (#output)
 - [Options] (#options)
 - [Population structure] (#population-structure)
@@ -26,7 +27,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
-**LATEST VERSION - 1.6.8**
+**LATEST VERSION - 1.6.9**
 
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
@@ -120,6 +121,9 @@ It should look something like this:
 
 You can see an example of how the input files could look in the exampledata folder.
 
+#### Missing data
+Don't worry if you have not measured the phenotype for all your traits. From v1.6.9 on, Scoary can handle missing data. The missing values need to be specified as "NA", "." or "-". Note that Scoary does not actually specify any kind of uncertainty model for these missing values, it simply excludes them from further analysis.
+
 ## Output
 Scory outputs a single csv file per trait in the traits file. It uses comma "," as a delimiter. The results consists of genes that were found to be associated with the trait, sorted according to significance. (By default, Scoary reports all genes with a naive p-value < 0.05, but the user can change the cut-off value and use adjusted p-values instead)
 
@@ -152,14 +156,15 @@ The results file contains the following columns:
 ## Options
 Scoary can take a number of optional arguments to tweak the output and make sure it performs as intended:
 ```
-usage: scoary [-h] [-t TRAITS] [-g GENES] [-o OUTDIR]
-              [-p P_VALUE_CUTOFF [P_VALUE_CUTOFF ...]]
-              [-c [{I,B,BH,PW,EPW,P} [{I,B,BH,PW,EPW,P} ...]]] [-e PERMUTE]
-              [-m MAX_HITS] [-r RESTRICT_TO] [-w] [-s START_COL] [-u]
-              [-n NEWICKTREE] [--delimiter DELIMITER] [--threads THREADS]
-              [--no-time] [--test] [--citation] [--version]
+usage: scoary.py [-h] [-t TRAITS] [-g GENES] [-o OUTDIR]
+                 [-p P_VALUE_CUTOFF [P_VALUE_CUTOFF ...]]
+                 [-c [{I,B,BH,PW,EPW,P} [{I,B,BH,PW,EPW,P} ...]]] [-e PERMUTE]
+                 [-m MAX_HITS] [-r RESTRICT_TO] [-w] [-s START_COL] [-u]
+                 [-n NEWICKTREE] [--delimiter DELIMITER] [--collapse]
+                 [--threads THREADS] [--no-time] [--test] [--citation]
+                 [--version]
 
-Scoary version 1.6.2 - Screen pan-genome for trait-associated genes
+Scoary version 1.6.9 - Screen pan-genome for trait-associated genes
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -233,7 +238,7 @@ optional arguments:
                         UPGMA tree to a newick file
   -n NEWICKTREE, --newicktree NEWICKTREE
                         Supply a custom tree (Newick format) for phylogenetic
-                        instead analyses instead of calculating it internally.
+                        analyses instead instead of calculating it internally.
   --delimiter DELIMITER
                         The delimiter between cells in the gene
                         presence/absence and trait files, as well as the
