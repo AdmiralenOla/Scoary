@@ -3,7 +3,7 @@ Isolate_1,0,0
 Isolate_10,0,1
 Isolate_11,0,1
 Isolate_12,1,0
-Isolate_13,0,0
+Isolate_13,0,NA
 Isolate_14,0,1
 Isolate_15,0,0
 Isolate_16,0,0
@@ -17,7 +17,7 @@ Isolate_22,1,1
 Isolate_23,1,0
 Isolate_24,0,0
 Isolate_25,0,1
-Isolate_26,1,1
+Isolate_26,1,-
 Isolate_27,0,0
 Isolate_28,1,1
 Isolate_29,1,1
@@ -75,7 +75,7 @@ Isolate_75,1,1
 Isolate_76,0,1
 Isolate_77,1,1
 Isolate_78,0,0
-Isolate_79,1,1
+Isolate_79,1,.
 Isolate_8,0,1
 Isolate_80,0,0
 Isolate_81,0,0
