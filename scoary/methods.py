@@ -12,6 +12,7 @@ import sys
 import csv
 import time
 import random
+import logging # NEW
 from multiprocessing import Pool, Value
 from scipy import stats as ss
 from scipy import spatial
@@ -32,7 +33,7 @@ try:
 except NameError:
     xrange = range
     
-
+                                    
 def main(**kwargs):
     """
     The main function of Scoary.
@@ -44,10 +45,13 @@ def main(**kwargs):
         args = kwargs["args"]
         cutoffs = kwargs["cutoffs"]
         sys.stdout = kwargs["statusbar"]
-    
+    # If the citation arg has been passed, nothing should be done except
+    # a call to citation
     if args.citation:
         sys.exit(citation())
    
+   # If the test argument was used, all settings are overrided and 
+   # defaulted
     if args.test:
         args.correction = ['I','EPW']
         args.delimiter = ','
@@ -70,12 +74,15 @@ def main(**kwargs):
         args.no_time = False
         args.collapse = False
         cutoffs = {"I": 0.05, "EPW": 0.05}
-        
+    
+    # Outdir should end with slash    
     if not args.outdir.endswith("/"):
         args.outdir += "/"
+        
+    # Perform tests to make sure all input is okay                        
     if args.traits is None or args.genes is None:
-        sys.exit("The following arguments are required: -t/--traits, "
-        "-g/--genes")
+        sys.exit(("The following arguments are required: -t/--traits, "
+        "-g/--genes"))
     if args.threads <= 0:
         sys.exit("Number of threads must be positive")
     if not os.path.isfile(args.traits):
@@ -198,11 +205,15 @@ def main(**kwargs):
                         Prune = [i for i in members if 
                                       i not in strains]
                         upgmatree = PruneForMissing(upgmatree, Prune)
-
+                    else:
+                        sys.exit("ERROR: Your provided tree file did "
+                        "not contain all the isolates in your gene "
+                        "presence absence file.")
         print("Reading traits file")
         traitsdic, Prunedic = Csv_to_dic(traits,
                                          args.delimiter,
-                                         allowed_isolates)
+                                         allowed_isolates,
+                                         strains)
         
         print("Finished loading files into memory.")
         
@@ -251,7 +262,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
     r = {}
     if writereducedset:
         file = open(ReduceSet(genefile,delimiter,startcol,
-                    allowed_isolates,no_time),"rU") # CHANGE
+                    allowed_isolates,no_time),"rU")
         csvfile = csv.reader(file, skipinitialspace=True, 
                              delimiter=delimiter)
     else:
@@ -264,13 +275,10 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
     strains = header[startcol:]
     if allowed_isolates is not None:
         strain_names_allowed = [val for val in strains
-                                if val in allowed_isolates.keys()] # CHANGED?
+                                if val in allowed_isolates.keys()]
     else:
         strain_names_allowed = strains
-    #strain_names_allowed = ([val for val in strains 
-    #                         if val in allowed_isolates.keys()]
-    #                         if allowed_isolates is not None
-    #                         else strains) 
+
     zero_ones_matrix = []
 
     try:
@@ -302,7 +310,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
 
         for strain in xrange(len(strains)):
             if (allowed_isolates is not None):
-                if strains[strain] not in allowed_isolates.keys(): # CHANGED?
+                if strains[strain] not in allowed_isolates.keys():
                     continue
             if q[startcol + strain] in ["", "0", "-"]:
                 # If the gene is not present, AND The isolate is allowed
@@ -367,7 +375,7 @@ def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None,
     "file %s" % str(reducedfilename))
     return reducedfilename
 
-def Csv_to_dic(csvfile, delimiter, allowed_isolates):
+def Csv_to_dic(csvfile, delimiter, allowed_isolates, strains):
     """
     Converts an input traits file (csv format) to dictionaries readable 
     by Scoary.
@@ -412,6 +420,15 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates):
             p = p_filt
         else:
             Prunedic[name_trait] = []
+        # Remove isolates that did not have rows in the trait file but
+        # that were allowed by the GPA file/restrict_to
+        if not all(s in p.keys() for s in strains):
+            print("WARNING: Some isolates in your gene presence "
+            "absence file were not represented in your traits file. "
+            "These will count as MISSING data and will not be included."
+            )
+            Prunedic[name_trait] += [s for s in strains if
+                                     s not in p.keys()]
         r[name_trait] = p
 
     return r, Prunedic
