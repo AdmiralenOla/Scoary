@@ -428,8 +428,10 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates, strains):
             "These will count as MISSING data and will not be included."
             )
             Prunedic[name_trait] += [s for s in strains if
-                                     s not in p.keys()]
+                                     s not in p.keys() and
+                                     s not in Prunedic[name_trait]]
         r[name_trait] = p
+        Prunedic[name_trait] += [None]
 
     return r, Prunedic
 
