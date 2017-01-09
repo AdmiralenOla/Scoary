@@ -273,6 +273,44 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
     roaryfile = True
 
     strains = header[startcol:]
+    
+    Roarycols = ["Gene", "Non-unique Gene name", "Annotation",
+                 "No. isolates", "No. sequences",
+                 "Avg sequences per isolate", "Genome Fragment",
+                 "Order within Fragment", "Accessory Fragment",
+                 "Accessory Order within Fragment", "QC",
+                 "Min group size nuc", "Max group size nuc",
+                 "Avg group size nuc"]
+    
+    # Move backwards and forwards from startcol to find correct startcol
+    if strains[0] in Roarycols:
+		for c in xrange(len(strains)):
+            if strains[c] not in Roarycols:
+                correctstartcol = startcol + c
+                break
+		print("CRITICAL: Make sure you have set the -s parameter "
+		"correctly. You are running with -s %s. This correponds to the "
+		"column %s. If this is not an isolate, Scoary might crash or "
+		"produce strange results. Scoary thinks you should have run "
+		"with -s %s instead" % (str(startcol+1),
+		                        strains[0],
+		                        str(correctstartcol + 1))
+    
+    Firstcols = header[:startcol][::-1]
+    minus = 0
+    for c in xrange(len(Firstcols)):
+		if Firstcols[c] not in Roarycols:
+			minus += 1
+		else:
+			if minus < 0:
+				correctstartcol = startcol - minus
+			    print("CRITICAL: Make sure you have set the -s "
+			    "parameter correctly. You are running with -s %s. "
+			    "Scoary thinks there might be columns corresponding to "
+			    "isolates before this in your gene presence absence "
+			    "file. Scoary thinks you should have used %s" % 
+			    (str(startcol+1), str(correctstartcol+1))
+    
     if allowed_isolates is not None:
         strain_names_allowed = [val for val in strains
                                 if val in allowed_isolates.keys()]
