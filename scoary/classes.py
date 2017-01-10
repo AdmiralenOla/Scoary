@@ -36,6 +36,35 @@ class PimpedFileHandler(logging.FileHandler):
             os.access(path, os.X_OK)):
 				sys.exit("CRITICAL: Need write permission to outdir")
 
+def counted(fn):
+    def wrapper(*args, **kwargs):
+        wrapper.called += 1
+        return fn(*args, **kwargs)
+    wrapper.called = 0
+    wrapper.__name__ = fn.__name__
+    return wrapper
+    
+class ScoaryLogger(logging.Logger):
+
+    def __init__(self, name, level=logging.DEBUG):
+        super(ScoaryLogger, self).__init__(name, level)
+
+    @counted
+    def info(self, *args, **kwargs):
+        super(ScoaryLogger, self).info(*args, **kwargs)
+
+    @counted
+    def warning(self, *args, **kwargs):
+        super(ScoaryLogger, self).warning(*args, **kwargs)
+
+    @counted
+    def critical(self, msg, *args, **kwargs):
+        super(ScoaryLogger, self).warning(*args, **kwargs)
+
+    @counted
+    def error(self, *args, **kwargs):
+        super(ScoaryLogger, self).warning(*args, **kwargs)
+        
 class Matrix:
     """
     A matrix stored as a list of lists

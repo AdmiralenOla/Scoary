@@ -21,6 +21,7 @@ from .classes import Matrix
 from .classes import QuadTree
 from .classes import PhyloTree
 from .classes import PimpedFileHandler
+from .classes import ScoaryLogger
 import scoary
 
 import os
@@ -33,24 +34,24 @@ try:
     xrange
 except NameError:
     xrange = range
-    
 
+# Set up log and message flow
+log = ScoaryLogger(logging.getLogger('scoary'))
+log.setLevel(logging.DEBUG)
+
+logformat = '%(asctime)s    %(message)s'
+logdatefmt='%m/%d/%Y %I:%M:%S %p'
+formatter = logging.Formatter(fmt=logformat,datefmt=logdatefmt)
+
+console = logging.StreamHandler(sys.stdout)
+console.setFormatter(logging.Formatter('%(message)s'))
+console.setLevel(logging.INFO)
+log.addHandler(console)
+    
 def main(**kwargs):
     """
     The main function of Scoary.
     """
-    # Set up log and message flow
-    log = logging.getLogger('scoary')
-    log.setLevel(logging.DEBUG)
-    
-    logformat = '%(asctime)s    %(message)s'
-    logdatefmt='%m/%d/%Y %I:%M:%S %p'
-    formatter = logging.Formatter(fmt=logformat,datefmt=logdatefmt)
-    
-    console = logging.StreamHandler(sys.stdout)
-    console.setFormatter(logging.Formatter('%(message)s'))
-    console.setLevel(logging.INFO)
-    log.addHandler(console)
         
     # If main has been ran from the GUI, then args already exists
     if len(kwargs) == 0:
@@ -267,8 +268,9 @@ def main(**kwargs):
                          args.threads,
                          time=currenttime,
                          delimiter=args.delimiter)
-            sys.stdout.write("\n")
-            log.info("Finished. Checked a total of %d genes for "
+            log.info("\n")
+            log.info("==== Finished ====")
+            log.info("Checked a total of %d genes for "
                   "associations to %d trait(s). Total time used: %d "
                   "seconds." % (len(genedic),
                                 len(traitsdic),
@@ -278,8 +280,20 @@ def main(**kwargs):
         exc_type, exc_value, _ = sys.exc_info()
         log.exception("CRITICAL:")
         sys.exit(1)
-        
-    sys.exit(0)
+    
+    if log.critical.called > 0:
+        log.info("Scoary finished successfully, but with CRITICAL ERRORS. "
+        "Please check your log file.")
+    elif log.error.called > 0:
+        log.info("Scoary finished successfully, but with ERRORS. Please check "
+        "your log file.")
+    elif log.warning.called > 0:
+        log.info("Scoary finished successfully, but with WARNINGS. Please "
+        "check your log file.")
+    else:
+        log.info("No warnings were recorded.")
+    log.removeHandler(log_handler)
+    sys.exit("Thank you for using Scoary")
 
 ###############################
 # FUNCTIONS FOR READING INPUT #
@@ -290,9 +304,6 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
     Converts a gene presence/absence file into dictionaries
     that are readable by Scoary.
     """
-    # Get log
-    log = logging.getLogger('scoary')
-    
     r = {}
     if writereducedset:
         file = open(ReduceSet(genefile,delimiter,startcol,
@@ -312,15 +323,17 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
         "correspond to any column in your gene presence/absence file.")
     strains = header[startcol:]
     
+    # Include alternative column spellings
     Roarycols = ["Gene", "Non-unique Gene name", "Annotation",
                  "No. isolates", "No. sequences",
                  "Avg sequences per isolate", "Genome Fragment",
                  "Order within Fragment", "Accessory Fragment",
                  "Accessory Order with Fragment", "QC",
                  "Min group size nuc", "Max group size nuc",
-                 "Avg group size nuc"]
+                 "Avg group size nuc", "Order within fragment",
+                 "Genome fragment", "Accessory fragment" ]
     
-    # Move backwards and forwards from startcol to find correct startcol
+    # Move forwards from startcol to find correct startcol
     if strains[0] in Roarycols:
         for c in xrange(len(strains)):
             if strains[c] not in Roarycols:
@@ -334,19 +347,25 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
                                 strains[0],
                                 str(correctstartcol + 1)))
     
+    # Move backwards from startcol to find correct startcol
     Firstcols = header[:startcol][::-1]
     minus = 0
+    Censored_isolates = []
     for c in xrange(len(Firstcols)):
         if Firstcols[c] not in Roarycols:
             minus += 1
-            print(Firstcols[c])
+            #print(Firstcols[c])
+            Censored_isolates.append(Firstcols[c])
         else:
             if minus > 0:
                 correctstartcol = startcol - minus
                 log.error("ERROR: Make sure you have set the -s "
                 "parameter correctly. You are running with -s %s. "
-                "Scoary thinks you should have used %s" % 
-                (str(startcol+1), str(correctstartcol+1)))
+                "Scoary thinks you should have used %s. This excludes the "
+                "following, which Scoary thinks are isolates: %s" % 
+                (str(startcol+1),
+                str(correctstartcol+1), 
+                ", ".join(Censored_isolates)))
                 break
     
     if allowed_isolates is not None:
@@ -424,7 +443,6 @@ def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None,
     Scoary when analyzing subsets of large (e.g. more than a couple 
     of hundred) datasets.
     """
-    log = logging.getLogger('scoary')
     csvfile = csv.reader(genefile, skipinitialspace=True,
                          delimiter=delimiter)
     header = next(csvfile)
@@ -453,7 +471,6 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates, strains):
     Converts an input traits file (csv format) to dictionaries readable 
     by Scoary.
     """
-    log = logging.getLogger('scoary')
     tab = list(zip(*csv.reader(csvfile, delimiter=delimiter)))
     r = {}
     # Create dictionary over which trees need pruning due to missing 
@@ -638,7 +655,6 @@ def StoreUPGMAtreeToFile(upgmatree, outdir, time=""):
     A method for printing the UPGMA tree that is built internally from 
     the hamming distances in the gene presence/absence matrix
     """
-    log = logging.getLogger('scoary')
     treefilename = str(outdir + ("Tree%s.nwk" % time))
     with open(treefilename, "w") as treefile:
         Tree = str(upgmatree)
@@ -659,7 +675,6 @@ def Setup_results(genedic, traitsdic, collapse):
     of known 2x2 cell distributions, so that identical Fisher's tests 
     will not have to be run.
     """
-    log = logging.getLogger('scoary')
     # Need to create one results dictionary for each trait
 
     all_traits = {}
@@ -826,7 +841,6 @@ def Perform_statistics(traits, genes):
     The method that adds the presence/absence status for each 
     trait-status combination.
     """
-    log = logging.getLogger('scoary')
     r = {"tpgp": 0, "tpgn": 0, "tngp": 0, "tngn": 0}
     # tpgn = trait positive, gene negative, etc
     gene_trait = {}
@@ -884,7 +898,6 @@ def StoreResults(Results, max_hits, cutoffs, upgmatree, GTC, Prunedic,
     A method for storing the results. Calls StoreTraitResult for each 
     trait column in the input file.
     """
-    log = logging.getLogger('scoary')
     for Trait in Results:
         sys.stdout.write("\n")
         log.info("Storing results: " + Trait)
@@ -899,7 +912,6 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
     The method that actually stores the results. Only accepts results 
     from a single trait at a time
     """
-    log = logging.getLogger('scoary')
     permutations = int(permutations)
     if num_threads > 1:
         multithreaded = True
@@ -1294,7 +1306,7 @@ def FindClosestIndex(sortedlist, value, index=None):
                                    index))
     
     return index   
-
+   
 #########################
 # MISC HELPER FUNCTIONS #
 #########################            
