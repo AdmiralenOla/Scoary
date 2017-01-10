@@ -1,4 +1,7 @@
 import sys
+import logging
+import os
+import errno
 
 # Note: The Matrix and QuadTree implementations are heavily based on 
 # original implementations by Christian Storm Pedersen.
@@ -9,6 +12,29 @@ try:
 except NameError:
     xrange = range
 
+class PimpedFileHandler(logging.FileHandler):
+	"""
+	A filehandler that can create directories if needed.
+	"""
+	def __init__(self, filename, mode='w', encoding=None, delay=0):
+		"""
+		Initiates the filehandler and create dir if it does not exist.
+		"""
+		self.makedir(filename)
+		logging.FileHandler.__init__(self, filename, mode, encoding, delay)
+	
+	def makedir(self, filename):
+		path = os.path.dirname(filename)
+		# Check if dir exists. If not, try to create it. Else, do nothing:
+		if not os.path.isdir(path):
+			try:
+				os.makedirs(path)
+			except OSError as e:
+				sys.exit("CRITICAL: Need write permission to outdir")
+		else: # Dir exists, but might not have permission
+			if not (os.access(path, os.W_OK) and 
+            os.access(path, os.X_OK)):
+				sys.exit("CRITICAL: Need write permission to outdir")
 
 class Matrix:
     """
