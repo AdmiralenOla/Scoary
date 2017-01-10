@@ -12,7 +12,7 @@ import sys
 import csv
 import time
 import random
-import logging # NEW
+import logging
 from multiprocessing import Pool, Value
 from scipy import stats as ss
 from scipy import spatial
@@ -20,7 +20,7 @@ from .citation import citation
 from .classes import Matrix
 from .classes import QuadTree
 from .classes import PhyloTree
-from .classes import PimpedFileHandler # NEW
+from .classes import PimpedFileHandler
 import scoary
 
 import os
@@ -43,9 +43,8 @@ def main(**kwargs):
     log = logging.getLogger('scoary')
     log.setLevel(logging.DEBUG)
     
-    logformat = '%(asctime)s    %(message)s' #
-    #logformat = '%(message)s'
-    logdatefmt='%m/%d/%Y %I:%M:%S %p' #
+    logformat = '%(asctime)s    %(message)s'
+    logdatefmt='%m/%d/%Y %I:%M:%S %p'
     formatter = logging.Formatter(fmt=logformat,datefmt=logdatefmt)
     
     console = logging.StreamHandler(sys.stdout)
@@ -110,7 +109,6 @@ def main(**kwargs):
     log_handler.setFormatter(formatter)
     log.addHandler(log_handler)
     log.info("==== Scoary started ====")
-    #log.debug("Time is: %s" % time.strftime("%d.%m.%Y %H:%M %p"))
     
     # Catch all system exceptions from here on out
     try:
@@ -123,18 +121,6 @@ def main(**kwargs):
             sys.exit("Number of threads must be positive")
         if not os.path.isfile(args.traits):
             sys.exit("Could not find the traits file: %s" % args.traits)
-        #if not os.path.isdir(args.outdir):
-            #print("Outdir does not exist, checking for write permissions")
-            #if (os.access(args.outdir, os.W_OK) and 
-            #os.access(args.outdir, os.X_OK)):
-                #print("Appear to have write permission to outdir")
-                #os.makedirs(args.outdir)
-            #else:
-                #sys.exit("Need to have write (and exec) permission to outdir")
-        #else:
-            #if not (os.access(args.outdir, os.W_OK) and
-            #os.access(args.outdir, os.X_OK)):
-                #sys.exit("Need to have write (and exec) permission to outdir")
         if not os.path.isfile(args.genes):
             sys.exit("Could not find the gene presence absence file: %s" 
             % args.genes)
@@ -258,9 +244,7 @@ def main(**kwargs):
             filtopts = filtrationoptions(cutoffs, args.collapse)
             for line in filtopts:
                 log.info(line)
-            #log.info(filtrationoptions(cutoffs, args.collapse))
-            #sys.stdout.write("\n")
-            #log.info("\n")
+
             log.info("Tallying genes and performing statistical analyses")
     
             RES_and_GTC = Setup_results(genedic, traitsdic, args.collapse)
@@ -451,12 +435,7 @@ def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None,
     
     log.info("Writing gene presence absence file for the reduced set of "
           "isolates")
-    #if no_time:
-    #    reducedfilename = "gene_presence_absence_reduced.csv"
-    #else:
-    #    reducedfilename = ("gene_presence_absence_reduced_" + 
-    #                       time.strftime("_%d_%m_%Y_%H%M") + 
-    #                       ".csv")
+
     reducedfilename = "gene_presence_absence_reduced%s.csv" % time
     
     with open(reducedfilename, "w") as csvout:
@@ -1357,10 +1336,7 @@ def filtrationoptions(cutoffs, collapse):
                for k,v in cutoffs.items()] 
     filters.append("Collapse genes:    " + str(collapse) + "\n\n")
     filters = ["-- Filtration options --"] + filters
-    #filters += ["------------------------"]
-    #return ("\n"
-    #        "==== Filtration options ==== \n"
-    #        + "\n".join(filters))
+
     return filters
     
 def decideifbreak(cutoffs, currentgene):
