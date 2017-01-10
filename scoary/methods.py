@@ -306,7 +306,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
             
     roaryfile = True
     try:
-		header[startcol]
+        header[startcol]
     except IndexError:
         sys.exit("The startcol (-s) you have specified does not seem to "
         "correspond to any column in your gene presence/absence file.")
