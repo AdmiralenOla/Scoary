@@ -169,7 +169,8 @@ class ScoaryGUI(Tkinter.Tk):
 
         frame.lab = Tkinter.Label(frame,text=u"Awaiting input options")
         frame.lab.pack(in_=frame.pb,expand=True)
-        sys.stdout = StdoutToLabel(frame.lab, progressbar=frame.pb)
+        #sys.stdout = StdoutToLabel(frame.lab, progressbar=frame.pb)
+        sys.stdout = StdoutToLabel(frame.lab, progressbar=frame.pb, width=frame.cget('width'))
     
     def initialize_controlboard(self):
         """
@@ -922,7 +923,7 @@ class StdoutToLabel(Tkinter.Label):
             except:
                 self.width = None
         else:
-            self.width = width   
+            self.width = width
 
     def flush(self):
         """
@@ -938,10 +939,14 @@ class StdoutToLabel(Tkinter.Label):
         self.defstdout.write(string)
         if string == "\n":
             pass
-        elif (len(string) > self.width and 
+        elif (len(string) > 100 and
         self.width is not None and 
         self.width > 0):
-            self.widget.config(text="See log file for details")
+            if ("Fatal error" in string):
+                self.widget.config(text=
+                "Fatal error: See log file for details")
+            else:
+                self.widget.config(text="See log file for details")
         elif string is not None:
 
             last_char = string[-1]
