@@ -27,7 +27,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
-**LATEST VERSION - 1.6.9**
+**LATEST VERSION - 1.6.10**
 
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
@@ -164,7 +164,7 @@ usage: scoary.py [-h] [-t TRAITS] [-g GENES] [-o OUTDIR]
                  [--threads THREADS] [--no-time] [--test] [--citation]
                  [--version]
 
-Scoary version 1.6.9 - Screen pan-genome for trait-associated genes
+Scoary version 1.6.10 - Screen pan-genome for trait-associated genes
 
 optional arguments:
   -h, --help            show this help message and exit
