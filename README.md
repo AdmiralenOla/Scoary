@@ -356,8 +356,9 @@ In theory yes, but it requires some tinkering. Obviously you couldn't take the i
 - **A lot of my empirical p-values are identical. Bug?**
 
 Not really. In order to save time, Scoary calculates the empirical p-values as it goes through permutations. If it sees early on that a particular variant is not interesting (e.g. empirical p-value above 0.1) it does not waste any more resources on this variant. As a result, note that higher empirical p-values are less accurate (because they have been calculated from fewer permutations).
-- **Can I use this for SNPs/kmers?**
+- **Do I need to convert my gene_presence_absence.csv file into 1s and 0s rather than gene/locus_tag names?**
 
+No. Scoary treats "0", "-" and "" as gene absence, anything else as presence. You should be able to feed the file directly from Roary. 
 - **Can I use this for archea?**
 
 Honestly, I don't know enough about archea to say for sure.
