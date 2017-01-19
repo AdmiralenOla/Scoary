@@ -4,6 +4,8 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 [![DOI](https://zenodo.org/badge/51000172.svg)](https://zenodo.org/badge/latestdoi/51000172)
 
+[![OMICtools](https://omictools.com/img/logo-blue.png)](https://omictools.com/association-mapping-category)
+
 ## Contents
 - [What's new] (#whats-new)
 - [Dependencies] (#dependencies)
