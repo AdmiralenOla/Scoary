@@ -42,12 +42,7 @@ log.setLevel(logging.DEBUG)
 logformat = '%(asctime)s    %(message)s'
 logdatefmt='%m/%d/%Y %I:%M:%S %p'
 formatter = logging.Formatter(fmt=logformat,datefmt=logdatefmt)
-
-#console = logging.StreamHandler(sys.stdout)
-#console.setFormatter(logging.Formatter('%(message)s'))
-#console.setLevel(logging.INFO)
-#log.addHandler(console)
-    
+   
 def main(**kwargs):
     """
     The main function of Scoary.
@@ -60,12 +55,7 @@ def main(**kwargs):
         args = kwargs["args"]
         cutoffs = kwargs["cutoffs"]
         sys.stdout = kwargs["statusbar"]
-        # Re-initiate console, because sys.stdout is now a statusbar from GUI
-        #log.removeHandler(console)
-        #console = logging.StreamHandler(sys.stdout)
-        #console.setFormatter(logging.Formatter('%(message)s'))
-        #console.setLevel(logging.INFO)
-        #log.addHandler(console)
+
     # If the citation arg has been passed, nothing should be done except
     # a call to citation
     if args.citation:
@@ -291,6 +281,8 @@ def main(**kwargs):
     except SystemExit as e:
         exc_type, exc_value, _ = sys.exc_info()
         log.exception("CRITICAL:")
+        log.removeHandler(log_handler)
+        log.removeHandler(console)
         sys.exit(exc_value)
     
     if log.critical.called > 0:
