@@ -58,7 +58,7 @@ class ScoaryLogger(logging.Logger):
         super(ScoaryLogger, self).warning(*args, **kwargs)
 
     @counted
-    def critical(self, msg, *args, **kwargs):
+    def critical(self, *args, **kwargs):
         super(ScoaryLogger, self).warning(*args, **kwargs)
 
     @counted
