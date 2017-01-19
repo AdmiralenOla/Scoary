@@ -195,7 +195,7 @@ def main(**kwargs):
                 if args.write_reduced:
                     sys.exit("You cannot use the -w argument without "
                     "specifying a subset (-r)")
-                
+
             log.info("Reading gene presence absence file")
             
             genedic_and_matrix = \
@@ -896,6 +896,7 @@ def Perform_statistics(traits, genes):
             sys.stdout.write("\n")
             log.critical("CRITICAL: Could not find %s in the genes "
             "file." % str(t) )
+            #log.warning("CRITICAL: Could not find %s in the genes file" % str(t))
             sys.exit("Make sure strains are named the same in your "
             "traits file as in your gene presence/absence file")
     return {"statistics": r, "hash": int(distribution_hash, 2),
