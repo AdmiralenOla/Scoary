@@ -12,7 +12,7 @@ import sys
 import csv
 import time
 import random
-import logging # NEW
+import logging
 from multiprocessing import Pool, Value
 from scipy import stats as ss
 from scipy import spatial
@@ -20,6 +20,8 @@ from .citation import citation
 from .classes import Matrix
 from .classes import QuadTree
 from .classes import PhyloTree
+from .classes import PimpedFileHandler
+from .classes import ScoaryLogger
 import scoary
 
 import os
@@ -32,12 +34,20 @@ try:
     xrange
 except NameError:
     xrange = range
-    
-                                    
+
+# Set up log and message flow
+log = ScoaryLogger(logging.getLogger('scoary'))
+log.setLevel(logging.DEBUG)
+
+logformat = '%(asctime)s    %(message)s'
+logdatefmt='%m/%d/%Y %I:%M:%S %p'
+formatter = logging.Formatter(fmt=logformat,datefmt=logdatefmt)
+   
 def main(**kwargs):
     """
     The main function of Scoary.
     """
+        
     # If main has been ran from the GUI, then args already exists
     if len(kwargs) == 0:
         args, cutoffs = ScoaryArgumentParser()
@@ -45,13 +55,14 @@ def main(**kwargs):
         args = kwargs["args"]
         cutoffs = kwargs["cutoffs"]
         sys.stdout = kwargs["statusbar"]
+
     # If the citation arg has been passed, nothing should be done except
     # a call to citation
     if args.citation:
         sys.exit(citation())
    
-   # If the test argument was used, all settings are overrided and 
-   # defaulted
+    # If the test argument was used, all settings are overrided and 
+    # defaulted
     if args.test:
         args.correction = ['I','EPW']
         args.delimiter = ','
@@ -75,186 +86,225 @@ def main(**kwargs):
         args.collapse = False
         cutoffs = {"I": 0.05, "EPW": 0.05}
     
+    # Start clock
+    starttime = time.time()
+    # currenttime is ONLY used to append to filenames, therefore, it
+    # is set empty if args.no_time is True
+    if args.no_time:
+        currenttime = ""
+    else:
+        currenttime = time.strftime("_%d_%m_%Y_%H%M")
+
     # Outdir should end with slash    
     if not args.outdir.endswith("/"):
         args.outdir += "/"
-        
-    # Perform tests to make sure all input is okay                        
-    if args.traits is None or args.genes is None:
-        sys.exit(("The following arguments are required: -t/--traits, "
-        "-g/--genes"))
-    if args.threads <= 0:
-        sys.exit("Number of threads must be positive")
-    if not os.path.isfile(args.traits):
-        sys.exit("Could not find the traits file: %s" % args.traits)
-    if not os.path.isdir(args.outdir):
-        print("Outdir does not exist, checking for write permissions")
-        if (os.access(args.outdir, os.W_OK) and 
-        os.access(args.outdir, os.X_OK)):
-            print("Appear to have write permission to outdir")
-        else:
-            sys.exit("Need to have write (and exec) permission to "
-            "outdir")
-    if not os.path.isfile(args.genes):
-        sys.exit("Could not find the gene presence absence file: %s" 
-        % args.genes)
-    if ((args.newicktree is not None) and 
-    (not os.path.isfile(args.newicktree))):
-        sys.exit("Could not find the custom tree file: %s"
-        % args.newicktree)
-    if not all( [(p <= 1.0 and p > 0.0) for p in args.p_value_cutoff] ):
-        sys.exit("P must be between 0.0 and 1.0 or exactly 1.0")
-    if (len(args.delimiter) > 1):
-        sys.exit("Delimiter must be a single character string. "
-        "There is no support for tab.")
-    if ((len(args.p_value_cutoff) != len(args.correction)) and
-    (len(args.p_value_cutoff) != 1)):
-        sys.exit("You can not use more p-value cutoffs than correction "
-        "methods. Either provide a single p-value that will be applied "
-        "to all correction methods, or provide exactly as many as the "
-        "number of correction methods and in corresponding sequence. "
-        "e.g. -c I EPW -p 0.1 0.05 will apply an individual p-value "
-        "cutoff of 0.1 AND a pairwise comparisons p-value cutoff of "
-        "0.05.")
-    if "P" in cutoffs and args.permute == 0:
-        sys.exit("Cannot use empirical p-values in filtration without "
-        "performing permutations. Use '--permute X' where X is a "
-        "number equal to or larger than 10")
-    if args.permute < 10 and args.permute != 0:
-        sys.exit("The absolute minimum number of permutations is 10 "
-        "(or 0 to deactivate)")
-    elif args.permute > 0:
-        try:
-            random.shuffle
-        except:
-            sys.exit("Unable to find random.shuffle. Can not proceed "
-            "with permutations")
-    if "P" in cutoffs:
-        if cutoffs["P"] < (1.0/args.permute):
-            sys.exit("Permutation cutoff too low for this number of "
-            "permutations")
-    if args.permute > 10000:
-        print("Warning: You have set Scoary to do a high number of "
-        "permutations. This may take a while.")
-        
-    starttime = time.time()
-        
-    # Start analysis
-    with open(args.genes, "rU") as genes, \
-    open(args.traits, "rU") as traits:
+    
+    # Initiate console from sys.stdout (which might be a statusbar)
+    console = logging.StreamHandler(sys.stdout)
+    console.setFormatter(logging.Formatter('%(message)s'))
+    console.setLevel(logging.INFO)
+    log.addHandler(console)
+    
+    # Create log file
+    log_filename = os.path.join(args.outdir,
+                                "scoary%s.log" % currenttime)
+    log_handler = PimpedFileHandler(log_filename, mode='w')
+    log_handler.setFormatter(formatter)
+    log.addHandler(log_handler)
+    log.info("==== Scoary started ====")
+    
+    # Catch all system exceptions from here on out
+    try:
 
-        if args.restrict_to is not None:
-            # Note: Despite being a dictionary, the values of
-            # allowed_isolates are not currently used, only the keys
-            allowed_isolates = {isolate : "all"
-                                for line in
-                                open(args.restrict_to,"rU")
-                                for isolate in line.rstrip().split(",")}
-        else:
-            # Despite the confusing name
-            # this actually means all isolates are allowed
-            # and included in the analysis
-            allowed_isolates = None
-            if args.write_reduced:
-                sys.exit("You cannot use the -w argument without "
-                "specifying a subset (-r)")
+        # Perform tests to make sure all input is okay                        
+        if args.traits is None or args.genes is None:
+            sys.exit(("The following arguments are required: -t/--traits, "
+            "-g/--genes"))
+        if args.threads <= 0:
+            sys.exit("Number of threads must be positive")
+        if not os.path.isfile(args.traits):
+            sys.exit("Could not find the traits file: %s" % args.traits)
+        if not os.path.isfile(args.genes):
+            sys.exit("Could not find the gene presence absence file: %s" 
+            % args.genes)
+        if ((args.newicktree is not None) and 
+        (not os.path.isfile(args.newicktree))):
+            sys.exit("Could not find the custom tree file: %s"
+            % args.newicktree)
+        if not all( [(p <= 1.0 and p > 0.0) for p in args.p_value_cutoff] ):
+            sys.exit("P must be between 0.0 and 1.0 or exactly 1.0")
+        if (len(args.delimiter) > 1):
+            sys.exit("Delimiter must be a single character string. "
+            "There is no support for tab.")
+        if ((len(args.p_value_cutoff) != len(args.correction)) and
+        (len(args.p_value_cutoff) != 1)):
+            sys.exit("You can not use more p-value cutoffs than correction "
+            "methods. Either provide a single p-value that will be applied "
+            "to all correction methods, or provide exactly as many as the "
+            "number of correction methods and in corresponding sequence. "
+            "e.g. -c I EPW -p 0.1 0.05 will apply an individual p-value "
+            "cutoff of 0.1 AND a pairwise comparisons p-value cutoff of "
+            "0.05.")
+        if "P" in cutoffs and args.permute == 0:
+            sys.exit("Cannot use empirical p-values in filtration without "
+            "performing permutations. Use '--permute X' where X is a "
+            "number equal to or larger than 10")
+        if args.permute < 10 and args.permute != 0:
+            sys.exit("The absolute minimum number of permutations is 10 "
+            "(or 0 to deactivate)")
+        elif args.permute > 0:
+            try:
+                random.shuffle
+            except:
+                sys.exit("Unable to find random.shuffle. Can not proceed "
+                "with permutations")
+        if "P" in cutoffs:
+            if cutoffs["P"] < (1.0/args.permute):
+                sys.exit("Permutation cutoff too low for this number of "
+                "permutations")
+        if args.permute > 10000:
+            log.info("Warning: You have set Scoary to do a high number of "
+            "permutations. This may take a while.")
             
-        print("Reading gene presence absence file")
-        
-        genedic_and_matrix = \
-            Csv_to_dic_Roary(genes,
-            args.delimiter,
-            startcol=int(args.start_col) - 1,
-            allowed_isolates=allowed_isolates,
-            writereducedset=args.write_reduced,
-            no_time=args.no_time)
-        genedic = genedic_and_matrix["Roarydic"]
-        zeroonesmatrix = genedic_and_matrix["Zero_ones_matrix"]
-        strains = genedic_and_matrix["Strains"]
+        # Start analysis
+        with open(args.genes, "rU") as genes, \
+        open(args.traits, "rU") as traits:
+    
+            if args.restrict_to is not None:
+                # Note: Despite being a dictionary, the values of
+                # allowed_isolates are not currently used, only the keys
+                allowed_isolates = {isolate : "all"
+                                    for line in
+                                    open(args.restrict_to,"rU")
+                                    for isolate in line.rstrip().split(",")}
+            else:
+                # Despite the confusing name
+                # this actually means all isolates are allowed
+                # and included in the analysis
+                allowed_isolates = None
+                if args.write_reduced:
+                    sys.exit("You cannot use the -w argument without "
+                    "specifying a subset (-r)")
 
-        # Create or load tree
-        if (args.newicktree) is None:
-            print("Creating Hamming distance matrix based on gene "
-            "presence/absence")
-            TDM = CreateTriangularDistanceMatrix(zeroonesmatrix,
-                                                 strains)
-            QT = PopulateQuadTreeWithDistances(TDM)
-            print("Building UPGMA tree from distance matrix")
-            upgmatree = upgma(QT)
-        else:
-            print("Reading custom tree file")
-            from .nwkhandler import ReadTreeFromFile
-            upgmatree, members = ReadTreeFromFile(args.newicktree)
-            if (sorted(strains) != sorted(members)):
-                # There could be two reasons for this. Either (a) that
-                # the gene presence absence file and the tree file does
-                # not have the same isolates or (b) that the -r flag has
-                # been used.
-                if args.restrict_to is None:
-                    sys.exit("ERROR: Please make sure that isolates in "
-                    "your custom tree match those in your gene "
-                    "presence absence file.")
-                else:    
-                    # Verify that the all isolates in strains (from GPA
-                    # file) are in members (from tree), and if so prune
-                    # tree of extraneous isolates. Else, call an error
-                    if (all(i in members for i in strains)):
-                        # Prune tree of the extraneous isolates
-                        print("Pruning phylogenetic tree to correspond "
-                        "to set of included isolates")
-                        Prune = [i for i in members if 
-                                      i not in strains]
-                        upgmatree = PruneForMissing(upgmatree, Prune)
-                    else:
-                        sys.exit("ERROR: Your provided tree file did "
-                        "not contain all the isolates in your gene "
+            log.info("Reading gene presence absence file")
+            
+            genedic_and_matrix = \
+                Csv_to_dic_Roary(genes,
+                args.delimiter,
+                startcol=int(args.start_col) - 1,
+                allowed_isolates=allowed_isolates,
+                writereducedset=args.write_reduced,
+                time=currenttime) 
+            genedic = genedic_and_matrix["Roarydic"]
+            zeroonesmatrix = genedic_and_matrix["Zero_ones_matrix"]
+            strains = genedic_and_matrix["Strains"]
+    
+            # Create or load tree
+            if (args.newicktree) is None:
+                log.info("Creating Hamming distance matrix based on gene "
+                "presence/absence")
+                TDM = CreateTriangularDistanceMatrix(zeroonesmatrix,
+                                                     strains)
+                QT = PopulateQuadTreeWithDistances(TDM)
+                log.info("Building UPGMA tree from distance matrix")
+                upgmatree = upgma(QT)
+            else:
+                log.info("Reading custom tree file")
+                from .nwkhandler import ReadTreeFromFile
+                upgmatree, members = ReadTreeFromFile(args.newicktree)
+                if (sorted(strains) != sorted(members)):
+                    # There could be two reasons for this. Either (a) that
+                    # the gene presence absence file and the tree file does
+                    # not have the same isolates or (b) that the -r flag has
+                    # been used.
+                    if args.restrict_to is None:
+                        sys.exit("CRITICAL: Please make sure that isolates in "
+                        "your custom tree match those in your gene "
                         "presence absence file.")
-        print("Reading traits file")
-        traitsdic, Prunedic = Csv_to_dic(traits,
-                                         args.delimiter,
-                                         allowed_isolates,
-                                         strains)
-        
-        print("Finished loading files into memory.")
-        
+                    else:    
+                        # Verify that the all isolates in strains (from GPA
+                        # file) are in members (from tree), and if so prune
+                        # tree of extraneous isolates. Else, call an error
+                        if (all(i in members for i in strains)):
+                            # Prune tree of the extraneous isolates
+                            log.info("Pruning phylogenetic tree to correspond "
+                            "to set of included isolates")
+                            Prune = [i for i in members if 
+                                          i not in strains]
+                            upgmatree = PruneForMissing(upgmatree, Prune)
+                        else:
+                            sys.exit("CRITICAL: Your provided tree file did "
+                            "not contain all the isolates in your gene "
+                            "presence absence file.")
+            log.info("Reading traits file")
+            traitsdic, Prunedic = Csv_to_dic(traits,
+                                             args.delimiter,
+                                             allowed_isolates,
+                                             strains)
+            
+            log.info("Finished loading files into memory.\n\n")
+            log.info("==== Performing statistics ====")
+            filtopts = filtrationoptions(cutoffs, args.collapse)
+            for line in filtopts:
+                log.info(line)
 
-
-        print(filtrationoptions(cutoffs, args.collapse))
-        print("Tallying genes and performing statistical analyses")
-
-        RES_and_GTC = Setup_results(genedic, traitsdic, args.collapse)
-        RES = RES_and_GTC["Results"]
-        GTC = RES_and_GTC["Gene_trait_combinations"]
-
-        if args.upgma_tree:
-            StoreUPGMAtreeToFile(upgmatree,
-                                 args.outdir,
-                                 no_time=args.no_time)        
-
-        StoreResults(RES,
-                     args.max_hits,
-                     cutoffs,
-                     upgmatree,
-                     GTC,
-                     Prunedic,
-                     args.outdir,
-                     args.permute,
-                     args.threads,
-                     no_time=args.no_time,
-                     delimiter=args.delimiter)
-        print("\nFinished. Checked a total of %d genes for "
-              "associations to %d trait(s). Total time used: %d "
-              "seconds." % (len(genedic),
-                            len(traitsdic),
-                            int(time.time()-starttime)))
-
+            log.info("Tallying genes and performing statistical analyses")
+    
+            RES_and_GTC = Setup_results(genedic, traitsdic, args.collapse)
+            RES = RES_and_GTC["Results"]
+            GTC = RES_and_GTC["Gene_trait_combinations"]
+    
+            if args.upgma_tree:
+                StoreUPGMAtreeToFile(upgmatree,
+                                     args.outdir,
+                                     time=currenttime)        
+    
+            StoreResults(RES,
+                         args.max_hits,
+                         cutoffs,
+                         upgmatree,
+                         GTC,
+                         Prunedic,
+                         args.outdir,
+                         args.permute,
+                         args.threads,
+                         time=currenttime,
+                         delimiter=args.delimiter)
+            log.info("\n")
+            log.info("==== Finished ====")
+            log.info("Checked a total of %d genes for "
+                  "associations to %d trait(s). Total time used: %d "
+                  "seconds." % (len(genedic),
+                                len(traitsdic),
+                                int(time.time()-starttime)))
+    
+    except SystemExit as e:
+        exc_type, exc_value, _ = sys.exc_info()
+        log.exception("CRITICAL:")
+        log.removeHandler(log_handler)
+        log.removeHandler(console)
+        sys.exit(exc_value)
+    
+    if log.critical.called > 0:
+        log.info("Scoary finished successfully, but with CRITICAL ERRORS. "
+        "Please check your log file.")
+    elif log.error.called > 0:
+        log.info("Scoary finished successfully, but with ERRORS. Please check "
+        "your log file.")
+    elif log.warning.called > 0:
+        log.info("Scoary finished successfully, but with WARNINGS. Please "
+        "check your log file.")
+    else:
+        log.info("No warnings were recorded.")
+    log.removeHandler(log_handler)
+    log.removeHandler(console)
     sys.exit(0)
 
 ###############################
 # FUNCTIONS FOR READING INPUT #
 ###############################
 def Csv_to_dic_Roary(genefile, delimiter, startcol=14, 
-    allowed_isolates=None, writereducedset=False, no_time=False):
+    allowed_isolates=None, writereducedset=False, time=""):
     """
     Converts a gene presence/absence file into dictionaries
     that are readable by Scoary.
@@ -262,7 +312,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
     r = {}
     if writereducedset:
         file = open(ReduceSet(genefile,delimiter,startcol,
-                    allowed_isolates,no_time),"rU")
+                    allowed_isolates,time),"rU")
         csvfile = csv.reader(file, skipinitialspace=True, 
                              delimiter=delimiter)
     else:
@@ -271,8 +321,58 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
     header = next(csvfile)
             
     roaryfile = True
-
+    try:
+        header[startcol]
+    except IndexError:
+        sys.exit("The startcol (-s) you have specified does not seem to "
+        "correspond to any column in your gene presence/absence file.")
     strains = header[startcol:]
+    
+    # Include alternative column spellings
+    Roarycols = ["Gene", "Non-unique Gene name", "Annotation",
+                 "No. isolates", "No. sequences",
+                 "Avg sequences per isolate", "Genome Fragment",
+                 "Order within Fragment", "Accessory Fragment",
+                 "Accessory Order with Fragment", "QC",
+                 "Min group size nuc", "Max group size nuc",
+                 "Avg group size nuc", "Order within fragment",
+                 "Genome fragment", "Accessory fragment" ]
+    
+    # Move forwards from startcol to find correct startcol
+    if strains[0] in Roarycols:
+        for c in xrange(len(strains)):
+            if strains[c] not in Roarycols:
+                correctstartcol = startcol + c
+                break
+        log.error("ERROR: Make sure you have set the -s parameter "
+        "correctly. You are running with -s %s. This correponds to the "
+        "column %s. If this is not an isolate, Scoary might crash or "
+        "produce strange results. Scoary thinks you should have run "
+        "with -s %s instead" % (str(startcol+1),
+                                strains[0],
+                                str(correctstartcol + 1)))
+    
+    # Move backwards from startcol to find correct startcol
+    Firstcols = header[:startcol][::-1]
+    minus = 0
+    Censored_isolates = []
+    for c in xrange(len(Firstcols)):
+        if Firstcols[c] not in Roarycols:
+            minus += 1
+            #print(Firstcols[c])
+            Censored_isolates.append(Firstcols[c])
+        else:
+            if minus > 0:
+                correctstartcol = startcol - minus
+                log.error("ERROR: Make sure you have set the -s "
+                "parameter correctly. You are running with -s %s. "
+                "Scoary thinks you should have used %s. This excludes the "
+                "following, which Scoary thinks are isolates: %s" % 
+                (str(startcol+1),
+                str(correctstartcol+1), 
+                ", ".join(Censored_isolates)))
+                break
+    
     if allowed_isolates is not None:
         strain_names_allowed = [val for val in strains
                                 if val in allowed_isolates.keys()]
@@ -286,7 +386,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
         nugcol = header.index("Non-unique Gene name")
         anncol = header.index("Annotation")
     except ValueError:
-        print("Warning: Could not properly detect the correct names "
+        log.error("ERROR: Could not properly detect the correct names "
         "for all columns in the ROARY table.")
         genecol = 0
         nugcol = 1
@@ -300,7 +400,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
                               if roaryfile
                               else {})
         except IndexError:
-            sys.exit("ERROR: Could not read gene presence absence "
+            sys.exit("CRITICAL: Could not read gene presence absence "
             "file. Verify that this file is a proper Roary file using "
             "the specified delimiter (default is ',').")
         # The zero_ones_line variable represents the presence (1) or 
@@ -340,7 +440,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
             "Strains": strain_names_allowed}
 
 def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None, 
-              no_time=False):
+              time=""):
     """
     Helper function for csv_to_dic_roary.
     Method for writing a reduced gene presence absence file, based only
@@ -356,14 +456,10 @@ def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None,
         if header[c] in allowed_isolates.keys():
             allowed_indexes.append(c)
     
-    print("Writing gene presence absence file for the reduced set of "
+    log.info("Writing gene presence absence file for the reduced set of "
           "isolates")
-    if no_time:
-        reducedfilename = "gene_presence_absence_reduced.csv"
-    else:
-        reducedfilename = ("gene_presence_absence_reduced_" + 
-                           time.strftime("_%d_%m_%Y_%H%M") + 
-                           ".csv")
+
+    reducedfilename = "gene_presence_absence_reduced%s.csv" % time
     
     with open(reducedfilename, "w") as csvout:
         wtr = csv.writer(csvout, delimiter = delimiter)
@@ -371,7 +467,7 @@ def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None,
         wtr.writerow(newheader)
         for r in csvfile:
             wtr.writerow( tuple(r[a] for a in allowed_indexes) )
-    print("Finished writing reduced gene presence absence list to "
+    log.info("Finished writing reduced gene presence absence list to "
     "file %s" % str(reducedfilename))
     return reducedfilename
 
@@ -387,7 +483,7 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates, strains):
     Prunedic = {}
     if len(tab) < 2:
         sys.exit("Please check that your traits file is formatted "
-        "properly and contain at least one trait")
+        "properly and contains at least one trait")
     for num_trait in xrange(1, len(tab)):
         p = dict(zip(tab[0], tab[num_trait]))
         if "" in p:
@@ -409,7 +505,7 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates, strains):
         if ("NA" in p.values() 
         or "-" in p.values() 
         or "." in p.values()):
-            print("WARNING: Some isolates have missing values for "
+            log.warning("WARNING: Some isolates have missing values for "
             "trait %s. Missing-value isolates will not be counted in "
             "association analysis towards this trait." 
             % str(name_trait))
@@ -417,19 +513,24 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates, strains):
                 p.items() if indicator not in ["NA","-","."]}
             Prunedic[name_trait] = [k for (k,v) in p.items() if
                 v in ["NA","-","."]]
-            p = p_filt
+            #p = p_filt
         else:
             Prunedic[name_trait] = []
+            p_filt = p
         # Remove isolates that did not have rows in the trait file but
         # that were allowed by the GPA file/restrict_to
+        #if not all(s in p.keys() for s in strains):
         if not all(s in p.keys() for s in strains):
-            print("WARNING: Some isolates in your gene presence "
+            log.error("ERROR: Some isolates in your gene presence "
             "absence file were not represented in your traits file. "
             "These will count as MISSING data and will not be included."
             )
+
             Prunedic[name_trait] += [s for s in strains if
-                                     s not in p.keys()]
-        r[name_trait] = p
+                                     s not in p.keys() and
+                                     s not in Prunedic[name_trait]]
+        r[name_trait] = p_filt
+        Prunedic[name_trait] += [None]
 
     return r, Prunedic
 
@@ -554,22 +655,18 @@ def PruneForMissing(tree, Prunedic):
     else:
         return [tree[0], tree[1]]
 
-def StoreUPGMAtreeToFile(upgmatree, outdir, no_time=False):
+def StoreUPGMAtreeToFile(upgmatree, outdir, time=""):
     """
     A method for printing the UPGMA tree that is built internally from 
     the hamming distances in the gene presence/absence matrix
     """
-    if not no_time:
-        treefilename = str(outdir + "Tree" + 
-                           time.strftime("_%d_%m_%Y_%H%M") + ".nwk")
-    else:
-        treefilename = str(outdir + "Tree.nwk")
+    treefilename = str(outdir + ("Tree%s.nwk" % time))
     with open(treefilename, "w") as treefile:
         Tree = str(upgmatree)
         Tree = Tree.replace("[", "(")
         Tree = Tree.replace("]", ")")
         treefile.write(Tree + ";")
-        print("Wrote the UPGMA tree to file: %s" % treefilename)       
+        log.info("Wrote the UPGMA tree to file: %s" % treefilename)       
 
 #####################################
 # FUNCTIONS FOR CALCULATING RESULTS #
@@ -592,7 +689,7 @@ def Setup_results(genedic, traitsdic, collapse):
         all_traits[trait] = {}
         # Also need a list of all p-values to perform stepwise FDR corr
         p_value_list = []
-        print("Gene-wise counting and Fisher's exact tests for trait: " 
+        log.info("Gene-wise counting and Fisher's exact tests for trait: " 
               "%s" % str(trait))
 
         # We also need a number of tests variable for each genedic.
@@ -710,8 +807,8 @@ def Setup_results(genedic, traitsdic, collapse):
         
         sys.stdout.write("\r100.00%")
         sys.stdout.flush()
-        print("\nAdding p-values adjusted for testing multiple "
-        "hypotheses")
+        sys.stdout.write("\n")
+        log.info("Adding p-values adjusted for testing multiple hypotheses")
         
         # Now calculate Benjamini-Hochberg and Bonferroni p-values
         # Sorted list of tuples: (gene, p-value)
@@ -727,8 +824,7 @@ def Setup_results(genedic, traitsdic, collapse):
         # bh_c_p_v = abbreviation for bh_corrected_p_values
         bh_c_p_v = {}
         # The least significant gene is entered into the dic
-        bh_c_p_v[s_p_v[len(s_p_v)-1][0]] = \
-            last_bh = s_p_v[len(s_p_v)-1][1]
+        bh_c_p_v[s_p_v[len(s_p_v)-1][0]] = last_bh = s_p_v[len(s_p_v)-1][1]
 
         for (ind, (gene, p)) in reversed(list(enumerate(s_p_v[:-1]))):
             bh_c_p_v[gene] = min([last_bh, p*number_of_tests/(ind+1.0)]\
@@ -789,8 +885,10 @@ def Perform_statistics(traits, genes):
                 "cells for non-present genes and non-empty text cells "
                 "for present genes.")
         except KeyError:
-            print("\nError occured when trying to find %s in the genes "
+            sys.stdout.write("\n")
+            log.critical("CRITICAL: Could not find %s in the genes "
             "file." % str(t) )
+            #log.warning("CRITICAL: Could not find %s in the genes file" % str(t))
             sys.exit("Make sure strains are named the same in your "
             "traits file as in your gene presence/absence file")
     return {"statistics": r, "hash": int(distribution_hash, 2),
@@ -800,21 +898,22 @@ def Perform_statistics(traits, genes):
 # FUNCTIONS FOR CREATING OUTPUT #
 #################################
 def StoreResults(Results, max_hits, cutoffs, upgmatree, GTC, Prunedic,
-                 outdir, permutations, num_threads, 
-                 no_time=False, delimiter=","):
+                 outdir, permutations, num_threads,
+                 time="", delimiter=","):
     """
     A method for storing the results. Calls StoreTraitResult for each 
     trait column in the input file.
     """
     for Trait in Results:
-        print("\nStoring results: " + Trait)
+        sys.stdout.write("\n")
+        log.info("Storing results: " + Trait)
         StoreTraitResult(Results[Trait], Trait, max_hits, cutoffs, 
                          upgmatree, GTC, Prunedic, outdir, permutations, 
-                         num_threads, no_time, delimiter)
+                         num_threads, time, delimiter)
 
 def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree, 
                      GTC, Prunedic, outdir, permutations, num_threads, 
-                     no_time=False, delimiter=","):
+                     time="", delimiter=","):
     """
     The method that actually stores the results. Only accepts results 
     from a single trait at a time
@@ -825,11 +924,7 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
     else:
         multithreaded = False
     
-    if not no_time:
-        fname = (outdir + Traitname + time.strftime("_%d_%m_%Y_%H%M") + 
-                 ".csv")
-    else:
-        fname = outdir + Traitname + '.results.csv'
+    fname = (outdir + Traitname + time + '.results.csv')
 
     with open(fname, "w") as outfile:
         # Sort genes by p-value.
@@ -863,11 +958,11 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
                       "\n")
         
         if permutations >= 10:
-            print("Calculating max number of contrasting pairs for "
+            log.info("Calculating max number of contrasting pairs for "
             "each significant gene and performing %s permutations" 
             % str(permutations))
         else:
-            print("Calculating max number of contrasting pairs for "
+            log.info("Calculating max number of contrasting pairs for "
             "each nominally significant gene")
             
         # If some isolates have missing values, prune tree and GTC of 
@@ -910,6 +1005,7 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
             Threadresults = [PairWiseComparisons(all_args)]
         sys.stdout.write("\r100.00%")
         sys.stdout.flush()
+        sys.stdout.write("\n")
 
         # Wait for each thread to finish and weave results from all 
         # threads
@@ -936,9 +1032,9 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
             sort_instructions = \
                 SortResultsAndSetKey(Filteredresults,key="Empirical_p")
         else:
-            print("No filtration applied")
+            log.info("No filtration applied")
         
-        print("\nStoring results to file")       
+        log.info("Storing results to file")       
         num_filteredresults = min(num_results, len(Filteredresults))
         for x in xrange(num_filteredresults):
             currentgene = sort_instructions[x]
@@ -1020,7 +1116,7 @@ def PairWiseComparisons(nestedlist):
         resultscontainer[currentgene] = {}
         
         Max_pairwise_comparisons = ConvertUPGMAtoPhyloTree(
-            tree, GTC[currentgene]) # CHANGE
+            tree, GTC[currentgene])
 
         resultscontainer[currentgene]["max_total_pairs"] = \
             Max_pairwise_comparisons["Total"]
@@ -1058,19 +1154,14 @@ def PairWiseComparisons(nestedlist):
             sys.exit("There was a problem using " 
             "scipy.stats.binom_test. Ensure you have a recent "
             "distribution of SciPy installed.")
-        except ValueError:  
-            print(currentgene)
-            print(GTC[currentgene])
-            print(Max_pairwise_comparisons["DEBUG"].maxvalues)
-            sys.exit(-1)
+
         # Loop can break early if filtration includes non-pairwise 
         # correction measures, because if these are all above the p
         # then we are not interested in the pairwise results
         
         resultscontainer[currentgene]["p_v"] = Trait[currentgene]["p_v"]
         resultscontainer[currentgene]["B_p"] = Trait[currentgene]["B_p"]
-        resultscontainer[currentgene]["BH_p"] = \
-            Trait[currentgene]["BH_p"]
+        resultscontainer[currentgene]["BH_p"] = Trait[currentgene]["BH_p"]
         
         if decideifbreak(cutoffs, resultscontainer[currentgene]):
             # Genes that are cut from the break
@@ -1118,8 +1209,10 @@ def Permute(tree, GTC, permutations, cutoffs):
                            Unpermuted_tree["Total"])
 
     if permutations < 10:
-        print("Number of permutations too few. The absolute minimum is "
-        "10.")
+        # The program is never supposed to go here since fewer than 10
+        # permutations are globally disallowed
+        sys.stdout.write("Number of permutations too few. The absolute "
+        "minimum is 10.")
         proceed = False
 
     if proceed:
@@ -1137,7 +1230,7 @@ def Permute(tree, GTC, permutations, cutoffs):
             # abort
             if i >= 30:
                 if (1 - ss.binom.cdf(r,i,0.1)) < 0.05:
-                    emp_p = (r+1.0)/(i+1.0)
+                    emp_p = (r+1.0)/(i+2.0)
                     break
         else:
             emp_p = (r+1.0)/(permutations+1.0)
@@ -1219,7 +1312,7 @@ def FindClosestIndex(sortedlist, value, index=None):
                                    index))
     
     return index   
-
+   
 #########################
 # MISC HELPER FUNCTIONS #
 #########################            
@@ -1259,8 +1352,10 @@ def filtrationoptions(cutoffs, collapse):
                    "P": "Empirical p-value (permutation-based)"}
     filters = [str(translation[k]) + ":    " + str(v)
                for k,v in cutoffs.items()] 
-    filters.append("Collapse genes:    " + str(collapse))
-    return "Filtration options: \n" + "\n".join(filters)
+    filters.append("Collapse genes:    " + str(collapse) + "\n\n")
+    filters = ["-- Filtration options --"] + filters
+
+    return filters
     
 def decideifbreak(cutoffs, currentgene):
     """

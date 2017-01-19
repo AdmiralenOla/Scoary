@@ -4,6 +4,8 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 [![DOI](https://zenodo.org/badge/51000172.svg)](https://zenodo.org/badge/latestdoi/51000172)
 
+[![OMICtools](https://omictools.com/img/logo-blue.png)](https://omictools.com/association-mapping-category)
+
 ## Contents
 - [What's new] (#whats-new)
 - [Dependencies] (#dependencies)
@@ -27,7 +29,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 
 ## What's new?
 
-**LATEST VERSION - 1.6.9**
+**LATEST VERSION - 1.6.10**
 
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
@@ -164,7 +166,7 @@ usage: scoary.py [-h] [-t TRAITS] [-g GENES] [-o OUTDIR]
                  [--threads THREADS] [--no-time] [--test] [--citation]
                  [--version]
 
-Scoary version 1.6.9 - Screen pan-genome for trait-associated genes
+Scoary version 1.6.10 - Screen pan-genome for trait-associated genes
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -356,8 +358,9 @@ In theory yes, but it requires some tinkering. Obviously you couldn't take the i
 - **A lot of my empirical p-values are identical. Bug?**
 
 Not really. In order to save time, Scoary calculates the empirical p-values as it goes through permutations. If it sees early on that a particular variant is not interesting (e.g. empirical p-value above 0.1) it does not waste any more resources on this variant. As a result, note that higher empirical p-values are less accurate (because they have been calculated from fewer permutations).
-- **Can I use this for SNPs/kmers?**
+- **Do I need to convert my gene_presence_absence.csv file into 1s and 0s rather than gene/locus_tag names?**
 
+No. Scoary treats "0", "-" and "" as gene absence, anything else as presence. You should be able to feed the file directly from Roary. 
 - **Can I use this for archea?**
 
 Honestly, I don't know enough about archea to say for sure.

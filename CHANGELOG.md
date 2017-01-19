@@ -1,4 +1,9 @@
 #CHANGELOG
+v1.6.10 (Jan 2017)
+- Scoary now creates a log file (both in terminal and GUI mode)
+- Fixed a bug where empirical p-values would exceed 1.0
+- Fixed a bug where Scoary would crash when pruning many isolates from the internally calculated phylogenetic tree
+
 v1.6.9 (Dec 2016)
 - Scoary now handles missing data specified in the traits file as "NA", "-" or ".".
 - Now also handles missing isolates (rows) in the traits file.
