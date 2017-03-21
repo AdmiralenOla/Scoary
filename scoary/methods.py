@@ -500,19 +500,26 @@ def Csv_to_dic(csvfile, delimiter, allowed_isolates, strains):
         if allowed_isolates is not None:
             p = {strain: indicator for (strain, indicator) in 
             list(p.items()) if strain in allowed_isolates.keys()}
+        # Stop if unknown character found in traits file
+        allowed_values = ["0","1","NA",".","-"," ",""]
+        if not all([x in allowed_values for x in p.values()]):
+            sys.exit("Unrecognized character found in trait file. Allowed "
+            "values (no commas): %s" % str(",".join(allowed_values)))
         # Remove isolates with missing values, but only for the 
         # trait for which they are missing
         if ("NA" in p.values() 
         or "-" in p.values() 
-        or "." in p.values()):
+        or "." in p.values()
+        or " " in p.values()
+        or "" in p.values()):
             log.warning("WARNING: Some isolates have missing values for "
             "trait %s. Missing-value isolates will not be counted in "
             "association analysis towards this trait." 
             % str(name_trait))
             p_filt = {strain: indicator for (strain, indicator) in 
-                p.items() if indicator not in ["NA","-","."]}
+                p.items() if indicator not in ["NA","-","."," ",""]}
             Prunedic[name_trait] = [k for (k,v) in p.items() if
-                v in ["NA","-","."]]
+                v in ["NA","-","."," ",""]]
             #p = p_filt
         else:
             Prunedic[name_trait] = []
