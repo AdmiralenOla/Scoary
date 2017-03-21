@@ -71,6 +71,7 @@ def main(**kwargs):
             'Gene_presence_absence.csv')
         args.max_hits = None
         args.newicktree = None
+        args.no_pairwise = False
         args.outdir = './'
         args.permute = 0
         args.p_value_cutoff = [0.05,0.05]
@@ -163,8 +164,16 @@ def main(**kwargs):
                 sys.exit("Permutation cutoff too low for this number of "
                 "permutations")
         if args.permute > 10000:
-            log.info("Warning: You have set Scoary to do a high number of "
+            log.info("Note: You have set Scoary to do a high number of "
             "permutations. This may take a while.")
+        if args.no_pairwise:
+            log.info("Performing no pairwise comparisons. Ignoring all "
+            "tree related options (user tree, population aware-correction, "
+            "permutations).")
+            args.permute = 0
+            args.newicktree = None
+            for m in ["PW","EPW","P"]:
+                cutoffs.pop(m,None)
             
         # Start analysis
         with open(args.genes, "rU") as genes, \
@@ -199,8 +208,8 @@ def main(**kwargs):
             zeroonesmatrix = genedic_and_matrix["Zero_ones_matrix"]
             strains = genedic_and_matrix["Strains"]
     
-            # Create or load tree
-            if (args.newicktree) is None:
+            # Create or load tree (No need for tree if --no_pairwise)
+            if (args.newicktree) is None and not (args.no_pairwise):
                 log.info("Creating Hamming distance matrix based on gene "
                 "presence/absence")
                 TDM = CreateTriangularDistanceMatrix(zeroonesmatrix,
@@ -208,6 +217,10 @@ def main(**kwargs):
                 QT = PopulateQuadTreeWithDistances(TDM)
                 log.info("Building UPGMA tree from distance matrix")
                 upgmatree = upgma(QT)
+            elif:
+                # Performing --no_pairwise analysis
+                log.info("Ignoring relatedness among input sample and "
+                "performing only population structure-naive analysis.")
             else:
                 log.info("Reading custom tree file")
                 from .nwkhandler import ReadTreeFromFile
@@ -268,6 +281,7 @@ def main(**kwargs):
                          args.outdir,
                          args.permute,
                          args.threads,
+                         args.no_pairwise,
                          time=currenttime,
                          delimiter=args.delimiter)
             log.info("\n")
@@ -905,7 +919,7 @@ def Perform_statistics(traits, genes):
 # FUNCTIONS FOR CREATING OUTPUT #
 #################################
 def StoreResults(Results, max_hits, cutoffs, upgmatree, GTC, Prunedic,
-                 outdir, permutations, num_threads,
+                 outdir, permutations, num_threads, no_pairwise,
                  time="", delimiter=","):
     """
     A method for storing the results. Calls StoreTraitResult for each 
@@ -916,11 +930,11 @@ def StoreResults(Results, max_hits, cutoffs, upgmatree, GTC, Prunedic,
         log.info("Storing results: " + Trait)
         StoreTraitResult(Results[Trait], Trait, max_hits, cutoffs, 
                          upgmatree, GTC, Prunedic, outdir, permutations, 
-                         num_threads, time, delimiter)
+                         num_threads, no_pairwise, time, delimiter)
 
 def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree, 
                      GTC, Prunedic, outdir, permutations, num_threads, 
-                     time="", delimiter=","):
+                     no_pairwise, time="", delimiter=","):
     """
     The method that actually stores the results. Only accepts results 
     from a single trait at a time
@@ -954,9 +968,12 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
         "Number_pos_not_present_in","Number_neg_not_present_in",
         "Sensitivity","Specificity","Odds_ratio","Naive_p",
         "Bonferroni_p",
-        "Benjamini_H_p","Max_Pairwise_comparisons",
-        "Max_supporting_pairs","Max_opposing_pairs",
-        "Best_pairwise_comp_p","Worst_pairwise_comp_p"]
+        "Benjamini_H_p"]
+
+        if not no_pairwise:
+            columns += ["Max_Pairwise_comparisons",
+                        "Max_supporting_pairs","Max_opposing_pairs",
+                        "Best_pairwise_comp_p","Worst_pairwise_comp_p"]
         
         if permutations >= 10:
             columns.append("Empirical_p")
@@ -968,79 +985,89 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
             log.info("Calculating max number of contrasting pairs for "
             "each significant gene and performing %s permutations" 
             % str(permutations))
+        elif no_pairwise:
+            log.info("Skipping population structure-aware analyses.")
         else:
             log.info("Calculating max number of contrasting pairs for "
             "each nominally significant gene")
-            
-        # If some isolates have missing values, prune tree and GTC of 
-        # these isolates
-        if len(Prunedic[Traitname]) > 0:
-            upgmatree = PruneForMissing(upgmatree, Prunedic[Traitname])
+        
+
+        if not no_pairwise:    
+            # If some isolates have missing values, prune tree and GTC of 
+            # these isolates
+            if len(Prunedic[Traitname]) > 0:
+                upgmatree = PruneForMissing(upgmatree, Prunedic[Traitname])
+    
         # Use threads to resolve pairwise comparisons and permutations
         # Each subprocess will be responsible for a domain of the 
         # results list
         
-        if multithreaded:
-            domains = [list(xrange(tnum, num_results, num_threads)) 
-                       for tnum in xrange(num_threads)]
-            # The Progress variable holds the total progress status of 
-            # the subprocesses. It is locked, but can be written to by 
-            # all subprocs
-            Progress = Value("h",0)
-            pool = Pool(processes = num_threads,initializer=initProcess,
-                        initargs=(Progress,))
-            argumentlist = {"si":sort_instructions,"tree":upgmatree,
-                            "GTC": GTC[Traitname],"cutoffs": cutoffs,
-                            "cp": cut_possibilities,"perm":permutations,
-                            "Trait":Trait, "Threaded": True}
-            # Need to make a copy of dict to prevent then from pointing 
-            # to the same object
-            all_args = [ (domains[x], dict(argumentlist)) 
-                         for x in xrange(len(domains)) ] 
+            if multithreaded:
+                domains = [list(xrange(tnum, num_results, num_threads)) 
+                           for tnum in xrange(num_threads)]
+                # The Progress variable holds the total progress status of 
+                # the subprocesses. It is locked, but can be written to by 
+                # all subprocs
+                Progress = Value("h",0)
+                pool = Pool(processes = num_threads,initializer=initProcess,
+                            initargs=(Progress,))
+                argumentlist = {"si":sort_instructions,"tree":upgmatree,
+                                "GTC": GTC[Traitname],"cutoffs": cutoffs,
+                                "cp": cut_possibilities,"perm":permutations,
+                                "Trait":Trait, "Threaded": True}
+                # Need to make a copy of dict to prevent then from pointing 
+                # to the same object
+                all_args = [ (domains[x], dict(argumentlist)) 
+                             for x in xrange(len(domains)) ] 
         
-            Threadresults = pool.imap(PairWiseComparisons,all_args)
+                Threadresults = pool.imap(PairWiseComparisons,all_args)
 
-            pool.close()
-            pool.join()
-        else:
-            domains = list(xrange(num_results))
-            argumentlist = {"si":sort_instructions,"tree":upgmatree,
-                            "GTC": GTC[Traitname],"cutoffs": cutoffs,
-                            "cp": cut_possibilities,"perm":permutations,
-                            "Trait":Trait, "Threaded": False}
-            all_args = (domains, argumentlist)
-            Threadresults = [PairWiseComparisons(all_args)]
-        sys.stdout.write("\r100.00%")
-        sys.stdout.flush()
-        sys.stdout.write("\n")
+                pool.close()
+                pool.join()
+            else:
+                domains = list(xrange(num_results))
+                argumentlist = {"si":sort_instructions,"tree":upgmatree,
+                                "GTC": GTC[Traitname],"cutoffs": cutoffs,
+                                "cp": cut_possibilities,"perm":permutations,
+                                "Trait":Trait, "Threaded": False}
+                all_args = (domains, argumentlist)
+                Threadresults = [PairWiseComparisons(all_args)]
+            sys.stdout.write("\r100.00%")
+            sys.stdout.flush()
+            sys.stdout.write("\n")
 
-        # Wait for each thread to finish and weave results from all 
-        # threads
+            # Wait for each thread to finish and weave results from all 
+            # threads
 
-        # Finally, create a filteredresults that merges results data 
-        # from Trait[currentgene] with Threadresult[currentgene]
-        Filteredresults = {}
-        Threadresults = list(Threadresults)
+            # Finally, create a filteredresults that merges results data 
+            # from Trait[currentgene] with Threadresult[currentgene]
+            Filteredresults = {}
+            Threadresults = list(Threadresults)
 
-        for thread in xrange(num_threads):
-            for currentgene in Threadresults[thread]:
-                Filteredresults[currentgene] = \
-                    Threadresults[thread][currentgene]
-                Filteredresults[currentgene].update(Trait[currentgene])
+            for thread in xrange(num_threads):
+                for currentgene in Threadresults[thread]:
+                    Filteredresults[currentgene] = \
+                        Threadresults[thread][currentgene]
+                    Filteredresults[currentgene].update(Trait[currentgene])
        
-        # Only sort by pairwise values if they are the only present 
-        # correction methods
-        if ("I" in cutoffs) or ("B" in cutoffs) or ("BH" in cutoffs):
-            sort_instructions = SortResultsAndSetKey(Filteredresults)
-        elif ("PW" in cutoffs) or ("EPW" in cutoffs):
-            sort_instructions = \
-                SortResultsAndSetKeyPairwise(Filteredresults,cutoffs)
-        elif ("P" in cutoffs):
-            sort_instructions = \
-                SortResultsAndSetKey(Filteredresults,key="Empirical_p")
-        else:
-            log.info("No filtration applied")
+            # Only sort by pairwise values if they are the only present 
+            # correction methods
+            if ("I" in cutoffs) or ("B" in cutoffs) or ("BH" in cutoffs):
+                sort_instructions = SortResultsAndSetKey(Filteredresults)
+            elif ("PW" in cutoffs) or ("EPW" in cutoffs):
+                sort_instructions = \
+                    SortResultsAndSetKeyPairwise(Filteredresults,cutoffs)
+            elif ("P" in cutoffs):
+                sort_instructions = \
+                    SortResultsAndSetKey(Filteredresults,key="Empirical_p")
+            else:
+                log.info("No filtration applied")
         
+        # If no_pairwise mode was run - merge up after this clause.
+        else:
+            Filteredresults = Trait
+            sort_instructions = SortResultsAndSetKey(Filteredresults)
+
         log.info("Storing results to file")       
         num_filteredresults = min(num_results, len(Filteredresults))
         for x in xrange(num_filteredresults):
@@ -1062,18 +1089,20 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
                 str(Filteredresults[currentgene]["OR"]),
                 str(Filteredresults[currentgene]["p_v"]),
                 str(Filteredresults[currentgene]["B_p"]),
-                str(Filteredresults[currentgene]["BH_p"]),
-                str(Filteredresults[currentgene]["max_total_pairs"]),
-                str(Filteredresults[currentgene]["max_propairs"]),
-                str(Filteredresults[currentgene]["max_antipairs"]),
-                str(Filteredresults[currentgene]["Pbest"]),
-                str(Filteredresults[currentgene]["Pworst"])]
+                str(Filteredresults[currentgene]["BH_p"])]
+                if not no_pairwise:
+                    outrow += [
+                    str(Filteredresults[currentgene]["max_total_pairs"]),
+                    str(Filteredresults[currentgene]["max_propairs"]),
+                    str(Filteredresults[currentgene]["max_antipairs"]),
+                    str(Filteredresults[currentgene]["Pbest"]),
+                    str(Filteredresults[currentgene]["Pworst"])]
             
-                # If permutations have been performed, print empirical 
-                # p-values as well
-                if permutations >= 10:
-                    outrow.append(
-                    str(Filteredresults[currentgene]["Empirical_p"]))
+                    # If permutations have been performed, print empirical 
+                    # p-values as well
+                    if permutations >= 10:
+                        outrow.append(
+                        str(Filteredresults[currentgene]["Empirical_p"]))
                         
                 outfile.write(
                 delimiter.join('"' + c + '"' for c in outrow) + "\n"
@@ -1507,6 +1536,15 @@ def ScoaryArgumentParser():
                         'phylogenetic analyses instead instead of '
                         'calculating it internally.',
                         default=None)
+    parser.add_argument('--no_pairwise',
+                        help='Do not perform pairwise comparisons. In'
+                        'this mode, Scoary will perform population '
+                        'structure-naive calculations only. (Fishers '
+                        'test, ORs etc). Useful for summary operations '
+                        'and exploring sets. (Genes unique in groups, '
+                        'intersections etc) but not causal analyses.',
+                        default=False,
+                        action='store_true')
     parser.add_argument('--delimiter',
                         help='The delimiter between cells in the gene '
                         'presence/absence and trait files, as well as '
