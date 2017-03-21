@@ -217,10 +217,11 @@ def main(**kwargs):
                 QT = PopulateQuadTreeWithDistances(TDM)
                 log.info("Building UPGMA tree from distance matrix")
                 upgmatree = upgma(QT)
-            elif:
+            elif (args.no_pairwise):
                 # Performing --no_pairwise analysis
                 log.info("Ignoring relatedness among input sample and "
                 "performing only population structure-naive analysis.")
+                upgmatree = None
             else:
                 log.info("Reading custom tree file")
                 from .nwkhandler import ReadTreeFromFile
