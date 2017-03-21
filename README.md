@@ -7,29 +7,30 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary] (http
 [![OMICtools](https://omictools.com/img/logo-blue.png)](https://omictools.com/association-mapping-category)
 
 ## Contents
-- [What's new] (#whats-new)
-- [Dependencies] (#dependencies)
-- [Installation] (#installation)
-- [Usage] (#usage)
-- [Input] (#input)
-- [Missing data] (#missing-data)
-- [Output] (#output)
-- [Options] (#options)
-- [Population structure] (#population-structure)
-- [Example data] (#example-data)
-- [License] (#license)
-- [Etymology] (#etymology)
-- [Bugs] (#bugs)
-- [FAQ] (#faq)
-- [Coming soon] (#coming-soon)
-- [Acknowledgements] (#acknowledgements)
-- [Feedback] (#feedback)
-- [Citation] (#citation)
-- [Contact] (#contact)
+- [What's new](#whats-new)
+- [Dependencies](#dependencies)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Input](#input)
+- [Missing data](#missing-data)
+- [Output](#output)
+- [Options](#options)
+- [Population structure](#population-structure)
+- [Example data](#example-data)
+- [Examples](#examples)
+- [License](#license)
+- [Etymology](#etymology)
+- [Bugs](#bugs)
+- [FAQ](#faq)
+- [Coming soon](#coming-soon)
+- [Acknowledgements](#acknowledgements)
+- [Feedback](#feedback)
+- [Citation](#citation)
+- [Contact](#contact)
 
 ## What's new?
 
-**LATEST VERSION - 1.6.10**
+**LATEST VERSION - 1.6.11**
 
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
@@ -335,6 +336,12 @@ Running Scoary with the --test flag is equivalent to the following command:
 ```
 python ./scoary.py -t ./exampledata/Tetracycline_resistance.csv -g ./exampledata/Gene_presence_absence.csv -u -c I EPW
 ```
+
+## Examples
+LOREM IPSUM
+1. AMR related to which gene (need pairwise comp)
+2. Which genes are enriched in groups (naive analysis)
+3. Categorical analysis
 
 ## License
 Scoary is freely available under a GPLv3 license.
