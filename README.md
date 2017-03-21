@@ -3,6 +3,8 @@
 Scoary is designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome and the traits. It reports a list of genes sorted by strength of association per trait.
 
 [![DOI](https://zenodo.org/badge/51000172.svg)](https://zenodo.org/badge/latestdoi/51000172)
+[![PyPI version](https://badge.fury.io/py/scoary.svg)](https://badge.fury.io/py/scoary)
+[![Build Status](https://travis-ci.org/AdmiralenOla/Scoary.svg?branch=master)](https://travis-ci.org/AdmiralenOla/Scoary)
 
 [![OMICtools](https://omictools.com/img/logo-blue.png)](https://omictools.com/association-mapping-category)
 
