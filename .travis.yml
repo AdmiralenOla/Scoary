@@ -16,7 +16,7 @@ python:
   - "pypy3" # Pypy3 2.4.0
   - "pypy-5.3.1"
 # command to install dependencies
-install: "pip install ."
+install: "pip install scoary"
   #  - pip install -r requirements.txt
 # command to run tests
 script: py.test
