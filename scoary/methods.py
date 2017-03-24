@@ -22,12 +22,14 @@ from .classes import QuadTree
 from .classes import PhyloTree
 from .classes import PimpedFileHandler
 from .classes import ScoaryLogger
-import scoary
+from .__init__ import __version__
+#import scoary
 
 import os
 from pkg_resources import resource_string, resource_filename
 
-SCOARY_VERSION = scoary.__version__
+#SCOARY_VERSION = scoary.__version__
+SCOARY_VERSION = __version__
 
 # Python 2/3 annoyances
 try:
