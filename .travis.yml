@@ -14,7 +14,6 @@ python:
   - "pypy"  # PyPy2 2.5.0
   - "pypy3" # Pypy3 2.4.0
   - "pypy-5.3.1"
-# command to install dependencies
 before_install:
 - sudo apt-get build-dep python-scipy
 - pip install scipy
@@ -22,5 +21,17 @@ install:
 #- pip install --upgrade pip setuptools wheel
 #- pip install --only-binary numpy --only-binary scipy
 - pip install -r requirements.txt
-# command to run tests
-# script: pytest
+script: 
+#- pytest
+- pip install scoary
+# Normal run
+- scoary -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv
+# No_pairwise run
+- scoary -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv --no_pairwise
+# Restricted run
+- scoary -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -r scoary/exampledata/Restrict_to.csv -w
+# Advanced opts run
+- scoary -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -p 0.01 1E-5 -c B EPW --collapse -m 50 -u -n scoary/exampledata/ExampleTree.nwk
+
+# Add pytest to verify output
+
