@@ -24,13 +24,13 @@ install:
 script: 
 #- pytest
 # Normal run
-- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -o Test1 --no_timestamp
 # No_pairwise run
-- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv --no_pairwise
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv --no_pairwise -o Test2 --no_timestamp
 # Restricted run
-- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -r scoary/exampledata/Restrict_to.csv -w
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -r scoary/exampledata/Restrict_to.csv -w -o Test3 --no_timestamp
 # Advanced opts run
-- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -p 0.01 1E-5 -c B EPW --collapse -m 50 -u -n scoary/exampledata/ExampleTree.nwk --threads 4
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -p 0.01 1E-5 -c B EPW --collapse -m 50 -u -n scoary/exampledata/ExampleTree.nwk --threads 4 -o Test4 --no_timestamp
 
-# Add pytest to verify output
-
+# Add test to verify output
+- python test_scoary_output.py
