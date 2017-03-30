@@ -1,4 +1,4 @@
-#CHANGELOG
+# CHANGELOG
 v1.6.11 (Apr 2017)
 - Blank values in trait files will now correctly be read as missing. Fixes (#54)
 - Added --no_pairwise option for simple set differences / categorical enrichment analysis without causal hypothesis (As requested among others in (#53)
