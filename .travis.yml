@@ -23,15 +23,14 @@ install:
 - pip install -r requirements.txt
 script: 
 #- pytest
-- pip install scoary
 # Normal run
-- scoary -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv
 # No_pairwise run
-- scoary -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv --no_pairwise
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv --no_pairwise
 # Restricted run
-- scoary -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -r scoary/exampledata/Restrict_to.csv -w
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -r scoary/exampledata/Restrict_to.csv -w
 # Advanced opts run
-- scoary -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -p 0.01 1E-5 -c B EPW --collapse -m 50 -u -n scoary/exampledata/ExampleTree.nwk
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -p 0.01 1E-5 -c B EPW --collapse -m 50 -u -n scoary/exampledata/ExampleTree.nwk -t 4
 
 # Add pytest to verify output
 
