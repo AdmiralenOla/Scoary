@@ -1116,7 +1116,9 @@ def initProcess(share):
     Initiates the progressbar as a shared variable between multiple
     processes.
     """
-    scoary.Progress = share
+    #scoary.Progress = share
+    global Progress
+    Progress = share
 
 def PairWiseComparisons(nestedlist):
     """
@@ -1139,10 +1141,13 @@ def PairWiseComparisons(nestedlist):
 
     for genenumber in domain:
         if Threaded:
-            with scoary.Progress.get_lock():
-                scoary.Progress.value += 1
+            #with scoary.Progress.get_lock():
+            #    scoary.Progress.value += 1
+            with Progress.get_lock():
+                Progress.value += 1
             sys.stdout.write(
-            "\r{:.2%}".format(float(scoary.Progress.value)/num_tot_res)
+            #"\r{:.2%}".format(float(scoary.Progress.value)/num_tot_res)
+            "\r{:.2%}".format(float(Progress.value)/num_tot_res)
             )
             sys.stdout.flush()
         else:
