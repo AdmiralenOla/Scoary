@@ -14,13 +14,12 @@ reference = ["TetRCG","","A fictitious gene known to cause resistance against te
              6.45209132679E-011,25,25,1,5.96046447754E-008,1.54972076416E-006]
 
 
-for Test in ["1","2","3","4"]:
+for Test in ["1","2","4"]:
     with open(os.getcwd() + "/Test" + Test + "/Tetracycline_resistance.results.csv" ,"rU") as resfile:
         tab = csv.reader(resfile, delimiter=",")
         for i in range(2):
             if i == 0:
                 tab.next()
-                continue
             if i == 1:
                 data = tab.next()
                 assert data[0] == reference[0]

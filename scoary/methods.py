@@ -205,7 +205,8 @@ def main(**kwargs):
                 startcol=int(args.start_col) - 1,
                 allowed_isolates=allowed_isolates,
                 writereducedset=args.write_reduced,
-                time=currenttime) 
+                time=currenttime,
+                outdir=args.outdir) 
             genedic = genedic_and_matrix["Roarydic"]
             zeroonesmatrix = genedic_and_matrix["Zero_ones_matrix"]
             strains = genedic_and_matrix["Strains"]
@@ -321,7 +322,8 @@ def main(**kwargs):
 # FUNCTIONS FOR READING INPUT #
 ###############################
 def Csv_to_dic_Roary(genefile, delimiter, startcol=14, 
-    allowed_isolates=None, writereducedset=False, time=""):
+    allowed_isolates=None, writereducedset=False, time="",
+    outdir="./"):
     """
     Converts a gene presence/absence file into dictionaries
     that are readable by Scoary.
@@ -329,7 +331,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
     r = {}
     if writereducedset:
         file = open(ReduceSet(genefile,delimiter,startcol,
-                    allowed_isolates,time),"rU")
+                    allowed_isolates,time,outdir),"rU")
         csvfile = csv.reader(file, skipinitialspace=True, 
                              delimiter=delimiter)
     else:
@@ -457,7 +459,7 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
             "Strains": strain_names_allowed}
 
 def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None, 
-              time=""):
+              time="",outdir="./"):
     """
     Helper function for csv_to_dic_roary.
     Method for writing a reduced gene presence absence file, based only
@@ -476,7 +478,8 @@ def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None,
     log.info("Writing gene presence absence file for the reduced set of "
           "isolates")
 
-    reducedfilename = "gene_presence_absence_reduced%s.csv" % time
+    reducedfilename = \
+        "%sgene_presence_absence_reduced%s.csv" % (outdir, time)
     
     with open(reducedfilename, "w") as csvout:
         wtr = csv.writer(csvout, delimiter = delimiter)
