@@ -1,6 +1,6 @@
 ![Scoary - Microbial Pan-GWAS](https://cloud.githubusercontent.com/assets/14874487/15772489/b026105a-2971-11e6-9d1e-da4035502869.png)
 
-Scoary is designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome and the traits. It reports a list of genes sorted by strength of association per trait.
+Scoary is designed to take the gene_presence_absence.csv file from [Roary](https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome and the traits. It reports a list of genes sorted by strength of association per trait.
 
 [![DOI](https://zenodo.org/badge/51000172.svg)](https://zenodo.org/badge/latestdoi/51000172)
 [![PyPI version](https://badge.fury.io/py/scoary.svg)](https://badge.fury.io/py/scoary)
@@ -39,7 +39,7 @@ All changes are logged in the [CHANGELOG](CHANGELOG.md)
 ## Dependencies
 
 - Python (Tested with versions 2.7 and 3.5)
-- [SciPy] (http://www.scipy.org/install.html) (Tested with versions 0.16, 0.17, 0.18)
+- [SciPy](http://www.scipy.org/install.html) (Tested with versions 0.16, 0.17, 0.18)
 
 #### If you supply custom trees (Optional)
 
@@ -97,10 +97,10 @@ to bring up a graphical interface. It is fairly intuitive, has a progress bar an
     scoary.py -g <gene_presence_absence.csv> -t <traits.csv>
 
 ## Input
-Scoary requires two input files: The gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) and a list of traits to test associations to. Traits can be anything as long as you can classify it into binary categories. (e.g. antibiotic resistance, group membership (yes/no), MIC value higher/lower than 16)
+Scoary requires two input files: The gene_presence_absence.csv file from [Roary](https://sanger-pathogens.github.io/Roary/) and a list of traits to test associations to. Traits can be anything as long as you can classify it into binary categories. (e.g. antibiotic resistance, group membership (yes/no), MIC value higher/lower than 16)
 
 The **gene_presence_absence.csv** file will look something like this:
-![gene_presence_absence.csv output] (http://sanger-pathogens.github.io/Roary/images/gene_presence_and_absence.png)
+![gene_presence_absence.csv output](http://sanger-pathogens.github.io/Roary/images/gene_presence_and_absence.png)
 
 _Source: http://sanger-pathogens.github.io/Roary/_
 
