@@ -663,6 +663,10 @@ def PruneForMissing(tree, Prunedic):
     """
     # Traverse tree and prune missing-data isolates
     # Left node is a subtree, go deeper
+
+    # Make slice copy to prevent tampering with original
+    tree = tree[:]
+    
     if isinstance(tree[0],list):
         tree[0] = PruneForMissing(tree[0], Prunedic)
     # Right node is a subtree, go deeper
