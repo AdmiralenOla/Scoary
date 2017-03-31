@@ -1,4 +1,13 @@
-#CHANGELOG
+# CHANGELOG
+v1.6.11 (Apr 2017)
+- Blank values in trait files will now correctly be read as missing. Fixes (#54)
+- Added --no_pairwise option for simple set differences / categorical enrichment analysis without causal hypothesis (As requested among others in (#53)
+- Modified GUI with no_pairwise and slightly modified look.
+- Added ExampleTree.nwk to exampledata
+- Added support for travis. (CI tests will be further developed)
+- Added example cases in README.md
+- Fixed broken links in README.md
+
 v1.6.10 (Jan 2017)
 - Scoary now creates a log file (both in terminal and GUI mode)
 - Fixed a bug where empirical p-values would exceed 1.0

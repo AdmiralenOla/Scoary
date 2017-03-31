@@ -1,0 +1,27 @@
+language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.6-dev"
+before_install:
+- sudo apt-get build-dep python-scipy
+- pip install scipy
+install: 
+#- pip install --upgrade pip setuptools wheel
+#- pip install --only-binary numpy --only-binary scipy
+- pip install -r requirements.txt
+script: 
+#- pytest
+# Normal run
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -o Test1 --no-time
+# No_pairwise run
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv --no_pairwise -o Test2 --no-time
+# Restricted run
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -r scoary/exampledata/Restrict_to.csv -w -o Test3 --no-time
+# Advanced opts run
+- python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -p 0.01 1E-5 -c B EPW --collapse -m 50 -u -n scoary/exampledata/ExampleTree.nwk --threads 4 -o Test4 --no-time
+
+# Add test to verify output
+- python 'tests/test_scoary_output.py'

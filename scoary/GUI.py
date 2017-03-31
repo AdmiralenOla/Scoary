@@ -76,6 +76,7 @@ class ScoaryGUI(Tkinter.Tk):
                                   "Delimiter":",", "Startcol": "15",
                                   "Maxhits":None, "Notime":False,
                                   "Outdir":None, "Permutations":0,
+                                  "No_pairwise":False, "Collapse":False,
                                   "Cutoffs": {"I": [1,0.05], 
                                               "B": [0,1.0], 
                                               "BH": [0,1.0], 
@@ -170,7 +171,9 @@ class ScoaryGUI(Tkinter.Tk):
         frame.lab = Tkinter.Label(frame,text=u"Awaiting input options")
         frame.lab.pack(in_=frame.pb,expand=True)
         #sys.stdout = StdoutToLabel(frame.lab, progressbar=frame.pb)
-        sys.stdout = StdoutToLabel(frame.lab, progressbar=frame.pb, width=frame.cget('width'))
+        sys.stdout = StdoutToLabel(frame.lab,
+                                   progressbar=frame.pb,
+                                   width=frame.cget('width'))
     
     def initialize_controlboard(self):
         """
@@ -275,20 +278,20 @@ class ScoaryGUI(Tkinter.Tk):
             text=u"Run analysis",
             font=masterbuttonfont,
             command=self.RunAnalysis,
-            padx=15,pady=15)
+            padx=15,pady=10)
         RunButton.grid(column=2,row=0)
         
         QuitButton = Tkinter.Button(board.emptyspace,
             text=u"Quit",
             font=masterbuttonfont,
-            command=self.quit,padx=15,pady=15)
+            command=self.quit,padx=15,pady=10)
         QuitButton.grid(column=1,row=0)
         
         HelpButton = Tkinter.Button(board.emptyspace,
                                     text=u"Help",
                                     font=masterbuttonfont,
                                     command=self.HelpButton,
-                                    padx=15,pady=15)
+                                    padx=15,pady=10)
         HelpButton.grid(column=0,row=0)
         
     def initialize_miscopts(self):
@@ -377,6 +380,26 @@ class ScoaryGUI(Tkinter.Tk):
             offvalue=0,
             variable=self.writetreevar)
         miscframe.writetree.grid(row=6,column=0,sticky='w')
+
+        # No_pairwise
+        self.nopairwisevar = Tkinter.IntVar()
+        miscframe.nopairwise = \
+            Tkinter.Checkbutton(miscframe,
+            text=u"No pairwise",
+            onvalue=1,
+            offvalue=0,
+            variable=self.nopairwisevar)
+        miscframe.nopairwise.grid(row=7,column=0,sticky='w')
+
+        # Collapse
+        self.collapsevar = Tkinter.IntVar()
+        miscframe.collapse = \
+            Tkinter.Checkbutton(miscframe,
+            text=u"Collapse corr",
+            onvalue=1,
+            offvalue=0,
+            variable=self.collapsevar)
+        miscframe.collapse.grid(row=8,column=0,sticky='w')
         
     def initialize_pvalueframe(self):
         """
@@ -387,15 +410,21 @@ class ScoaryGUI(Tkinter.Tk):
         
         # Add p-value checkboxes
         
+        self.naivetext = Tkinter.StringVar()
         self.pVar = Tkinter.IntVar()
         self.pVar.set(1)
         self.pBVar = Tkinter.IntVar()
         self.pBHVar = Tkinter.IntVar()
+        self.pstext = Tkinter.StringVar()
         self.pPWVar = Tkinter.IntVar()
         self.pEPWVar = Tkinter.IntVar()
         self.pEPWVar.set(1)
         self.pPermVar = Tkinter.IntVar()
         
+        pframe.naivelab = \
+            Tkinter.Label(pframe,
+            textvariable=self.naivetext)
+        self.naivetext.set(u"Pop structure-naive filters")
         pframe.pNcheck = \
             Tkinter.Checkbutton(pframe,
             text=u"Naive (Fisher's)",
@@ -415,6 +444,10 @@ class ScoaryGUI(Tkinter.Tk):
             onvalue=1,
             offvalue=0,
             variable=self.pBHVar)
+        pframe.pslab = \
+            Tkinter.Label(pframe,
+            textvariable=self.pstext)
+        self.pstext.set(u"Pop structure-aware filters")
         pframe.pPWcheck = \
             Tkinter.Checkbutton(pframe,
             text=u"Pairwise comparison (Best)",
@@ -434,12 +467,14 @@ class ScoaryGUI(Tkinter.Tk):
             offvalue=0,
             variable=self.pPermVar)
         
-        pframe.pNcheck.grid(column=0,row=0,sticky='w')
-        pframe.pBcheck.grid(column=0,row=1,sticky='w')
-        pframe.pBHcheck.grid(column=0,row=2,sticky='w')
-        pframe.pPWcheck.grid(column=0,row=3,sticky='w')
-        pframe.pEPWcheck.grid(column=0,row=4,sticky='w')
-        pframe.pPermcheck.grid(column=0,row=5,sticky='w')
+        pframe.naivelab.grid(column=0,row=0,sticky='w')
+        pframe.pNcheck.grid(column=0,row=1,sticky='w')
+        pframe.pBcheck.grid(column=0,row=2,sticky='w')
+        pframe.pBHcheck.grid(column=0,row=3,sticky='w')
+        pframe.pslab.grid(column=0,row=4,sticky='w')
+        pframe.pPWcheck.grid(column=0,row=5,sticky='w')
+        pframe.pEPWcheck.grid(column=0,row=6,sticky='w')
+        pframe.pPermcheck.grid(column=0,row=7,sticky='w')
         
         # Add p-value entry cells
         
@@ -469,12 +504,12 @@ class ScoaryGUI(Tkinter.Tk):
                                           textvariable=self.pPerm,
                                           width=8)
         
-        pframe.pNaiveEntry.grid(column=1,row=0,sticky='w')
-        pframe.pBonfEntry.grid(column=1,row=1,sticky='w')
-        pframe.pBHEntry.grid(column=1,row=2,sticky='w')
-        pframe.pPWEntry.grid(column=1,row=3,sticky='w')
-        pframe.pEPWEntry.grid(column=1,row=4,sticky='w')
-        pframe.pPermEntry.grid(column=1,row=5,sticky='w')
+        pframe.pNaiveEntry.grid(column=1,row=1,sticky='w')
+        pframe.pBonfEntry.grid(column=1,row=2,sticky='w')
+        pframe.pBHEntry.grid(column=1,row=3,sticky='w')
+        pframe.pPWEntry.grid(column=1,row=5,sticky='w')
+        pframe.pEPWEntry.grid(column=1,row=6,sticky='w')
+        pframe.pPermEntry.grid(column=1,row=7,sticky='w')
         
         self.pNaive.set("0.05")
         self.pBonf.set("1.0")
@@ -576,6 +611,7 @@ class ScoaryGUI(Tkinter.Tk):
         self.pPW.set("1.0")
         self.pEPW.set("0.05")
         self.pPerm.set("1.0")
+        self.nopairwisevar.set(0)
         
     def TestExample(self):
         """
@@ -607,6 +643,7 @@ class ScoaryGUI(Tkinter.Tk):
         self.pPW.set("1.0")
         self.pEPW.set("0.05")
         self.pPerm.set("1.0")
+        self.nopairwisevar.set(0)
         
         ######## RUNNING THE ANALYSIS ########
         
@@ -627,6 +664,8 @@ class ScoaryGUI(Tkinter.Tk):
         self.Scoary_parameters["Maxhits"] = self.maxhitsvar.get()
         self.Scoary_parameters["Notime"] = self.notimevar.get()
         self.Scoary_parameters["Permutations"] = self.permvar.get()
+        self.Scoary_parameters["No_pairwise"] = self.nopairwisevar.get()
+        self.Scoary_parameters["Collapse"] = self.collapsevar.get()
         self.Scoary_parameters["Cutoffs"]["I"][0] = self.pVar.get()
         self.Scoary_parameters["Cutoffs"]["I"][1] = self.pNaive.get()
         self.Scoary_parameters["Cutoffs"]["B"][0] = self.pBVar.get()
@@ -712,7 +751,10 @@ class ScoaryGUI(Tkinter.Tk):
         upgma_tree = (True if self.Scoary_parameters["Writetree"] == 1 
                       else False)
         write_reduced=False
-        collapse=False
+        collapse= (True if self.Scoary_parameters["Collapse"] == 1
+                   else False)
+        no_pairwise = (True if self.Scoary_parameters["No_pairwise"] == 1
+                       else False)
                
         myargs = argparse.Namespace(citation=citation,
                                     correction=correction,
@@ -731,7 +773,8 @@ class ScoaryGUI(Tkinter.Tk):
                                     traits=traits,
                                     upgma_tree=upgma_tree,
                                     write_reduced=write_reduced,
-                                    collapse=collapse)
+                                    collapse=collapse,
+                                    no_pairwise=no_pairwise)
         
         if RunScoary:
             try:

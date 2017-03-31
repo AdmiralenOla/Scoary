@@ -1,42 +1,45 @@
 ![Scoary - Microbial Pan-GWAS](https://cloud.githubusercontent.com/assets/14874487/15772489/b026105a-2971-11e6-9d1e-da4035502869.png)
 
-Scoary is designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome and the traits. It reports a list of genes sorted by strength of association per trait.
+Scoary is designed to take the gene_presence_absence.csv file from [Roary](https://sanger-pathogens.github.io/Roary/) as well as a traits file created by the user and calculate the assocations between all genes in the accessory genome and the traits. It reports a list of genes sorted by strength of association per trait.
 
 [![DOI](https://zenodo.org/badge/51000172.svg)](https://zenodo.org/badge/latestdoi/51000172)
+[![PyPI version](https://badge.fury.io/py/scoary.svg)](https://badge.fury.io/py/scoary)
+[![Build Status](https://travis-ci.org/AdmiralenOla/Scoary.svg?branch=master)](https://travis-ci.org/AdmiralenOla/Scoary)
 
 [![OMICtools](https://omictools.com/img/logo-blue.png)](https://omictools.com/association-mapping-category)
 
 ## Contents
-- [What's new] (#whats-new)
-- [Dependencies] (#dependencies)
-- [Installation] (#installation)
-- [Usage] (#usage)
-- [Input] (#input)
-- [Missing data] (#missing-data)
-- [Output] (#output)
-- [Options] (#options)
-- [Population structure] (#population-structure)
-- [Example data] (#example-data)
-- [License] (#license)
-- [Etymology] (#etymology)
-- [Bugs] (#bugs)
-- [FAQ] (#faq)
-- [Coming soon] (#coming-soon)
-- [Acknowledgements] (#acknowledgements)
-- [Feedback] (#feedback)
-- [Citation] (#citation)
-- [Contact] (#contact)
+- [What's new](#whats-new)
+- [Dependencies](#dependencies)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Input](#input)
+- [Missing data](#missing-data)
+- [Output](#output)
+- [Options](#options)
+- [Population structure](#population-structure)
+- [Example data](#example-data)
+- [Examples](#examples)
+- [License](#license)
+- [Etymology](#etymology)
+- [Bugs](#bugs)
+- [FAQ](#faq)
+- [Coming soon](#coming-soon)
+- [Acknowledgements](#acknowledgements)
+- [Feedback](#feedback)
+- [Citation](#citation)
+- [Contact](#contact)
 
 ## What's new?
 
-**LATEST VERSION - 1.6.10**
+**LATEST VERSION - 1.6.11**
 
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
 ## Dependencies
 
 - Python (Tested with versions 2.7 and 3.5)
-- [SciPy] (http://www.scipy.org/install.html) (Tested with versions 0.16, 0.17, 0.18)
+- [SciPy](http://www.scipy.org/install.html) (Tested with versions 0.16, 0.17, 0.18)
 
 #### If you supply custom trees (Optional)
 
@@ -94,10 +97,10 @@ to bring up a graphical interface. It is fairly intuitive, has a progress bar an
     scoary.py -g <gene_presence_absence.csv> -t <traits.csv>
 
 ## Input
-Scoary requires two input files: The gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/) and a list of traits to test associations to. 
+Scoary requires two input files: The gene_presence_absence.csv file from [Roary](https://sanger-pathogens.github.io/Roary/) and a list of traits to test associations to. Traits can be anything as long as you can classify it into binary categories. (e.g. antibiotic resistance, group membership (yes/no), MIC value higher/lower than 16)
 
 The **gene_presence_absence.csv** file will look something like this:
-![gene_presence_absence.csv output] (http://sanger-pathogens.github.io/Roary/images/gene_presence_and_absence.png)
+![gene_presence_absence.csv output](http://sanger-pathogens.github.io/Roary/images/gene_presence_and_absence.png)
 
 _Source: http://sanger-pathogens.github.io/Roary/_
 
@@ -290,10 +293,12 @@ From version 1.4.0, you can also mix different restrictions together. For exampl
 Alternatively, you can specify a single (one) p-value, and this will be taken as the filter for all the specified -c options. For example _-c EPW BH -p 0.05_ will filter the results to only include genes where the entire range of pairwise comparison as well as the Benjamini-Hochberg p-values are > 0.05
 
 #### The -u flag
-Calling Scoary with the **-u** flag will cause it to write a newick file of the UPGMA tree that is calculated internally. The tree is based on pairwise Hamming distances in the gene_presence_absence matrix.
+Calling Scoary with the **-u** flag will cause it to write a newick file of the UPGMA tree that is calculated internally. The tree is based on pairwise Hamming distances in the gene_presence_absence matrix. Taxa have to be named the same as they are in the gene presence/absence and trait files.
 
 #### The -n parameter
 Can be used to supply a custom phylogenetic tree (in newick format) to Scoary. This tree will be used for calculating contrasting pairs rather than Scoary using the gene presence absence file for UPGMA calculation.
+
+Note: The input sample tree topology is a fixed parameter in Scoary. It is assumed to be without error. By default, Scoary calculates a UPGMA tree topology internally from the presence/absence status in the gene presence/absence matrix, which is probably not the most robust data for phylogenetic inference. Since pairwise comparisons rely on the branching order in the tree, a best practices approach would be to supply tree(s) that you have calculated using a more robust approach (e.g. a ML tree based on your sequence data).
 
 #### Post-analysis label-switching permutations
 Use **-e X** to permute the dataset X times, rank the test estimators (number of successes (AB-ab pairs) / total number of contrasting pairs (ie. AB-ab and Ab-aB)) and report the unpermuted test estimator's empirical p-value. Calculated as (r+1)/(n+1) where r is the number of estimators that exceed the unpermuted estimator in value and n is the total number of permutations (North, Curtis and Sham, 2002). Empirical p-values are great for deciding if your result looks significant just by coincidence or by a true association. The permutation procedure destroys the relationship between the variant and the phenotype, making the null hypothesis true. Each permutation test estimator is sampled under the null hypothesis. If these data look like your real data, you're in trouble. So if your empirical p-value is not low, chances are you seeing a false positive results even if your other p-values (Bonferroni, pairwise comparisons etc) indicate significance of the variant. You can use empirical p-values as a results filter by using **-c P**.
@@ -336,6 +341,40 @@ Running Scoary with the --test flag is equivalent to the following command:
 python ./scoary.py -t ./exampledata/Tetracycline_resistance.csv -g ./exampledata/Gene_presence_absence.csv -u -c I EPW
 ```
 
+## Examples
+Below are presented some popular use cases with examples of how to run and interpret results.
+
+#### 1. Resistance towards an antibiotic compund in Mycobacterium abscessus
+A user wanted to screen for possible genetic causes of resistance towards a new antibiotic in Mycobacterium abscessus. One hypothesis was that the resistance could be related to a truncated form of a gene. In this experiment, the user had classified the resistance pattern as (S)usceptible, (I)ntermediate and (R)esistant. This information was coded into the traits file as dummy variables, e.g. the first trait was SI_vs_R and the second was S_vs_IR.
+
+Mycobacterium abscessus contains numerous subspecies, and the user wanted to test only M. abscessus ss abscessus. The Roary output additionally contained other subspecies, such as M. abscessus ss masiliense. To avoid altering the Roary file, a csv was made containing the names of all isolates that were M. abscessus ss abscessus. To write a separate gene presence/absence file from only these isolates (and to speed up analysis), the -w parameter was used.
+
+A high number of isolates was used in the experiment, and it was therefore decided to set the p-values low. The experiment was interested in causal mutations, so pairwise comparisons had to be used. (Population structure could be a major confounder). It was decided to require that the entire range of pairwise comparison values should be < 1E-4. Additionally, after 10.000 permutations the input configuration should be in the top 0.1 percentile. (Among 10.000 randomly permuted datasets, no more than 9 were allowed to have a even higher number of contrasting pairs for a gene to be included in results).
+
+Finally, since it was possible that the resistance determinant was inherited as a set of genes (such as a plasmid), the --collapse flag was used to collapse genes with identical distribution patterns.
+
+The analysis was run with the following command:
+```
+scoary -t Resistancefile -g Gene_presence_absence.csv -p 1E-4 1E-3 -c EPW P -e 10000 -w -r OnlyAbscessusIsolates.csv --collapse
+```
+Results showed that the top two hits were different alleles of the same gene, one positively and one negatively associated with the trait. (The two alleles were different enough to not be clustered as the same by Roary). The interpretation was that this gene was likely to play a role in the resistance pattern.
+
+#### 2. Enrichment of genes in select host groups
+Another user had a high number of E. coli isolated from different hosts, and wanted to know which genes were enriched in which host groups. In this case, Scoary was not used to infer causal association, but simply to discover trends in different sets. The input trait file consisted of dummy variable memberships to different host groups, reminiscent of the below table:
+
+|   | Cattle | Human | Sheep | Food |
+| - | ------ | ----- | ----- | ---- |
+| Ecoli1 | 1 | 0 | 0 | 0 |
+| Ecoli2 | 0 | 1 | 0 | 0 |
+| Ecoli3 | 0 | 1 | 0 | 0 |
+
+Here, the user is not trying to infer which genes "cause" membership in a group, just which genes are overrepresented. Therefore, the --no_pairwise flag was used. The Benjamini-Hochberg adjusted p-value was used to only show the genes most overrepresented in a specific host group
+
+The analysis was run with the following command:
+```
+scoary -g gene_presence_absence.csv -t Hostgroup_membership.csv -p 1E-5 -c BH --no_pairwise
+```
+
 ## License
 Scoary is freely available under a GPLv3 license.
 
@@ -370,6 +409,8 @@ Most certainly not.
 
 ## Coming soon
 - Multiprocessing also when using the GUI. (The GUI currently only uses a single thread. See Issues).
+- Continous integration
+- Support for non-binary traits
 - Please feel free to suggest improvements, point out bugs or methods that could be better optimized.
 
 ## Acknowledgements
