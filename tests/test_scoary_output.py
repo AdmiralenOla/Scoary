@@ -19,9 +19,9 @@ for Test in ["1","2","4"]:
         tab = csv.reader(resfile, delimiter=",")
         for i in range(2):
             if i == 0:
-                tab.next()
+                next(tab)
             if i == 1:
-                data = tab.next()
+                data = next(tab)
                 assert data[0] == reference[0]
                 assert data[1] == reference[1]
                 assert data[2] == reference[2]
