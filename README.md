@@ -34,6 +34,8 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary](https
 
 **LATEST VERSION - 1.6.11**
 
+Among the latest features is pairwise comparisons-free analysis, which allows major speed-ups for large datasets for people not interested in causal association. (e.g. just trying to infer genes enriched in particular groups etc)
+
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
 ## Dependencies
