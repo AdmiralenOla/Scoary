@@ -38,7 +38,7 @@ All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
 ## Dependencies
 
-- Python (Tested with versions 2.7 and 3.5)
+- Python (Tested with versions 2.7, 3.4, 3.5, 3.6 and 3.6-dev)
 - [SciPy](http://www.scipy.org/install.html) (Tested with versions 0.16, 0.17, 0.18)
 
 #### If you supply custom trees (Optional)
