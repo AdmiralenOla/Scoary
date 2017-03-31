@@ -37,7 +37,7 @@ The most updated documentation for scoary is found at `the project site <https:/
 
 Citation
 --------
-If you use Scoary, please citing our `paper <https://dx.doi.org/10.1186/s13059-016-1108-8>`_
+If you use Scoary, please cite our `paper <https://dx.doi.org/10.1186/s13059-016-1108-8>`_
 
 License
 -------
