@@ -32,9 +32,7 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary](https
 
 ## What's new?
 
-**LATEST VERSION - 1.6.11**
-
-Among the latest features is pairwise comparisons-free analysis, which allows major speed-ups for large datasets for people not interested in causal association. (e.g. just trying to infer genes enriched in particular groups etc)
+**LATEST VERSION - 1.6.12**
 
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
@@ -127,6 +125,9 @@ It should look something like this:
 | StrainN | 1      | 0      | ... | 0      |
 
 You can see an example of how the input files could look in the exampledata folder.
+
+#### LS-BSR input
+You can also use as input the pan-genome as called from Jason Sahl's program [LS-BSR](https://github.com/jasonsahl/LS-BSR) (Large-Scale Blast Score Ratio). The program includes a python script for converting LS-BSR output to the Roary/Scoary format.
 
 #### Missing data
 Don't worry if you have not measured the phenotype for all your traits. From v1.6.9 on, Scoary can handle missing data. The missing values need to be specified as "NA", "." or "-". Note that Scoary does not actually specify any kind of uncertainty model for these missing values, it simply excludes them from further analysis.
@@ -381,6 +382,9 @@ scoary -g gene_presence_absence.csv -t Hostgroup_membership.csv -p 1E-5 -c BH --
 
 #### 3. SNPs linked to penicillin resistance in Neisseria meningitidis
 For population structure-aware association analysis to work, it is imperative to work on trees that best represent the genealogy of the input sample. Due to the high frequency of recombination in Neisseria meningitidis, the internal tree builder in Scoary is likely to perform poorly. In this case (actually, in almost any case) it would be advisable to use a dedicated tree program and provide this to Scoary instead. There are now many programs that can produce phylogenetic trees where only the clonally evolved patterns are retained (i.e. "free" from the obfuscating effects of recombination). Some examples are [Gubbins](https://sanger-pathogens.github.io/gubbins), [ClonalFrameML](https://github.com/xavierdidelot/ClonalFrameML) and [BRATNextGen](http://www.helsinki.fi/bsg/software/BRAT-NextGen).
+```
+scoary -g gene_presence_absence.csv -t penicillinres.csv -n clonaltree.nwk
+```
 
 ## License
 Scoary is freely available under a GPLv3 license.
