@@ -13,6 +13,7 @@ import csv
 import time
 import random
 import logging
+import re
 from multiprocessing import Pool, Value
 from scipy import stats as ss
 from scipy import spatial
@@ -71,6 +72,7 @@ def main(**kwargs):
         args.genes = os.path.join(
             resource_filename(__name__, 'exampledata'), 
             'Gene_presence_absence.csv')
+        args.grabcols = [-999]
         args.max_hits = None
         args.newicktree = None
         args.no_pairwise = False
@@ -115,6 +117,7 @@ def main(**kwargs):
     log_handler.setFormatter(formatter)
     log.addHandler(log_handler)
     log.info("==== Scoary started ====")
+    log.info("Command: " + " ".join(sys.argv))
     
     # Catch all system exceptions from here on out
     try:
@@ -202,6 +205,7 @@ def main(**kwargs):
             genedic_and_matrix = \
                 Csv_to_dic_Roary(genes,
                 args.delimiter,
+                args.grabcols,
                 startcol=int(args.start_col) - 1,
                 allowed_isolates=allowed_isolates,
                 writereducedset=args.write_reduced,
@@ -210,7 +214,8 @@ def main(**kwargs):
             genedic = genedic_and_matrix["Roarydic"]
             zeroonesmatrix = genedic_and_matrix["Zero_ones_matrix"]
             strains = genedic_and_matrix["Strains"]
-    
+            extracolstoprint = genedic_and_matrix["Extracols"]
+
             # Create or load tree (No need for tree if --no_pairwise)
             if (args.newicktree) is None and not (args.no_pairwise):
                 log.info("Creating Hamming distance matrix based on gene "
@@ -259,42 +264,44 @@ def main(**kwargs):
                                              allowed_isolates,
                                              strains)
             
-            log.info("Finished loading files into memory.\n\n")
-            log.info("==== Performing statistics ====")
-            filtopts = filtrationoptions(cutoffs, args.collapse)
-            for line in filtopts:
-                log.info(line)
+        log.info("Finished loading files into memory.\n\n")
+        log.info("==== Performing statistics ====")
+        filtopts = filtrationoptions(cutoffs, args.collapse)
+        for line in filtopts:
+            log.info(line)
 
-            log.info("Tallying genes and performing statistical analyses")
+        log.info("Tallying genes and performing statistical analyses")
+
+        RES_and_GTC = Setup_results(genedic, traitsdic, args.collapse)
+        RES = RES_and_GTC["Results"]
+        GTC = RES_and_GTC["Gene_trait_combinations"]
+
+        if args.upgma_tree:
+            StoreUPGMAtreeToFile(upgmatree,
+                                 args.outdir,
+                                 time=currenttime)        
     
-            RES_and_GTC = Setup_results(genedic, traitsdic, args.collapse)
-            RES = RES_and_GTC["Results"]
-            GTC = RES_and_GTC["Gene_trait_combinations"]
-    
-            if args.upgma_tree:
-                StoreUPGMAtreeToFile(upgmatree,
-                                     args.outdir,
-                                     time=currenttime)        
-    
-            StoreResults(RES,
-                         args.max_hits,
-                         cutoffs,
-                         upgmatree,
-                         GTC,
-                         Prunedic,
-                         args.outdir,
-                         args.permute,
-                         args.threads,
-                         args.no_pairwise,
-                         time=currenttime,
-                         delimiter=args.delimiter)
-            log.info("\n")
-            log.info("==== Finished ====")
-            log.info("Checked a total of %d genes for "
-                  "associations to %d trait(s). Total time used: %d "
-                  "seconds." % (len(genedic),
-                                len(traitsdic),
-                                int(time.time()-starttime)))
+        StoreResults(RES,
+                     args.max_hits,
+                     cutoffs,
+                     upgmatree,
+                     GTC,
+                     Prunedic,
+                     args.outdir,
+                     args.permute,
+                     args.threads,
+                     args.no_pairwise,
+                     genedic,
+                     extracolstoprint,
+                     time=currenttime,
+                     delimiter=args.delimiter)
+        log.info("\n")
+        log.info("==== Finished ====")
+        log.info("Checked a total of %d genes for "
+              "associations to %d trait(s). Total time used: %d "
+              "seconds." % (len(genedic),
+                            len(traitsdic),
+                            int(time.time()-starttime)))
     
     except SystemExit as e:
         exc_type, exc_value, _ = sys.exc_info()
@@ -321,7 +328,7 @@ def main(**kwargs):
 ###############################
 # FUNCTIONS FOR READING INPUT #
 ###############################
-def Csv_to_dic_Roary(genefile, delimiter, startcol=14, 
+def Csv_to_dic_Roary(genefile, delimiter, grabcols, startcol=14, 
     allowed_isolates=None, writereducedset=False, time="",
     outdir="./"):
     """
@@ -329,8 +336,9 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
     that are readable by Scoary.
     """
     r = {}
+
     if writereducedset:
-        file = open(ReduceSet(genefile,delimiter,startcol,
+        file = open(ReduceSet(genefile,delimiter, grabcols, startcol,
                     allowed_isolates,time,outdir),"rU")
         csvfile = csv.reader(file, skipinitialspace=True, 
                              delimiter=delimiter)
@@ -338,14 +346,18 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
         csvfile = csv.reader(genefile, skipinitialspace=True, 
                              delimiter=delimiter)
     header = next(csvfile)
-            
-    roaryfile = True
+    
+    # If include all relevant columns, grabcols == -999
+    if grabcols == [-999]:
+        grabcols = list(range(3,len(header)))
+
     try:
         header[startcol]
     except IndexError:
         sys.exit("The startcol (-s) you have specified does not seem to "
         "correspond to any column in your gene presence/absence file.")
     strains = header[startcol:]
+    extracolstoprint = [header[c] for c in grabcols]
     
     # Include alternative column spellings
     Roarycols = ["Gene", "Non-unique Gene name", "Annotation",
@@ -357,8 +369,13 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
                  "Avg group size nuc", "Order within fragment",
                  "Genome fragment", "Accessory fragment" ]
     
+    if header[0:3] == Roarycols[0:3]:
+        roaryfile = True
+    else:
+        roaryfile = False
+
     # Move forwards from startcol to find correct startcol
-    if strains[0] in Roarycols:
+    if strains[0] in Roarycols and roaryfile:
         for c in xrange(len(strains)):
             if strains[c] not in Roarycols:
                 correctstartcol = startcol + c
@@ -371,26 +388,26 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
                                 strains[0],
                                 str(correctstartcol + 1)))
     
-    # Move backwards from startcol to find correct startcol
-    Firstcols = header[:startcol][::-1]
-    minus = 0
-    Censored_isolates = []
-    for c in xrange(len(Firstcols)):
-        if Firstcols[c] not in Roarycols:
-            minus += 1
-            #print(Firstcols[c])
-            Censored_isolates.append(Firstcols[c])
-        else:
-            if minus > 0:
-                correctstartcol = startcol - minus
-                log.error("ERROR: Make sure you have set the -s "
-                "parameter correctly. You are running with -s %s. "
-                "Scoary thinks you should have used %s. This excludes the "
-                "following, which Scoary thinks are isolates: %s" % 
-                (str(startcol+1),
-                str(correctstartcol+1), 
-                ", ".join(Censored_isolates)))
-                break
+    if roaryfile:
+        # Move backwards from startcol to find correct startcol
+        Firstcols = header[:startcol][::-1]
+        minus = 0
+        Censored_isolates = []
+        for c in xrange(len(Firstcols)):
+            if Firstcols[c] not in Roarycols:
+                minus += 1
+                Censored_isolates.append(Firstcols[c])
+            else:
+                if minus > 0:
+                    correctstartcol = startcol - minus
+                    log.error("ERROR: Make sure you have set the -s "
+                    "parameter correctly. You are running with -s %s. "
+                    "Scoary thinks you should have used %s. This excludes "
+                    "the following, which Scoary thinks are isolates: %s" % 
+                    (str(startcol+1),
+                    str(correctstartcol+1), 
+                    ", ".join(Censored_isolates)))
+                    break
     
     if allowed_isolates is not None:
         strain_names_allowed = [val for val in strains
@@ -444,6 +461,10 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
                 # Add a 1 to indicate presence of the current gene in 
                 # this strain
 
+            # Add grabcols
+            for c in grabcols:
+                r[q[genecol]][header[c]+"_name"] = q[c]
+
         # Since we are only interested in the differences between 
         # strains, no need to append the zero_ones_line if it is all 1's
         # (core gene) or all 0's (not in collection)
@@ -456,10 +477,11 @@ def Csv_to_dic_Roary(genefile, delimiter, startcol=14,
     zero_ones_matrix = list(map(list, zip(*zero_ones_matrix)))
     return {"Roarydic": r,
             "Zero_ones_matrix": zero_ones_matrix,
-            "Strains": strain_names_allowed}
+            "Strains": strain_names_allowed,
+            "Extracols": extracolstoprint}
 
-def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None, 
-              time="",outdir="./"):
+def ReduceSet(genefile, delimiter, grabcols, startcol=14,
+              allowed_isolates=None, time="",outdir="./"):
     """
     Helper function for csv_to_dic_roary.
     Method for writing a reduced gene presence absence file, based only
@@ -481,6 +503,9 @@ def ReduceSet(genefile, delimiter, startcol=14, allowed_isolates=None,
     reducedfilename = \
         "%sgene_presence_absence_reduced%s.csv" % (outdir, time)
     
+    # Trim grabcols to only include non-restricted isolates
+    grabcols = [i for i in grabcols if i in allowed_indexes]
+
     with open(reducedfilename, "w") as csvout:
         wtr = csv.writer(csvout, delimiter = delimiter)
         newheader = [header[a] for a in allowed_indexes]
@@ -772,7 +797,7 @@ def Setup_results(genedic, traitsdic, collapse):
                 # Find out which gene is correlated
                 corr_gene = distributions[stats["hash"]]
                 # Collapse the two genes
-                newgenename = corr_gene + "-" + gene
+                newgenename = corr_gene + "--" + gene
                 distributions[stats["hash"]] = newgenename
                 # Remove 1 from the number of tests
                 number_of_tests -= 1
@@ -820,10 +845,13 @@ def Setup_results(genedic, traitsdic, collapse):
                 "p_v": p_value}
                 p_value_list.append((gene, p_value))
             else:
+                temp = all_traits[trait][corr_gene]
                 del(all_traits[trait][corr_gene])
                 all_traits[trait][newgenename] = {
-                "NUGN": "",
-                "Annotation": "Merged genes",
+                "NUGN": temp["NUGN"] + "--" + 
+                        genedic[gene]["Non-unique Gene name"],
+                "Annotation": temp["Annotation"] + "--" + 
+                              genedic[gene]["Annotation"],
                 "tpgp": stat_table["tpgp"],
                 "tngp": stat_table["tngp"],
                 "tpgn": stat_table["tpgn"],
@@ -835,6 +863,7 @@ def Setup_results(genedic, traitsdic, collapse):
                 "OR": odds_ratio,
                 "p_v": p_value}
                 p_value_list.append((newgenename, p_value))
+                
         
         sys.stdout.write("\r100.00%")
         sys.stdout.flush()
@@ -930,7 +959,7 @@ def Perform_statistics(traits, genes):
 #################################
 def StoreResults(Results, max_hits, cutoffs, upgmatree, GTC, Prunedic,
                  outdir, permutations, num_threads, no_pairwise,
-                 time="", delimiter=","):
+                 genedic, extracolstoprint, time="", delimiter=","):
     """
     A method for storing the results. Calls StoreTraitResult for each 
     trait column in the input file.
@@ -940,11 +969,13 @@ def StoreResults(Results, max_hits, cutoffs, upgmatree, GTC, Prunedic,
         log.info("Storing results: " + Trait)
         StoreTraitResult(Results[Trait], Trait, max_hits, cutoffs, 
                          upgmatree, GTC, Prunedic, outdir, permutations, 
-                         num_threads, no_pairwise, time, delimiter)
+                         num_threads, no_pairwise, genedic,
+                         extracolstoprint, time, delimiter)
 
 def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree, 
                      GTC, Prunedic, outdir, permutations, num_threads, 
-                     no_pairwise, time="", delimiter=","):
+                     no_pairwise, genedic, extracolstoprint, time="", 
+                     delimiter=","):
     """
     The method that actually stores the results. Only accepts results 
     from a single trait at a time
@@ -987,6 +1018,8 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
         
         if permutations >= 10:
             columns.append("Empirical_p")
+
+        columns += extracolstoprint
         
         outfile.write(delimiter.join('"' + c +'"' for c in columns) + 
                       "\n")
@@ -1114,6 +1147,17 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
                         outrow.append(
                         str(Filteredresults[currentgene]["Empirical_p"]))
                         
+                # Add extracols
+                for col in extracolstoprint:
+                    # Make sure to also get collapsed genes
+                    if "--" in currentgene:
+                        currentgenes = currentgene.split("--")
+                        appendlist = [str(genedic[g][col+"_name"])
+                                      for g in currentgenes]
+                        appendstring = "--".join(appendlist)
+                    else:
+                        appendstring = str(genedic[currentgene][col+"_name"])
+                    outrow.append(appendstring)
                 outfile.write(
                 delimiter.join('"' + c + '"' for c in outrow) + "\n"
                 )
@@ -1429,6 +1473,47 @@ def decideifbreak(cutoffs, currentgene):
         # pairwise and empirical filtration 
         return False
 
+def grabcoltype(string):
+    """
+    Accepts as arguments numbers with space, commas and range and
+    returns a list of all numbers
+    """
+    # If the keyword ALL is passed, return all input columns that have
+    # not been restricted from --restrict_to.
+    if string == "ALL":
+        return [-999]
+    if string == "":
+        return []
+    bycommas = string.split(",")
+
+    returnlist = []
+    for s in bycommas:
+        if "-" in s:
+            #Expand range
+            try:
+                bydash = s.split("-")
+                if not (int(bydash[1]) > int(bydash[0])):
+                    raise
+                add = range(int(bydash[0]), int(bydash[1]))
+                returnlist += list(add)
+            except:
+                sys.exit("Could not understand --include_input_columns "
+                         "argument %s" % s)
+        else:
+            try:
+                returnlist += [int(s)]
+            except TypeError:
+                sys.exit("Could not understand --include_input_columns "
+                         "argument %s" % s)
+    #Adjust to 0-based indexing
+    returnlist = [i-1 for i in returnlist]
+    #Remove the columns 0, 1 and 2, since they are always included in the output
+    returnlist = [i for i in returnlist if i not in [0,1,2]]
+    if not all([i > 1 for i in returnlist]):
+        sys.exit("Could not understand --include_input_columns argument. "
+                 "Make sure all numbers are positive and real.")
+    return list(set(returnlist))
+
 def ScoaryArgumentParser():
     """
     Function for parsing the arguments separate from the main function.
@@ -1438,24 +1523,55 @@ def ScoaryArgumentParser():
     # Parse arguments.
     parser = argparse.ArgumentParser(
             description='Scoary version %s - Screen pan-genome for '
-                        'trait-associated genes' % SCOARY_VERSION,
+                        'trait-associated variants' % SCOARY_VERSION,
                         epilog='by Ola Brynildsrud (olbb@fhi.no)')
-    parser.add_argument('-t', '--traits',
+    
+    inputgroup = parser.add_argument_group('Input options')
+    inputgroup.add_argument('-t', '--traits',
                         help='Input trait table '
                         '(comma-separated-values). Trait presence is '
                         'indicated by 1, trait absence by 0. Assumes '
                         'strain names in the first column and trait '
                         'names in the first row')
-    parser.add_argument('-g', '--genes',
+    inputgroup.add_argument('-g', '--genes',
                         help='Input gene presence/absence table '
                         '(comma-separated-values) from ROARY. '
                         'Strain names must be equal to those in the '
                         'trait table')
-    parser.add_argument('-o', '--outdir',
+    inputgroup.add_argument('-n', '--newicktree',
+                        help='Supply a custom tree (Newick format) for '
+                        'phylogenetic analyses instead instead of '
+                        'calculating it internally.',
+                        default=None)
+    inputgroup.add_argument('-s', '--start_col',
+                        help='On which column in the gene '
+                        'presence/absence file do individual strain '
+                        'info start. Default=15. (1-based indexing)',
+                        default=15,
+                        type=int)
+    inputgroup.add_argument('--delimiter',
+                        help='The delimiter between cells in the gene '
+                        'presence/absence and trait files, as well as '
+                        'the output file. ',
+                        default=',',
+                        type=str)
+    inputgroup.add_argument('-r', '--restrict_to',
+                        help='Use if you only want to analyze a subset '
+                        'of your strains. Scoary will read the '
+                        'provided comma-separated table of strains and '
+                        'restrict analyzes to these.')
+
+    outputgroup = parser.add_argument_group('Output options')
+    outputgroup.add_argument('-o', '--outdir',
                         help='Directory to place output files.'
                         ' Default = .',
                         default='./')
-    parser.add_argument('-p', '--p_value_cutoff',
+    outputgroup.add_argument('-u', '--upgma_tree',
+                        help='This flag will cause Scoary to write the '
+                        'calculated UPGMA tree to a newick file',
+                        default=False,
+                        action='store_true')
+    outputgroup.add_argument('-p', '--p_value_cutoff',
                         help='P-value cut-off / alpha level. '
                         'For Fishers, Bonferronis, and '
                         'Benjamini-Hochbergs tests, SCOARY will not '
@@ -1473,8 +1589,10 @@ def ScoaryArgumentParser():
                         nargs='+',
                         default=[0.05],
                         type=float)
-    parser.add_argument('-c', '--correction',
+    cutoffchoices = ['I', 'B', 'BH','PW','EPW','P']
+    outputgroup.add_argument('-c', '--correction',
                         help='Apply the indicated filtration measure. '
+                        'Allowed values are %s. '
                         'I=Individual (naive) p-value. '
                         'B=Bonferroni adjusted p-value. '
                         'BH=Benjamini-Hochberg adjusted p. '
@@ -1495,16 +1613,47 @@ def ScoaryArgumentParser():
                         'p-values, i.e. it will filter everything '
                         'except the upper and lower 2.5 percent of the '
                         'distribution. '
-                        'Default = Individual p-value. (I)',
-                        choices=['I',
-                                 'B',
-                                 'BH',
-                                 'PW',
-                                 'EPW',
-                                 'P'],
+                        'Default = Individual p-value. (I)' % ', '.join(
+                        cutoffchoices),
+                        choices=cutoffchoices,
                         nargs='*',
                         default=['I'])
-    parser.add_argument('-e','--permute',
+    outputgroup.add_argument('-m', '--max_hits',
+                        help='Maximum number of hits to report. SCOARY '
+                        'will only report the top max_hits results per '
+                        'trait',
+                        type=int)
+    outputgroup.add_argument('--include_input_columns',
+                        help='Grab columns from the input Roary file. '
+                        'and puts them in the output. Handles comma '
+                        'and ranges, e.g. --include_input_columns '
+                        '4,6,8,16-23. The special keyword ALL will include '
+                        'all relevant input columns in the output',
+                        dest='grabcols',
+                        type=grabcoltype,
+                        default=[])
+    outputgroup.add_argument('-w', '--write_reduced',
+                        help='Use with -r if you want Scoary to create '
+                        'a new gene presence absence file from your '
+                        'reduced set of isolates. Note: Columns 1-14 '
+                        '(No. sequences, Avg group size nuc etc) in '
+                        'this file do not reflect the reduced dataset. '
+                        'These are taken from the full dataset.',
+                        default=False,
+                        action='store_true')
+    outputgroup.add_argument('--no-time',
+                        help='Output file in the form '
+                        'TRAIT.results.csv, instead of '
+                        'TRAIT_TIMESTAMP.csv. When used with the -w '
+                        'argument will output a reduced gene matrix in '
+                        'the form gene_presence_absence_reduced.csv '
+                        'rather than '
+                        'gene_presence_absence_reduced_TIMESTAMP.csv ',
+                        default=False,
+                        action='store_true')
+
+    analysisgroup = parser.add_argument_group('Analysis options')
+    analysisgroup.add_argument('-e','--permute',
                         help='Perform N number of permutations of the '
                         'significant results post-analysis. Each '
                         'permutation will do a label switching of the '
@@ -1516,42 +1665,7 @@ def ScoaryArgumentParser():
                         'permuted p-value distribution is reported.',
                         type=int,
                         default=0)
-    parser.add_argument('-m', '--max_hits',
-                        help='Maximum number of hits to report. SCOARY '
-                        'will only report the top max_hits results per '
-                        'trait',
-                        type=int)
-    parser.add_argument('-r', '--restrict_to',
-                        help='Use if you only want to analyze a subset '
-                        'of your strains. Scoary will read the '
-                        'provided comma-separated table of strains and '
-                        'restrict analyzes to these.')
-    parser.add_argument('-w', '--write_reduced',
-                        help='Use with -r if you want Scoary to create '
-                        'a new gene presence absence file from your '
-                        'reduced set of isolates. Note: Columns 1-14 '
-                        '(No. sequences, Avg group size nuc etc) in '
-                        'this file do not reflect the reduced dataset. '
-                        'These are taken from the full dataset.',
-                        default=False,
-                        action='store_true')
-    parser.add_argument('-s', '--start_col',
-                        help='On which column in the gene '
-                        'presence/absence file do individual strain '
-                        'info start. Default=15. (1-based indexing)',
-                        default=15,
-                        type=int)
-    parser.add_argument('-u', '--upgma_tree',
-                        help='This flag will cause Scoary to write the '
-                        'calculated UPGMA tree to a newick file',
-                        default=False,
-                        action='store_true')
-    parser.add_argument('-n', '--newicktree',
-                        help='Supply a custom tree (Newick format) for '
-                        'phylogenetic analyses instead instead of '
-                        'calculating it internally.',
-                        default=None)
-    parser.add_argument('--no_pairwise',
+    analysisgroup.add_argument('--no_pairwise',
                         help='Do not perform pairwise comparisons. In'
                         'this mode, Scoary will perform population '
                         'structure-naive calculations only. (Fishers '
@@ -1560,48 +1674,34 @@ def ScoaryArgumentParser():
                         'intersections etc) but not causal analyses.',
                         default=False,
                         action='store_true')
-    parser.add_argument('--delimiter',
-                        help='The delimiter between cells in the gene '
-                        'presence/absence and trait files, as well as '
-                        'the output file. ',
-                        default=',',
-                        type=str)
-    parser.add_argument('--collapse',
+    analysisgroup.add_argument('--collapse',
                         help='Add this to collapse correlated genes '
                         '(genes that have identical distribution '
                         'patterns in the sample) into merged units. ',
                         default=False,
                         action='store_true')
-    parser.add_argument('--threads',
+
+    miscgroup = parser.add_argument_group('Misc options')
+    miscgroup.add_argument('--threads',
                         help='Number of threads to use. Default = 1',
                         type=int,
                         default=1)
-    parser.add_argument('--no-time',
-                        help='Output file in the form '
-                        'TRAIT.results.csv, instead of '
-                        'TRAIT_TIMESTAMP.csv. When used with the -w '
-                        'argument will output a reduced gene matrix in '
-                        'the form gene_presence_absence_reduced.csv '
-                        'rather than '
-                        'gene_presence_absence_reduced_TIMESTAMP.csv ',
-                        default=False,
-                        action='store_true')
-    parser.add_argument('--test',
+    miscgroup.add_argument('--test',
                         help='Run Scoary on the test set in '
                         'exampledata, overriding all other parameters.',
                         default=False,
                         action='store_true')
-    parser.add_argument('--citation',
+    miscgroup.add_argument('--citation',
                         help='Show citation information, and exit. ',
                         default=False,
                         action='store_true')
-    parser.add_argument('--version', help='Display Scoary version, and '
+    miscgroup.add_argument('--version', help='Display Scoary version, and '
                         'exit.',
                         action='version',
                         version=SCOARY_VERSION)
 
     args = parser.parse_args()
-    
+
     if len(args.p_value_cutoff) == 1:
         cutoffs = {c : args.p_value_cutoff[0] for c in args.correction}
     else:
