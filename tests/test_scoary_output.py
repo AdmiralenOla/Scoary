@@ -128,7 +128,7 @@ with open(os.getcwd() + "/mutations_presence_absence.csv" ,"rU") as vcfresfile:
         if i == 1:
             data = next(tab)
             try:
-                assert data == reference
+                assert data == referencevcf
             except AssertionError:
                 print("Got: %s" % ",".join(data))
                 print("Expected: %s" % ",".join(referencevcf))
