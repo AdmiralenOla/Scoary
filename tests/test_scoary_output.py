@@ -13,7 +13,7 @@ reference = ["TetRCG","","A fictitious gene known to cause resistance against te
              29,8,3,60,90.625,88.2352941176,72.5,1.08621066108E-014,6.45209132679E-011,
              6.45209132679E-011,25,25,1,5.96046447754E-008,1.54972076416E-006]
 
-referencevcf = ["NC_000962", "4013","0","T","C","9999","0","Type=snp","GT","False","0","1",
+referencevcf = ["NC_000962", "4013","0","T","C","9999","0","TYPE=snp","GT","False","0","1",
                 "1","1"]
 
 
