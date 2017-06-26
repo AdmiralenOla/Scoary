@@ -42,7 +42,7 @@ import csv
 import re
 import traceback
 
-__version__ = '0.1'
+__version__ = '0.1b'
 __author__ = 'Ola Brynildsrud'
 __credits = ['Ola Brynildsrud']
 __email__ = 'olbb@fhi.no'
@@ -118,7 +118,7 @@ def main():
                 sys.exit("ERROR: There appears to be only metainformation "
                          "(lines starting with ##) in your VCF file.")
             # Get metainfo from file
-            if (len(line) == 1) and line[0][:2] == '##':
+            if line[0][:2] == '##':
                 infoline = re.split('=',line[0], maxsplit=1)
                 # Capture list output for complex tags
                 if infoline[0] in metainfo:

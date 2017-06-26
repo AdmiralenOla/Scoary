@@ -1,0 +1,29 @@
+\contentsline {section}{\numberline {1}Scoary utility}{1}
+\contentsline {section}{\numberline {2}Installation}{1}
+\contentsline {subsection}{\numberline {2.1}Dependencies}{1}
+\contentsline {subsection}{\numberline {2.2}Installation}{2}
+\contentsline {section}{\numberline {3}Basic usage}{2}
+\contentsline {subsection}{\numberline {3.1}Getting started}{2}
+\contentsline {subsection}{\numberline {3.2}Input}{3}
+\contentsline {subsubsection}{\numberline {3.2.1}Gene presence/absence file}{3}
+\contentsline {subsubsection}{\numberline {3.2.2}Traits file}{3}
+\contentsline {subsubsection}{\numberline {3.2.3}Converting VCF files to use as Scoary input}{4}
+\contentsline {subsection}{\numberline {3.3}Output}{5}
+\contentsline {section}{\numberline {4}Advanced usage}{7}
+\contentsline {subsection}{\numberline {4.1}Restricting analysis to a subset of isolates with the -r parameter}{9}
+\contentsline {subsection}{\numberline {4.2}Getting input right when using non-standard Roary files using -s}{9}
+\contentsline {subsection}{\numberline {4.3}Controlling the output}{10}
+\contentsline {subsection}{\numberline {4.4}Writing a newick tree}{10}
+\contentsline {subsection}{\numberline {4.5}Setting a custom tree with the -n parameter}{10}
+\contentsline {subsection}{\numberline {4.6}Post-analysis label-switching permutations}{11}
+\contentsline {subsection}{\numberline {4.7}Collapsing correlated variants}{11}
+\contentsline {section}{\numberline {5}Population structure}{11}
+\contentsline {section}{\numberline {6}Example data}{14}
+\contentsline {section}{\numberline {7}Example use cases}{15}
+\contentsline {section}{\numberline {8}License}{17}
+\contentsline {section}{\numberline {9}Etymology}{17}
+\contentsline {section}{\numberline {10}FAQ}{17}
+\contentsline {section}{\numberline {11}Acknowledgements}{19}
+\contentsline {section}{\numberline {12}Feedback}{19}
+\contentsline {section}{\numberline {13}Citation}{19}
+\contentsline {section}{\numberline {14}Contact}{19}

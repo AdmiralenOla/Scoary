@@ -1,0 +1,27 @@
+\begin{longtable}{l|X}
+  \caption{Explanation of columns in the output}\label{tab:cols} \\
+  \toprule
+  Column name & Explanation \\
+  \midrule
+  \endhead
+  \verb+Gene+ & The gene name \\
+  \verb+Non-unique gene name+ & The non-unique gene name \\
+  \verb+Annotation+ & Annotation \\
+  \verb+Number_pos_present_in+ & The number of trait-positive isolates this gene was found in \\
+  \verb+Number_neg_present_in+ & The number of trait-negative isolates this gene was found in \\
+  \verb+Number_pos_not_present_in+ & The number of trait-positive isolates this gene was not found in \\
+  \verb+Number_neg_not_present_in+ & The number of trait-negative isolates this gene was not found in \\
+  \verb+Sensitivity+ & The sensitivity if using the presence of this gene as a diagnostic test to determine trait-positivity \\
+  \verb+Specificity+ & The specificity if using the non-presence of this gene as a diagnostic test to determine trait-negativity \\
+  \verb+Odds_ratio+ & Odds ratio \\
+  \verb+p_value+ & The naïve p-value for the null hypothesis that the presence/absence of this gene is unrelated to the trait status \\
+  \verb+Bonferroni_p+ & A p-value adjusted with Bonferroni's method for multiple comparisons correction. (An FWER type correction) \\
+  \verb+Benjamini_H_p+ & A p-value adjusted with Benjamini-Hochberg's method for multiple comparisons correction. (An FDR  type correction) \\
+  \verb+Max_pairwise_comparisons+ & The maximum number of pairs that contrast in both gene and trait characters that can be drawn on the phylogenetic tree without intersecting lines (Read \& Nee, 1995; Maddison, 2000) \\
+  \verb+Max_supporting_pairs+ & The maximum number of these pairs (\verb+Max_pairwise_comparisons+) that support \verb+A->B+ or \verb+A->b+, depending on the odds ratio. \\
+  \verb+Max_opposing_pairs+ & The maximum number of these pairs (\verb+Max_pairwise_comparisons+) that oppose \verb+A->B+ or \verb+A->b+, depending on the odds ratio. \\
+  \verb+Best_pairwise_comp_p+ & The p-value corresponding to the highest possible number of supporting pairs and the lowest possible number of opposing pairs, e.g. the lowest p-value you could end up with when picking a set of maximum number of pairs. \\
+  \verb+Worst_pairwise_comp_p+ & The p-value corresponding to the lowest possible number of supporting pairs and the highest possible number of opposing pairs, e.g. the highest p-value you could end up with when picking a set of maximum number of pairs. \\
+  \verb+Empirical_p+ & Empirical p-value after permutations and ranking of all test estimators. The test estimator used is number of successes (ie. AB-ab supporting pairs) divided by the number of trials (ie. the maximum number of contrasting pairs). This test estimator seem to approach a normal distribution. Empirical p is calculated by $(r+1)/(n+1)$ where r is the number of estimators that exceed the unpermuted estimator in value and n is the total number of permutations. \\
+  \bottomrule
+\end{longtable}
