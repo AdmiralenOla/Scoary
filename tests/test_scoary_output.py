@@ -130,6 +130,8 @@ with open(os.getcwd() + "/mutations_presence_absence.csv" ,"rU") as vcfresfile:
             try:
                 assert data == reference
             except AssertionError:
+                print("Got: %s" % ",".join(data))
+                print("Expected: %s" % ",".join(referencevcf))
                 print("VCF conversion did not produce the expected output")
                 sys.exit(-1)
 
