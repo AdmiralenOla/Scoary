@@ -35,7 +35,8 @@ setup(name='scoary',
       tests_require=[],
       entry_points={
           'console_scripts': ['scoary=scoary.methods:main',
-                             'scoary_GUI=scoary.GUI:main'],
+                             'scoary_GUI=scoary.GUI:main',
+                             'vcf2scoary=scoary.vcf2scoary:main'],
       
       },
       include_package_data=True,

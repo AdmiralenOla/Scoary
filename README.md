@@ -32,9 +32,11 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary](https
 
 ## What's new?
 
-**LATEST VERSION - 1.6.11**
+**LATEST VERSION - 1.6.12**
 
-Among the latest features is pairwise comparisons-free analysis, which allows major speed-ups for large datasets for people not interested in causal association. (e.g. just trying to infer genes enriched in particular groups etc)
+- Convert VCF files to Roary/Scoary format, allowing analysis on a wide range of variants (SNPs, indels, structural variations etc)
+- Grab columns from the Roary input and put in the output (To get strain-specific protein names, for example)
+- Scoary now comes with a manual, located under docs/tex/scoary_manual.pdf
 
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
@@ -127,6 +129,19 @@ It should look something like this:
 | StrainN | 1      | 0      | ... | 0      |
 
 You can see an example of how the input files could look in the exampledata folder.
+
+#### LS-BSR input
+You can also use as input the pan-genome as called from Jason Sahl's program [LS-BSR](https://github.com/jasonsahl/LS-BSR) (Large-Scale Blast Score Ratio). The program includes a python script for converting LS-BSR output to the Roary/Scoary format.
+
+#### Converting VCF files to use as Scoary input
+From version 1.6.12, Scoary has a function for converting VCF files to the Roary/Scoary format. This allows you to use a wide range of variants (e.g SNPs, indels, structural variants etc) in your input. The script can be run using the following command:
+  
+    vcf2scoary myvariants.vcf
+
+The current vcf2scoary script is a beta version, and may not correctly handle every VCF file. (Please report bugs!)
+
+Note that Scoary simplifies analysis for variants with more than 2 alleles. Rather than comparing all possible contrasts, it compares each non-reference with the reference. Say for example that 4 different alleles exist at a known SNP site. Let's call them A, C, G, and T, and let A be the reference allele. (The reference category is always inferred from the VCF file). This allele can be encoded in a single line in a VCF file, but in the Scoary format it needs to be spread over 3 different lines. (One for each contrast to the reference, i.e. A vs C, A vs G, and A vs T). Thus, not every possible contrast is tested in the association analysis! It is for example possible that there is a real difference in phenotype between G and T, but this contrast is not tested.
+
 
 #### Missing data
 Don't worry if you have not measured the phenotype for all your traits. From v1.6.9 on, Scoary can handle missing data. The missing values need to be specified as "NA", "." or "-". Note that Scoary does not actually specify any kind of uncertainty model for these missing values, it simply excludes them from further analysis.
@@ -351,13 +366,15 @@ A user wanted to screen for possible genetic causes of resistance towards a new 
 
 Mycobacterium abscessus contains numerous subspecies, and the user wanted to test only M. abscessus ss abscessus. The Roary output additionally contained other subspecies, such as M. abscessus ss masiliense. To avoid altering the Roary file, a csv was made containing the names of all isolates that were M. abscessus ss abscessus. To write a separate gene presence/absence file from only these isolates (and to speed up analysis), the -w parameter was used.
 
-A high number of isolates was used in the experiment, and it was therefore decided to set the p-values low. The experiment was interested in causal mutations, so pairwise comparisons had to be used. (Population structure could be a major confounder). It was decided to require that the entire range of pairwise comparison values should be < 1E-4. Additionally, after 10.000 permutations the input configuration should be in the top 0.1 percentile. (Among 10.000 randomly permuted datasets, no more than 9 were allowed to have a even higher number of contrasting pairs for a gene to be included in results).
+A high number of isolates was used in the experiment, and it was therefore decided to set the significance threshold high (i.e. require low p-values). The experiment was interested in causal mutations, so pairwise comparisons had to be used. (Population structure could be a major confounder). It was decided to require that the entire range of pairwise comparison values should be < 1E-4. Additionally, after 10.000 permutations the input configuration should be in the top 0.1 percentile. (Among 10.000 randomly permuted datasets, no more than 9 were allowed to have a even higher number of contrasting pairs for a gene to be included in results).
+
+A ML phylogeny was built with a dedicated tree program and provided as a custom tree.
 
 Finally, since it was possible that the resistance determinant was inherited as a set of genes (such as a plasmid), the --collapse flag was used to collapse genes with identical distribution patterns.
 
 The analysis was run with the following command:
 ```
-scoary -t Resistancefile -g Gene_presence_absence.csv -p 1E-4 1E-3 -c EPW P -e 10000 -w -r OnlyAbscessusIsolates.csv --collapse
+scoary -t Resistancefile -g Gene_presence_absence.csv -p 1E-4 1E-3 -c EPW P -e 10000 -w -r OnlyAbscessusIsolates.csv --collapse -n raxmltree.nwk
 ```
 Results showed that the top two hits were different alleles of the same gene, one positively and one negatively associated with the trait. (The two alleles were different enough to not be clustered as the same by Roary). The interpretation was that this gene was likely to play a role in the resistance pattern.
 
@@ -375,6 +392,12 @@ Here, the user is not trying to infer which genes "cause" membership in a group,
 The analysis was run with the following command:
 ```
 scoary -g gene_presence_absence.csv -t Hostgroup_membership.csv -p 1E-5 -c BH --no_pairwise
+```
+
+#### 3. SNPs linked to penicillin resistance in Neisseria meningitidis
+For population structure-aware association analysis to work, it is imperative to work on trees that best represent the genealogy of the input sample. Due to the high frequency of recombination in Neisseria meningitidis, the internal tree builder in Scoary is likely to perform poorly. In this case (actually, in almost any case) it would be advisable to use a dedicated tree program and provide this to Scoary instead. There are now many programs that can produce phylogenetic trees where only the clonally evolved patterns are retained (i.e. "free" from the obfuscating effects of recombination). Some examples are [Gubbins](https://sanger-pathogens.github.io/gubbins), [ClonalFrameML](https://github.com/xavierdidelot/ClonalFrameML) and [BRATNextGen](http://www.helsinki.fi/bsg/software/BRAT-NextGen).
+```
+scoary -g gene_presence_absence.csv -t penicillinres.csv -n clonaltree.nwk
 ```
 
 ## License
@@ -411,7 +434,6 @@ Most certainly not.
 
 ## Coming soon
 - Multiprocessing also when using the GUI. (The GUI currently only uses a single thread. See Issues).
-- Continous integration
 - Support for non-binary traits
 - Please feel free to suggest improvements, point out bugs or methods that could be better optimized.
 

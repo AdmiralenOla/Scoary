@@ -1,0 +1,33 @@
+\begin{thebibliography}{1}
+
+\bibitem{brynildsrud2016rapid}
+Ola Brynildsrud, Jon Bohlin, Lonneke Scheffer, and Vegard Eldholm.
+\newblock Rapid scoring of genes in microbial pan-genome-wide association
+  studies with scoary.
+\newblock {\em Genome biology}, 17(1):238, 2016.
+
+\bibitem{page2015roary}
+Andrew~J Page, Carla~A Cummins, Martin Hunt, Vanessa~K Wong, Sandra Reuter,
+  Matthew~TG Holden, Maria Fookes, Daniel Falush, Jacqueline~A Keane, and
+  Julian Parkhill.
+\newblock Roary: rapid large-scale prokaryote pan genome analysis.
+\newblock {\em Bioinformatics}, 31(22):3691--3693, 2015.
+
+\bibitem{north2002note}
+Bernard~V North, David Curtis, and Pak~C Sham.
+\newblock A note on the calculation of empirical p values from monte carlo
+  procedures.
+\newblock {\em The American Journal of Human Genetics}, 71(2):439--441, 2002.
+
+\bibitem{read1995inference}
+Andrew~F Read and Sean Nee.
+\newblock Inference from binary comparative data.
+\newblock {\em Journal of Theoretical Biology}, 173(1):99--108, 1995.
+
+\bibitem{maddison2000testing}
+WAYNE~P MADDISON.
+\newblock Testing character correlation using pairwise comparisons on a
+  phylogeny.
+\newblock {\em Journal of Theoretical Biology}, 202(3):195--204, 2000.
+
+\end{thebibliography}
