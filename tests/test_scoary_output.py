@@ -120,7 +120,7 @@ for Test in ["1","2","4"]:
                         print("Not equal at Test %s col 17: %s %s" % (Test, data[17], str(reference[17])))
                         sys.exit(-1)
 
-with open(os.getcwd() + "/Test" + "/mutations_presence_absence.csv" ,"rU") as vcfresfile:
+with open(os.getcwd() + "/mutations_presence_absence.csv" ,"rU") as vcfresfile:
     tab = csv.reader(vcfresfile, delimiter=",")
     for i in range(2):
         if i == 0:
