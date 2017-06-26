@@ -1,0 +1,9 @@
+##fileformat=VCFv4.1
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=TYPE,Number=A,Type=String,Description="The type of allele.">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Reference	Strain_A	Strain_B	Strain_C
+NC_000962	4013	0	T	C	9999	0	TYPE=snp	GT	0	1	1	1
+NC_000962	4705	0	T	C,A	9999	0	TYPE=snp	GT	0	0	1	2
+NC_000962	6575	0	C	A,T,G	9999	0	TYPE=snp	GT	0	3	1	2
+NC_000962	6750	0	C	T	9999	0	TYPE=snp	GT	0	0	1	0
+NC_000962	7362	0	G	C	9999	0	TYPE=snp	GT	0	1	1	1
