@@ -208,24 +208,6 @@ def fixdummy(line,c):
             newline[x] = "0"
     return newline
 
-
-
-
-
-
-
-
-    #genbank   =  args.genbank
-    #fasta     =  args.fasta
-    #split     =  os.path.splitext(args.genbank)
-    #basename  =  os.path.basename(split[0])
-    #start     =  args.start
-    #end       =  args.end
-    #blastMode =  args.blastmode
-    #outfile   =  args.outfile
-    #fasta     =  args.fasta
-    #tidy      =  args.no_tidy
-
 ########
 # MAIN #
 ########
