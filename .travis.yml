@@ -23,5 +23,7 @@ script:
 # Advanced opts run
 - python scoary.py -g scoary/exampledata/Gene_presence_absence.csv -t scoary/exampledata/Tetracycline_resistance.csv -p 0.01 1E-5 -c B EPW --collapse -m 50 -u -n scoary/exampledata/ExampleTree.nwk --threads 4 -o Test4 --no-time
 
+- python scoary/vcf2scoary.py --force scoary/exampledata/Example.vcf
+
 # Add test to verify output
 - python 'tests/test_scoary_output.py'
