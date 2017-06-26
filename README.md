@@ -34,6 +34,10 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary](https
 
 **LATEST VERSION - 1.6.12**
 
+- Convert VCF files to Roary/Scoary format, allowing analysis on a wide range of variants (SNPs, indels, structural variations etc)
+- Grab columns from the Roary input and put in the output (To get strain-specific protein names, for example)
+- Scoary now comes with a manual, located under docs/tex/scoary_manual.pdf
+
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 
 ## Dependencies
@@ -128,6 +132,16 @@ You can see an example of how the input files could look in the exampledata fold
 
 #### LS-BSR input
 You can also use as input the pan-genome as called from Jason Sahl's program [LS-BSR](https://github.com/jasonsahl/LS-BSR) (Large-Scale Blast Score Ratio). The program includes a python script for converting LS-BSR output to the Roary/Scoary format.
+
+#### Converting VCF files to use as Scoary input
+From version 1.6.12, Scoary has a function for converting VCF files to the Roary/Scoary format. This allows you to use a wide range of variants (e.g SNPs, indels, structural variants etc) in your input. The script can be run using the following command:
+  
+    vcf2scoary myvariants.vcf
+
+The current vcf2scoary script is a beta version, and may not correctly handle every VCF file. (Please report bugs!)
+
+Note that Scoary simplifies analysis for variants with more than 2 alleles. Rather than comparing all possible contrasts, it compares each non-reference with the reference. Say for example that 4 different alleles exist at a known SNP site. Let's call them A, C, G, and T, and let A be the reference allele. (The reference category is always inferred from the VCF file). This allele can be encoded in a single line in a VCF file, but in the Scoary format it needs to be spread over 3 different lines. (One for each contrast to the reference, i.e. A vs C, A vs G, and A vs T). Thus, not every possible contrast is tested in the association analysis! It is for example possible that there is a real difference in phenotype between G and T, but this contrast is not tested.
+
 
 #### Missing data
 Don't worry if you have not measured the phenotype for all your traits. From v1.6.9 on, Scoary can handle missing data. The missing values need to be specified as "NA", "." or "-". Note that Scoary does not actually specify any kind of uncertainty model for these missing values, it simply excludes them from further analysis.

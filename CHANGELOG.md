@@ -1,4 +1,10 @@
 # CHANGELOG
+v1.6.12 (Jun 2017)
+- Convert VCF files to Roary/Scoary format, allowing analysis on a wide range of variants (SNPs, indels, structural variations etc)
+- Grab columns from the Roary input and put in the output (To get strain-specific protein names, for example)
+- Scoary now comes with a manual, located under docs/tex/scoary_manual.pdf
+- The log now includes the original command line
+
 v1.6.11 (Apr 2017)
 - Blank values in trait files will now correctly be read as missing. Fixes (#54)
 - Added --no_pairwise option for simple set differences / categorical enrichment analysis without causal hypothesis (As requested among others in (#53)
