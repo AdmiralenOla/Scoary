@@ -68,12 +68,12 @@ def main():
         '--types',
         action='store',
         default='ALL',
-        nargs='*',
         help='The types of variants to include in the output. NOTE: This '
              'works if TYPE=XX can be found in the INFO column of the vcf '
              'file. The special keyword ALL includes all types. This is '
              'the default setting. Common types are snp, mnp, ins, del '
-             'and complex. Example: --types snp ins del')
+             'and complex. Give as comma-separated list. '
+             'Example: --types snp,ins,del')
     parser.add_argument(
         '--version',
         action='version',
@@ -91,6 +91,7 @@ def main():
         help='The VCF file to convert to Roary/Scoary format')
 
     args = parser.parse_args()
+    args.types = args.types.split(",")
 
     if os.path.isfile(args.out) and not args.force:
         sys.exit("Outfile already exists. Change name of outfile or "
