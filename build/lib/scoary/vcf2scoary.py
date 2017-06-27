@@ -91,8 +91,7 @@ def main():
         help='The VCF file to convert to Roary/Scoary format')
 
     args = parser.parse_args()
-    if args.types is not "ALL":
-        args.types = args.types.split(",")
+    args.types = args.types.split(",")
 
     if os.path.isfile(args.out) and not args.force:
         sys.exit("Outfile already exists. Change name of outfile or "
