@@ -140,6 +140,10 @@ From version 1.6.12, Scoary has a function for converting VCF files to the Roary
 
 The current vcf2scoary script is a beta version, and may not correctly handle every VCF file. (Please report bugs!)
 
+You can extract specific variant types (e.g. snps, indels, complex etc) using the --types argument. (This requires that TYPE=XX is defined in the INFO column of the vcf file.) The following command line would for example extract all snp, mnp and complex types.
+
+    vcf2scoary --types snp,mnp,complex myvariants.vcf
+
 Note that Scoary simplifies analysis for variants with more than 2 alleles. Rather than comparing all possible contrasts, it compares each non-reference with the reference. Say for example that 4 different alleles exist at a known SNP site. Let's call them A, C, G, and T, and let A be the reference allele. (The reference category is always inferred from the VCF file). This allele can be encoded in a single line in a VCF file, but in the Scoary format it needs to be spread over 3 different lines. (One for each contrast to the reference, i.e. A vs C, A vs G, and A vs T). Thus, not every possible contrast is tested in the association analysis! It is for example possible that there is a real difference in phenotype between G and T, but this contrast is not tested.
 
 
