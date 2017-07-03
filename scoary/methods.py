@@ -72,7 +72,7 @@ def main(**kwargs):
         args.genes = os.path.join(
             resource_filename(__name__, 'exampledata'), 
             'Gene_presence_absence.csv')
-        args.grabcols = [-999]
+        args.grabcols = []
         args.max_hits = None
         args.newicktree = None
         args.no_pairwise = False
@@ -202,6 +202,8 @@ def main(**kwargs):
 
             log.info("Reading gene presence absence file")
             
+            if args.grabcols == "ALL":
+                args.grabcols = [-999]
             genedic_and_matrix = \
                 Csv_to_dic_Roary(genes,
                 args.delimiter,
@@ -215,6 +217,7 @@ def main(**kwargs):
             zeroonesmatrix = genedic_and_matrix["Zero_ones_matrix"]
             strains = genedic_and_matrix["Strains"]
             extracolstoprint = genedic_and_matrix["Extracols"]
+            firstcolnames = genedic_and_matrix["Firstcolnames"]
 
             # Create or load tree (No need for tree if --no_pairwise)
             if (args.newicktree) is None and not (args.no_pairwise):
@@ -293,6 +296,7 @@ def main(**kwargs):
                      args.no_pairwise,
                      genedic,
                      extracolstoprint,
+                     firstcolnames,
                      time=currenttime,
                      delimiter=args.delimiter)
         log.info("\n")
@@ -417,28 +421,49 @@ def Csv_to_dic_Roary(genefile, delimiter, grabcols, startcol=14,
 
     zero_ones_matrix = []
 
-    try:
-        genecol = header.index("Gene")
-        nugcol = header.index("Non-unique Gene name")
-        anncol = header.index("Annotation")
-    except ValueError:
-        log.error("ERROR: Could not properly detect the correct names "
-        "for all columns in the ROARY table.")
+    if roaryfile:
+        try:
+            genecol = header.index("Gene")
+            nugcol = header.index("Non-unique Gene name")
+            anncol = header.index("Annotation")
+            firstcolnames = ["Gene", "Non-unique Gene name", "Annotation"]
+        except ValueError:
+            log.error("ERROR: Could not properly detect the correct names "
+            "for all columns in the ROARY table.")
+            genecol = 0
+            nugcol = 1
+            anncol = 2
+    else:
         genecol = 0
+        geneann = header[0]
         nugcol = 1
+        nugann = header[1]
         anncol = 2
+        annann = header[2]
+        firstcolnames = header[0:3]
 
     for line in csvfile:
         q = line
-        try:
-            r[q[genecol]] = ({"Non-unique Gene name": q[nugcol], 
-                              "Annotation": q[anncol]} 
-                              if roaryfile
-                              else {})
-        except IndexError:
-            sys.exit("CRITICAL: Could not read gene presence absence "
-            "file. Verify that this file is a proper Roary file using "
-            "the specified delimiter (default is ',').")
+        if roaryfile:
+            try:
+                identifier = q[genecol]
+                r[identifier] = {"Non-unique Gene name": q[nugcol], 
+                                  "Annotation": q[anncol]}
+            except IndexError:
+                sys.exit("CRITICAL: Could not read gene presence absence "
+                "file. Verify that this file is a proper Roary file using "
+                "the specified delimiter (default is ',').")
+        else:
+            try:
+                identifier = ( q[genecol] + "_|_" 
+                             + q[nugcol] + "_|_" 
+                             + q[anncol] )
+                             
+                r[identifier] = {"Non-unique Gene name": q[nugcol], 
+                                  "Annotation": q[anncol]}
+            except IndexError:
+                sys.exit("CRITICAL: Could not properly assign column. "
+                         "Please report this bug.")
         # The zero_ones_line variable represents the presence (1) or 
         # absence (0) of a gene. It is used for calculating distances  
         # between strains.
@@ -450,20 +475,20 @@ def Csv_to_dic_Roary(genefile, delimiter, grabcols, startcol=14,
                     continue
             if q[startcol + strain] in ["", "0", "-"]:
                 # If the gene is not present, AND The isolate is allowed
-                r[q[genecol]][strains[strain]] = 0
+                r[identifier][strains[strain]] = 0
                 zero_ones_line.append(0)
                 # Add a 0 to indicate non-presence
             else:
                 # Gene is present if any other value than "", "0" or "-"
                 # is in the cell
-                r[q[genecol]][strains[strain]] = 1
+                r[identifier][strains[strain]] = 1
                 zero_ones_line.append(1)
                 # Add a 1 to indicate presence of the current gene in 
                 # this strain
 
             # Add grabcols
             for c in grabcols:
-                r[q[genecol]][header[c]+"_name"] = q[c]
+                r[identifier][header[c]+"_name"] = q[c]
 
         # Since we are only interested in the differences between 
         # strains, no need to append the zero_ones_line if it is all 1's
@@ -475,10 +500,12 @@ def Csv_to_dic_Roary(genefile, delimiter, grabcols, startcol=14,
     if writereducedset:
         file.close()
     zero_ones_matrix = list(map(list, zip(*zero_ones_matrix)))
+
     return {"Roarydic": r,
             "Zero_ones_matrix": zero_ones_matrix,
             "Strains": strain_names_allowed,
-            "Extracols": extracolstoprint}
+            "Extracols": extracolstoprint,
+            "Firstcolnames": firstcolnames}
 
 def ReduceSet(genefile, delimiter, grabcols, startcol=14,
               allowed_isolates=None, time="",outdir="./"):
@@ -959,7 +986,8 @@ def Perform_statistics(traits, genes):
 #################################
 def StoreResults(Results, max_hits, cutoffs, upgmatree, GTC, Prunedic,
                  outdir, permutations, num_threads, no_pairwise,
-                 genedic, extracolstoprint, time="", delimiter=","):
+                 genedic, extracolstoprint, firstcolnames, time="", 
+                 delimiter=","):
     """
     A method for storing the results. Calls StoreTraitResult for each 
     trait column in the input file.
@@ -970,12 +998,12 @@ def StoreResults(Results, max_hits, cutoffs, upgmatree, GTC, Prunedic,
         StoreTraitResult(Results[Trait], Trait, max_hits, cutoffs, 
                          upgmatree, GTC, Prunedic, outdir, permutations, 
                          num_threads, no_pairwise, genedic,
-                         extracolstoprint, time, delimiter)
+                         extracolstoprint, firstcolnames, time, delimiter)
 
 def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree, 
                      GTC, Prunedic, outdir, permutations, num_threads, 
-                     no_pairwise, genedic, extracolstoprint, time="", 
-                     delimiter=","):
+                     no_pairwise, genedic, extracolstoprint, 
+                     firstcolnames, time="", delimiter=","):
     """
     The method that actually stores the results. Only accepts results 
     from a single trait at a time
@@ -1004,7 +1032,7 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
             "P": "Empirical_p"
         }
         
-        columns = ["Gene","Non-unique gene name","Annotation",
+        columns = firstcolnames + [
         "Number_pos_present_in","Number_neg_present_in",
         "Number_pos_not_present_in","Number_neg_not_present_in",
         "Sensitivity","Specificity","Odds_ratio","Naive_p",
@@ -1120,9 +1148,15 @@ def StoreTraitResult(Trait, Traitname, max_hits, cutoffs, upgmatree,
             if all( [Filteredresults[currentgene]\
                     [cut_possibilities[method]] <= cutoffs[method]
                     for method in cutoffs] ):
-                outrow = [currentgene, 
-                str(Filteredresults[currentgene]["NUGN"]),
-                str(Filteredresults[currentgene]["Annotation"]), 
+                # Split up identifier if it is a compound id
+                if "_|_" in currentgene:
+                    firstthree = currentgene.split("_|_")
+                else:
+                    firstthree = [currentgene,
+                    str(Filteredresults[currentgene]["NUGN"]),
+                    str(Filteredresults[currentgene]["Annotation"])]
+
+                outrow = firstthree + [ 
                 str(Filteredresults[currentgene]["tpgp"]),
                 str(Filteredresults[currentgene]["tngp"]),
                 str(Filteredresults[currentgene]["tpgn"]),

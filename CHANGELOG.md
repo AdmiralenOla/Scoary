@@ -1,4 +1,11 @@
 # CHANGELOG
+v1.6.13 (Jul 2017)
+- Fixed a bug where Scoary would not handle converted VCF files due to different headers
+- Changed the parameters of --test
+- Fixed the GUI that was broken since 1.6.12 due to introduction of --include_input_columns
+- Include_input_columns now correctly handles the ALL keyword
+- Added the ExampleVCFTrait.csv file to test VCF functionality
+
 v1.6.12 (Jun 2017)
 - Convert VCF files to Roary/Scoary format, allowing analysis on a wide range of variants (SNPs, indels, structural variations etc)
 - Grab columns from the Roary input and put in the output (To get strain-specific protein names, for example)
