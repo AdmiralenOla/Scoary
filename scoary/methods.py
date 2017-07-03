@@ -72,7 +72,7 @@ def main(**kwargs):
         args.genes = os.path.join(
             resource_filename(__name__, 'exampledata'), 
             'Gene_presence_absence.csv')
-        args.grabcols = [-999]
+        args.grabcols = []
         args.max_hits = None
         args.newicktree = None
         args.no_pairwise = False
