@@ -761,6 +761,7 @@ class ScoaryGUI(Tkinter.Tk):
                                     p_value_cutoff=p_value_cutoff,
                                     delimiter=delimiter,
                                     genes=genes,
+                                    grabcols=[],
                                     max_hits=max_hits,
                                     newicktree=newicktree,
                                     no_time=no_time,
