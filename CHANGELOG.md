@@ -1,4 +1,7 @@
 # CHANGELOG
+v1.6.14 (Jul 2017)
+- Fixed a bug where Scoary could not be upgraded using pip
+
 v1.6.13 (Jul 2017)
 - Fixed a bug where Scoary would not handle converted VCF files due to different headers
 - Changed the parameters of --test

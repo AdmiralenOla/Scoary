@@ -32,7 +32,10 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary](https
 
 ## What's new?
 
-**LATEST VERSION - 1.6.13**
+**LATEST VERSION - 1.6.14**
+- Fixed a bug where scoary could not be upgraded using pip
+
+**1.6.13**
 - Fixed bug where handling of converted VCF files would fail due to non-Roary column names
 - Fixed the ALL keyword used with --include_input_columns
 
