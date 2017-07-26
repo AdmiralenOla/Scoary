@@ -1,4 +1,4 @@
-__version__ = '1.6.14'
+__version__ = '1.6.15'
 __author__ = 'Ola Brynildsrud'
 __credits__ = ['Ola Brynildsrud']
 __license__ = 'GPL3'
