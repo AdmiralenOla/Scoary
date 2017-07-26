@@ -2,16 +2,9 @@
 from setuptools import setup
 from scoary import __version__ as sv
 
-
-def readme():
-    with open('README_pypi.md') as f:
-        return f.read()
-
-
 setup(name='scoary',
       version=sv,
       description='Microbial pan-GWAS using the output from Roary',
-      long_description=readme(),
       classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
