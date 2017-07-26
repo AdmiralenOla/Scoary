@@ -1,4 +1,7 @@
 # CHANGELOG
+v1.6.15 (Jul 2017)
+- Apparently 1.6.14 did not fix the pip issue for all users. Deleted the function that seemed to cause the pip crash
+
 v1.6.14 (Jul 2017)
 - Fixed a bug where Scoary could not be upgraded using pip
 
