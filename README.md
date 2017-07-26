@@ -32,7 +32,10 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary](https
 
 ## What's new?
 
-**LATEST VERSION - 1.6.14**
+**LATEST VERSION - 1.6.15**
+- Some people still have problems with pip installs. Removed the readme() function from setup
+
+**1.6.14**
 - Fixed a bug where scoary could not be upgraded using pip
 
 **1.6.13**
