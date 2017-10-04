@@ -32,20 +32,8 @@ Scoary is designed to take the gene_presence_absence.csv file from [Roary](https
 
 ## What's new?
 
-**LATEST VERSION - 1.6.15**
-- Some people still have problems with pip installs. Removed the readme() function from setup
-
-**1.6.14**
-- Fixed a bug where scoary could not be upgraded using pip
-
-**1.6.13**
-- Fixed bug where handling of converted VCF files would fail due to non-Roary column names
-- Fixed the ALL keyword used with --include_input_columns
-
-**1.6.12**
-- Convert VCF files to Roary/Scoary format, allowing analysis on a wide range of variants (SNPs, indels, structural variations etc)
-- Grab columns from the Roary input and put in the output (To get strain-specific protein names, for example)
-- Scoary now comes with a manual, located under docs/tex/scoary_manual.pdf
+**LATEST VERSION - 1.6.16**
+- Bug fixes to vcf2scoary
 
 All changes are logged in the [CHANGELOG](CHANGELOG.md)
 

@@ -1,4 +1,7 @@
 # CHANGELOG
+v1.6.16 (Aug 2017)
+- Bug fixes to vcf2scoary
+
 v1.6.15 (Jul 2017)
 - Apparently 1.6.14 did not fix the pip issue for all users. Deleted the function that seemed to cause the pip crash
 

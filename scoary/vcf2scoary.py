@@ -101,7 +101,7 @@ def main():
         sys.exit("Unable to locate input file %s" % args.vcf)
 
     with open(args.vcf,'rU') as vcffile, open(args.out,'w') as outfile:
-        lines = csv.reader(vcffile, delimiter="\t")
+        lines = csv.reader(vcffile, delimiter='\t', quotechar='"')
         metainfo = {"##INFO" : {},
                     "##FILTER" : {},
                     "##FORMAT" : {},
@@ -125,7 +125,7 @@ def main():
                 # Capture list output for complex tags
                 if infoline[0] in metainfo:
                     ID=re.search(r'ID=(\w+)',infoline[1]).group(1)
-                    infolist = re.split(',',infoline[1].strip("<>"))
+                    infolist = re.split(',(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)',infoline[1].strip("<>"))
                     metainfo[infoline[0]][ID] = {}
                     # Enter all elements in infolist into appropriate dic
                     for e in infolist:
@@ -203,11 +203,18 @@ def writeLine(line, outfile):
 
 def fixdummy(line,c):
     newline = line[:]
-    for x in range(len(line)):
-        if int(line[x]) == c:
-            newline[x] = "1"
-        else:
-            newline[x] = "0"
+    try:
+        for x in range(len(line)):
+            if line[x] == ".":
+                # Missing data get entered as reference / no presence
+                newline[x] = "0"
+            elif int(line[x]) == c:
+                newline[x] = "1"
+            else:
+                newline[x] = "0"
+    except ValueError:
+        print(newline, c)
+        sys.exit(-1)
     return newline
 
 ########
