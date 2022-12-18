@@ -181,15 +181,15 @@ def main(**kwargs):
                 cutoffs.pop(m,None)
             
         # Start analysis
-        with open(args.genes, "rU") as genes, \
-        open(args.traits, "rU") as traits:
+        with open(args.genes, "r") as genes, \
+        open(args.traits, "r") as traits:
     
             if args.restrict_to is not None:
                 # Note: Despite being a dictionary, the values of
                 # allowed_isolates are not currently used, only the keys
                 allowed_isolates = {isolate : "all"
                                     for line in
-                                    open(args.restrict_to,"rU")
+                                    open(args.restrict_to,"r")
                                     for isolate in line.rstrip().split(",")}
             else:
                 # Despite the confusing name
@@ -343,7 +343,7 @@ def Csv_to_dic_Roary(genefile, delimiter, grabcols, startcol=14,
 
     if writereducedset:
         file = open(ReduceSet(genefile,delimiter, grabcols, startcol,
-                    allowed_isolates,time,outdir),"rU")
+                    allowed_isolates,time,outdir),"r")
         csvfile = csv.reader(file, skipinitialspace=True, 
                              delimiter=delimiter)
     else:

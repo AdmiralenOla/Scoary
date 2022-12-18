@@ -20,7 +20,7 @@ referencevcf = ["NC_000962", "4013","0","T","C","9999","0","TYPE=snp","GT","Fals
 
 
 for Test in ["1","2","4"]:
-    with open(os.getcwd() + "/Test" + Test + "/Tetracycline_resistance.results.csv" ,"rU") as resfile:
+    with open(os.getcwd() + "/Test" + Test + "/Tetracycline_resistance.results.csv" ,"r") as resfile:
         tab = csv.reader(resfile, delimiter=",")
         for i in range(2):
             if i == 0:
@@ -120,7 +120,7 @@ for Test in ["1","2","4"]:
                         print("Not equal at Test %s col 17: %s %s" % (Test, data[17], str(reference[17])))
                         sys.exit(-1)
 
-with open(os.getcwd() + "/mutations_presence_absence.csv" ,"rU") as vcfresfile:
+with open(os.getcwd() + "/mutations_presence_absence.csv" ,"r") as vcfresfile:
     tab = csv.reader(vcfresfile, delimiter=",")
     for i in range(2):
         if i == 0:

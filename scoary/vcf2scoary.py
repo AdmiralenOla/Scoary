@@ -100,7 +100,7 @@ def main():
     if not os.path.isfile(args.vcf):
         sys.exit("Unable to locate input file %s" % args.vcf)
 
-    with open(args.vcf,'rU') as vcffile, open(args.out,'w') as outfile:
+    with open(args.vcf,'r') as vcffile, open(args.out,'w') as outfile:
         lines = csv.reader(vcffile, delimiter='\t', quotechar='"')
         metainfo = {"##INFO" : {},
                     "##FILTER" : {},
